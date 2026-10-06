@@ -1,0 +1,1 @@
+{"name":"ta-studio-demo","private":true,"scripts":{"build":"python3 build/build.py","test":"node tests/smoke.js index.html"},"devDependencies":{"jsdom":"^24.0.0"}}

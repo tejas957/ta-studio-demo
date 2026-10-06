@@ -1,0 +1,953 @@
+<title>TA Studio Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: a staffing desk. Top bar with role switch, a tab strip, then dense tables and a two-pane course workspace. Pine green is the only accent; status colors are separate. */
+:root{
+  --bg:#f4f6f4; --surface:#ffffff; --surface-2:#eaeeea; --line:#d5dcd6;
+  --fg:#16201c; --muted:#56655d;
+  --accent:#1d5a49; --accent-soft:#dcebe5; --accent-fg:#ffffff;
+  --ok:#17703f; --ok-soft:#dcf0e4; --warn:#8f5b00; --warn-soft:#faedcf; --bad:#a82820; --bad-soft:#fae0dd;
+  --shadow:0 12px 40px rgba(10,25,20,.18);
+  --f-display:"Bricolage Grotesque","Public Sans",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1512; --surface:#151e1a; --surface-2:#1c2723; --line:#2a3832;
+    --fg:#e4ede8; --muted:#92a39a;
+    --accent:#5fbb9f; --accent-soft:#183329; --accent-fg:#07130e;
+    --ok:#62d096; --ok-soft:#14301f; --warn:#e5b65e; --warn-soft:#352a10; --bad:#f28b83; --bad-soft:#3a1a17;
+    --shadow:0 12px 40px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1512; --surface:#151e1a; --surface-2:#1c2723; --line:#2a3832;
+  --fg:#e4ede8; --muted:#92a39a;
+  --accent:#5fbb9f; --accent-soft:#183329; --accent-fg:#07130e;
+  --ok:#62d096; --ok-soft:#14301f; --warn:#e5b65e; --warn-soft:#352a10; --bad:#f28b83; --bad-soft:#3a1a17;
+  --shadow:0 12px 40px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--f-body);padding-inline:16px;padding-block:0}
+.wrap{max-width:1280px;margin:0 auto;padding-bottom:48px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:700}
+h3{font-size:15px;font-weight:700}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.eyebrow{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* top bar */
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:16px 12px}
+.brand{font:700 22px var(--f-display);letter-spacing:-.02em}
+.brand small{display:block;font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.who{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:20px}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font:600 13px var(--f-body);color:var(--muted);white-space:nowrap;cursor:pointer;display:flex;gap:6px;align-items:center}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.badge{font:600 11px var(--f-mono);padding:1px 6px;border-radius:99px;background:var(--surface-2);color:var(--fg)}
+.badge.bad{background:var(--bad-soft);color:var(--bad)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* controls */
+.btn{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:6px;font:600 13px var(--f-body);cursor:pointer;color:var(--fg);white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad)}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;cursor:pointer;text-align:left}
+.link:hover{text-decoration:underline}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+input[type=number]{width:64px}
+textarea{width:100%;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:4px;font:600 11px/1.4 var(--f-body);padding:1px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+
+/* layout */
+.stack{display:flex;flex-direction:column;gap:20px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+.split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.card>h3{margin-bottom:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.stat b{display:block;font:500 26px var(--f-mono);letter-spacing:-.02em}
+.stat span{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:680px}
+th{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.sel td{background:var(--accent-soft)}
+td.num,th.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.bar{position:relative;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;display:block}
+.bar i.d{background:var(--accent-soft);outline:1px solid var(--accent);outline-offset:-1px}
+.bar i.c{background:var(--accent)}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:8px 12px;border-radius:0 6px 6px 0}
+.note.warn{border-color:var(--warn);background:var(--warn-soft)}
+.note.bad{border-color:var(--bad);background:var(--bad-soft)}
+.course-btn{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
+.course-btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.course-btn+.course-btn{margin-top:8px}
+.issue{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.issue:last-child{border-bottom:0}
+.issue>div{min-width:0}
+.guide ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.guide summary{cursor:pointer;font:700 15px var(--f-display)}
+ul.plain{list-style:none;margin:0;padding:0}
+
+/* notifications */
+.bellwrap{position:relative}
+.bellpanel{position:absolute;right:0;top:calc(100% + 6px);width:min(380px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);z-index:15;max-height:70vh;overflow-y:auto}
+@media (max-width:560px){.bellpanel{position:fixed;left:16px;right:16px;top:72px;width:auto}}
+.notif{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;cursor:pointer;color:var(--fg)}
+.notif:last-child{border-bottom:0}
+.notif.unread{background:var(--accent-soft)}
+.notif.unread span:first-child{font-weight:600}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(5,15,10,.45);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--surface);z-index:21;box-shadow:var(--shadow);overflow-y:auto;padding:20px 20px 40px;border-left:1px solid var(--line)}
+.drawer h2{margin-bottom:4px}
+.drawer dl{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:6px 12px;margin:12px 0}
+.drawer dt{color:var(--muted);font-size:12px}
+.drawer dd{margin:0;overflow-wrap:anywhere}
+.drawer .stmt{white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow-y:auto;background:var(--surface-2);padding:10px;border-radius:6px}
+.drawer h3{margin-top:16px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:6px;z-index:30;font-weight:600;opacity:0;pointer-events:none;transition:opacity .15s;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+footer.foot{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+.csv{font:12px/1.5 var(--f-mono);min-height:140px;white-space:pre}
+.pre{white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+
+<div class="wrap" id="app"></div>
+<div id="drawer"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const SEED={"terms":[{"term_id":"term_fall_2026","name":"Fall 2026","application_deadline":"2026-08-31T23:59:00-05:00","faculty_ranking_deadline":"2026-09-18T17:00:00-05:00","status":"faculty_ranking"}],"faculty":[{"faculty_id":"fac_w_young","display_name":"W Young","department":"Computer Science"},{"faculty_id":"fac_c_dey","display_name":"C Dey","department":"Computer Science"},{"faculty_id":"fac_j_biswas","display_name":"J Biswas","department":"Computer Science"},{"faculty_id":"fac_v_ravishankar","display_name":"V Ravishankar","department":"Computer Science"},{"faculty_id":"fac_d_parikh","display_name":"D Parikh","department":"Computer Science"},{"faculty_id":"fac_a_beasley","display_name":"A Beasley","department":"Computer Science"}],"users":[{"user_id":"usr_admin_01","role":"admin","display_name":"Admin Rowan","email":"admin.rowan@example.test","faculty_id":""},{"user_id":"usr_admin_02","role":"admin","display_name":"Admin Sky","email":"admin.sky@example.test","faculty_id":""},{"user_id":"usr_fac_001","role":"faculty","display_name":"W Young","email":"faculty001@example.test","faculty_id":"fac_w_young"},{"user_id":"usr_fac_002","role":"faculty","display_name":"C Dey","email":"faculty002@example.test","faculty_id":"fac_c_dey"},{"user_id":"usr_fac_003","role":"faculty","display_name":"J Biswas","email":"faculty003@example.test","faculty_id":"fac_j_biswas"},{"user_id":"usr_fac_004","role":"faculty","display_name":"V Ravishankar","email":"faculty004@example.test","faculty_id":"fac_v_ravishankar"},{"user_id":"usr_fac_005","role":"faculty","display_name":"D Parikh","email":"faculty005@example.test","faculty_id":"fac_d_parikh"},{"user_id":"usr_fac_006","role":"faculty","display_name":"A Beasley","email":"faculty006@example.test","faculty_id":"fac_a_beasley"}],"courses":[{"course_id":"crs_f26_001","term_id":"term_fall_2026","catalog_number":"303E","title":"Elements of Computers and Programming","section_label":"001","faculty_id":"fac_w_young","ta_slots_required":1.0,"status":"open"},{"course_id":"crs_f26_002","term_id":"term_fall_2026","catalog_number":"303E","title":"Elements of Computers and Programming","section_label":"002","faculty_id":"fac_c_dey","ta_slots_required":1.0,"status":"open"},{"course_id":"crs_f26_003","term_id":"term_fall_2026","catalog_number":"304I","title":"Essentials of AI Life and Society","section_label":"WB1","faculty_id":"fac_j_biswas","ta_slots_required":1.0,"status":"open"},{"course_id":"crs_f26_004","term_id":"term_fall_2026","catalog_number":"311","title":"Discrete Math for Computer Science","section_label":"001","faculty_id":"fac_v_ravishankar","ta_slots_required":1.0,"status":"open"},{"course_id":"crs_f26_005","term_id":"term_fall_2026","catalog_number":"311H","title":"Discrete Math for Computer Science Honors","section_label":"H01","faculty_id":"fac_d_parikh","ta_slots_required":1.0,"status":"open"},{"course_id":"crs_f26_006","term_id":"term_fall_2026","catalog_number":"312","title":"Introduction to Programming","section_label":"001","faculty_id":"fac_a_beasley","ta_slots_required":1.0,"status":"open"}],"applicants":[{"applicant_id":"apl_0001","display_name":"Candidate Atlas","synthetic_person":true},{"applicant_id":"apl_0002","display_name":"Candidate Birch","synthetic_person":true},{"applicant_id":"apl_0003","display_name":"Candidate Cedar","synthetic_person":true},{"applicant_id":"apl_0004","display_name":"Candidate Delta","synthetic_person":true},{"applicant_id":"apl_0005","display_name":"Candidate Ember","synthetic_person":true},{"applicant_id":"apl_0006","display_name":"Candidate Finch","synthetic_person":true},{"applicant_id":"apl_0007","display_name":"Candidate Grove","synthetic_person":true},{"applicant_id":"apl_0008","display_name":"Candidate Harbor","synthetic_person":true},{"applicant_id":"apl_0009","display_name":"Candidate Indigo","synthetic_person":true},{"applicant_id":"apl_0010","display_name":"Candidate Juniper","synthetic_person":true},{"applicant_id":"apl_0011","display_name":"Candidate Kestrel","synthetic_person":true},{"applicant_id":"apl_0012","display_name":"Candidate Linden","synthetic_person":true}],"applications":[{"application_id":"app_f26_0001","applicant_id":"apl_0001","term_id":"term_fall_2026","degree_level":"Undergraduate","assistant_type":"UGCA","program":"Computer Science","expected_graduation_term":"Spring 2027","returning_ta":true,"prior_ta_terms":0,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"verified","availability_status":"limited","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Led weekly study groups and reviewed programming assignments.","application_status":"submitted","submitted_at":"2026-08-01T09:00:00-05:00"},{"application_id":"app_f26_0002","applicant_id":"apl_0002","term_id":"term_fall_2026","degree_level":"Masters","assistant_type":"TA","program":"Computational Science","expected_graduation_term":"Fall 2028","returning_ta":false,"prior_ta_terms":1,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"verified","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Mentored peers in introductory programming and debugging.","application_status":"submitted","submitted_at":"2026-08-02T10:00:00-05:00"},{"application_id":"app_f26_0003","applicant_id":"apl_0003","term_id":"term_fall_2026","degree_level":"PhD","assistant_type":"TA","program":"Electrical and Computer Engineering","expected_graduation_term":"Spring 2029","returning_ta":false,"prior_ta_terms":2,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"not_required","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Supported office hours and wrote practice problems for a computing course.","application_status":"submitted","submitted_at":"2026-08-03T11:00:00-05:00"},{"application_id":"app_f26_0004","applicant_id":"apl_0004","term_id":"term_fall_2026","degree_level":"Undergraduate","assistant_type":"UGCA","program":"Information Studies","expected_graduation_term":"Fall 2027","returning_ta":false,"prior_ta_terms":3,"max_assignment_fte":1.0,"employment_eligibility_status":"pending_review","spoken_english_assessment":"pending","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"No formal teaching role yet; interested in gaining classroom experience.","application_status":"submitted","submitted_at":"2026-08-04T12:00:00-05:00"},{"application_id":"app_f26_0005","applicant_id":"apl_0005","term_id":"term_fall_2026","degree_level":"Masters","assistant_type":"TA","program":"Computer Science","expected_graduation_term":"Spring 2028","returning_ta":true,"prior_ta_terms":0,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"verified","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Led weekly study groups and reviewed programming assignments.","application_status":"submitted","submitted_at":"2026-08-05T13:00:00-05:00"},{"application_id":"app_f26_0006","applicant_id":"apl_0006","term_id":"term_fall_2026","degree_level":"PhD","assistant_type":"TA","program":"Computational Science","expected_graduation_term":"Fall 2029","returning_ta":false,"prior_ta_terms":1,"max_assignment_fte":0.5,"employment_eligibility_status":"eligible","spoken_english_assessment":"verified","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Mentored peers in introductory programming and debugging.","application_status":"submitted","submitted_at":"2026-08-06T14:00:00-05:00"},{"application_id":"app_f26_0007","applicant_id":"apl_0007","term_id":"term_fall_2026","degree_level":"Undergraduate","assistant_type":"UGCA","program":"Electrical and Computer Engineering","expected_graduation_term":"Spring 2027","returning_ta":false,"prior_ta_terms":2,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"not_required","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Supported office hours and wrote practice problems for a computing course.","application_status":"submitted","submitted_at":"2026-08-07T15:00:00-05:00"},{"application_id":"app_f26_0008","applicant_id":"apl_0008","term_id":"term_fall_2026","degree_level":"Masters","assistant_type":"TA","program":"Information Studies","expected_graduation_term":"Fall 2028","returning_ta":false,"prior_ta_terms":3,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"pending","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"No formal teaching role yet; interested in gaining classroom experience.","application_status":"submitted","submitted_at":"2026-08-08T16:00:00-05:00"},{"application_id":"app_f26_0009","applicant_id":"apl_0009","term_id":"term_fall_2026","degree_level":"PhD","assistant_type":"TA","program":"Computer Science","expected_graduation_term":"Spring 2029","returning_ta":true,"prior_ta_terms":0,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"verified","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Led weekly study groups and reviewed programming assignments.","application_status":"submitted","submitted_at":"2026-08-09T09:00:00-05:00"},{"application_id":"app_f26_0010","applicant_id":"apl_0010","term_id":"term_fall_2026","degree_level":"Undergraduate","assistant_type":"UGCA","program":"Computational Science","expected_graduation_term":"Fall 2027","returning_ta":false,"prior_ta_terms":1,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"verified","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Mentored peers in introductory programming and debugging.","application_status":"submitted","submitted_at":"2026-08-10T10:00:00-05:00"},{"application_id":"app_f26_0011","applicant_id":"apl_0011","term_id":"term_fall_2026","degree_level":"Masters","assistant_type":"TA","program":"Electrical and Computer Engineering","expected_graduation_term":"Spring 2028","returning_ta":false,"prior_ta_terms":2,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"not_required","availability_status":"available","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"Supported office hours and wrote practice problems for a computing course.","application_status":"submitted","submitted_at":"2026-08-11T11:00:00-05:00"},{"application_id":"app_f26_0012","applicant_id":"apl_0012","term_id":"term_fall_2026","degree_level":"PhD","assistant_type":"TA","program":"Information Studies","expected_graduation_term":"Fall 2029","returning_ta":false,"prior_ta_terms":3,"max_assignment_fte":1.0,"employment_eligibility_status":"eligible","spoken_english_assessment":"pending","availability_status":"limited","teaching_statement":"Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.","experience_summary":"No formal teaching role yet; interested in gaining classroom experience.","application_status":"draft","submitted_at":""}],"applicant_skills":[{"application_id":"app_f26_0001","skill_name":"Python","proficiency":"coursework","years_experience":0.5},{"application_id":"app_f26_0001","skill_name":"C","proficiency":"working","years_experience":1.5},{"application_id":"app_f26_0002","skill_name":"Java","proficiency":"working","years_experience":1.5},{"application_id":"app_f26_0002","skill_name":"JavaScript","proficiency":"advanced","years_experience":2.5},{"application_id":"app_f26_0002","skill_name":"Swift","proficiency":"coursework","years_experience":3.5},{"application_id":"app_f26_0003","skill_name":"C++","proficiency":"advanced","years_experience":2.5},{"application_id":"app_f26_0003","skill_name":"SQL","proficiency":"coursework","years_experience":3.5},{"application_id":"app_f26_0003","skill_name":"React","proficiency":"working","years_experience":4.5},{"application_id":"app_f26_0003","skill_name":"Java","proficiency":"advanced","years_experience":5.5},{"application_id":"app_f26_0004","skill_name":"C","proficiency":"coursework","years_experience":3.5},{"application_id":"app_f26_0004","skill_name":"Unix","proficiency":"working","years_experience":4.5},{"application_id":"app_f26_0005","skill_name":"JavaScript","proficiency":"working","years_experience":4.5},{"application_id":"app_f26_0005","skill_name":"Swift","proficiency":"advanced","years_experience":5.5},{"application_id":"app_f26_0005","skill_name":"Python","proficiency":"coursework","years_experience":0.5},{"application_id":"app_f26_0006","skill_name":"SQL","proficiency":"advanced","years_experience":5.5},{"application_id":"app_f26_0006","skill_name":"React","proficiency":"coursework","years_experience":0.5},{"application_id":"app_f26_0006","skill_name":"Java","proficiency":"working","years_experience":1.5},{"application_id":"app_f26_0006","skill_name":"JavaScript","proficiency":"advanced","years_experience":2.5},{"application_id":"app_f26_0007","skill_name":"Unix","proficiency":"coursework","years_experience":0.5},{"application_id":"app_f26_0007","skill_name":"Assembly","proficiency":"working","years_experience":1.5},{"application_id":"app_f26_0008","skill_name":"Swift","proficiency":"working","years_experience":1.5},{"application_id":"app_f26_0008","skill_name":"Python","proficiency":"advanced","years_experience":2.5},{"application_id":"app_f26_0008","skill_name":"C","proficiency":"coursework","years_experience":3.5},{"application_id":"app_f26_0009","skill_name":"React","proficiency":"advanced","years_experience":2.5},{"application_id":"app_f26_0009","skill_name":"Java","proficiency":"coursework","years_experience":3.5},{"application_id":"app_f26_0009","skill_name":"JavaScript","proficiency":"working","years_experience":4.5},{"application_id":"app_f26_0009","skill_name":"Swift","proficiency":"advanced","years_experience":5.5},{"application_id":"app_f26_0010","skill_name":"Assembly","proficiency":"coursework","years_experience":3.5},{"application_id":"app_f26_0010","skill_name":"C++","proficiency":"working","years_experience":4.5},{"application_id":"app_f26_0011","skill_name":"Python","proficiency":"working","years_experience":4.5},{"application_id":"app_f26_0011","skill_name":"C","proficiency":"advanced","years_experience":5.5},{"application_id":"app_f26_0011","skill_name":"Unix","proficiency":"coursework","years_experience":0.5},{"application_id":"app_f26_0012","skill_name":"Java","proficiency":"advanced","years_experience":5.5},{"application_id":"app_f26_0012","skill_name":"JavaScript","proficiency":"coursework","years_experience":0.5},{"application_id":"app_f26_0012","skill_name":"Swift","proficiency":"working","years_experience":1.5},{"application_id":"app_f26_0012","skill_name":"Python","proficiency":"advanced","years_experience":2.5}],"applicant_coursework":[{"application_id":"app_f26_0001","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A"},{"application_id":"app_f26_0001","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0002","catalog_number":"304I","course_title":"Essentials of AI Life and Society","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0002","catalog_number":"311","course_title":"Discrete Math for Computer Science","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0003","catalog_number":"311H","course_title":"Discrete Math for Computer Science Honors","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0003","catalog_number":"312","course_title":"Introduction to Programming","completion_status":"completed","grade_band":"A"},{"application_id":"app_f26_0004","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A"},{"application_id":"app_f26_0004","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0005","catalog_number":"304I","course_title":"Essentials of AI Life and Society","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0005","catalog_number":"311","course_title":"Discrete Math for Computer Science","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0006","catalog_number":"311H","course_title":"Discrete Math for Computer Science Honors","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0006","catalog_number":"312","course_title":"Introduction to Programming","completion_status":"completed","grade_band":"A"},{"application_id":"app_f26_0007","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A"},{"application_id":"app_f26_0007","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0008","catalog_number":"304I","course_title":"Essentials of AI Life and Society","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0008","catalog_number":"311","course_title":"Discrete Math for Computer Science","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0009","catalog_number":"311H","course_title":"Discrete Math for Computer Science Honors","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0009","catalog_number":"312","course_title":"Introduction to Programming","completion_status":"completed","grade_band":"A"},{"application_id":"app_f26_0010","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A"},{"application_id":"app_f26_0010","catalog_number":"303E","course_title":"Elements of Computers and Programming","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0011","catalog_number":"304I","course_title":"Essentials of AI Life and Society","completion_status":"completed","grade_band":"A-"},{"application_id":"app_f26_0011","catalog_number":"311","course_title":"Discrete Math for Computer Science","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0012","catalog_number":"311H","course_title":"Discrete Math for Computer Science Honors","completion_status":"completed","grade_band":"B+"},{"application_id":"app_f26_0012","catalog_number":"312","course_title":"Introduction to Programming","completion_status":"completed","grade_band":"A"}],"teaching_history":[{"application_id":"app_f26_0001","catalog_number":"303E","course_title":"Elements of Computers and Programming","term":"Fall 2024","role":"Course Assistant","allocation_fte":0.5},{"application_id":"app_f26_0005","catalog_number":"311H","course_title":"Discrete Math for Computer Science Honors","term":"Fall 2024","role":"TA","allocation_fte":1.0},{"application_id":"app_f26_0009","catalog_number":"304I","course_title":"Essentials of AI Life and Society","term":"Fall 2024","role":"TA","allocation_fte":1.0}],"course_preferences":[{"preference_id":"pref_0001_1","application_id":"app_f26_0001","course_id":"crs_f26_001","preference_rank":1,"preparedness":"strong","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0001_2","application_id":"app_f26_0001","course_id":"crs_f26_002","preference_rank":2,"preparedness":"moderate","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0002_1","application_id":"app_f26_0002","course_id":"crs_f26_001","preference_rank":1,"preparedness":"moderate","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0002_2","application_id":"app_f26_0002","course_id":"crs_f26_004","preference_rank":2,"preparedness":"learning","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0002_3","application_id":"app_f26_0002","course_id":"crs_f26_002","preference_rank":3,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0003_1","application_id":"app_f26_0003","course_id":"crs_f26_001","preference_rank":1,"preparedness":"learning","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0003_2","application_id":"app_f26_0003","course_id":"crs_f26_004","preference_rank":2,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0003_3","application_id":"app_f26_0003","course_id":"crs_f26_002","preference_rank":3,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0003_4","application_id":"app_f26_0003","course_id":"crs_f26_005","preference_rank":4,"preparedness":"moderate","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0004_1","application_id":"app_f26_0004","course_id":"crs_f26_002","preference_rank":1,"preparedness":"strong","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0004_2","application_id":"app_f26_0004","course_id":"crs_f26_005","preference_rank":2,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0005_1","application_id":"app_f26_0005","course_id":"crs_f26_002","preference_rank":1,"preparedness":"strong","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0005_2","application_id":"app_f26_0005","course_id":"crs_f26_005","preference_rank":2,"preparedness":"moderate","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0005_3","application_id":"app_f26_0005","course_id":"crs_f26_003","preference_rank":3,"preparedness":"learning","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0006_1","application_id":"app_f26_0006","course_id":"crs_f26_002","preference_rank":1,"preparedness":"moderate","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0006_2","application_id":"app_f26_0006","course_id":"crs_f26_005","preference_rank":2,"preparedness":"learning","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0006_3","application_id":"app_f26_0006","course_id":"crs_f26_003","preference_rank":3,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0006_4","application_id":"app_f26_0006","course_id":"crs_f26_001","preference_rank":4,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0007_1","application_id":"app_f26_0007","course_id":"crs_f26_003","preference_rank":1,"preparedness":"learning","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0007_2","application_id":"app_f26_0007","course_id":"crs_f26_001","preference_rank":2,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0008_1","application_id":"app_f26_0008","course_id":"crs_f26_003","preference_rank":1,"preparedness":"strong","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0008_2","application_id":"app_f26_0008","course_id":"crs_f26_001","preference_rank":2,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0008_3","application_id":"app_f26_0008","course_id":"crs_f26_004","preference_rank":3,"preparedness":"moderate","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0009_1","application_id":"app_f26_0009","course_id":"crs_f26_003","preference_rank":1,"preparedness":"strong","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0009_2","application_id":"app_f26_0009","course_id":"crs_f26_001","preference_rank":2,"preparedness":"moderate","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0009_3","application_id":"app_f26_0009","course_id":"crs_f26_004","preference_rank":3,"preparedness":"learning","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0009_4","application_id":"app_f26_0009","course_id":"crs_f26_002","preference_rank":4,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0010_1","application_id":"app_f26_0010","course_id":"crs_f26_004","preference_rank":1,"preparedness":"moderate","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0010_2","application_id":"app_f26_0010","course_id":"crs_f26_002","preference_rank":2,"preparedness":"learning","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0011_1","application_id":"app_f26_0011","course_id":"crs_f26_004","preference_rank":1,"preparedness":"learning","applicant_note":"Completed related coursework and can support labs, office hours, and grading."},{"preference_id":"pref_0011_2","application_id":"app_f26_0011","course_id":"crs_f26_002","preference_rank":2,"preparedness":"strong","applicant_note":"Interested and available for this assignment."},{"preference_id":"pref_0011_3","application_id":"app_f26_0011","course_id":"crs_f26_005","preference_rank":3,"preparedness":"strong","applicant_note":"Interested and available for this assignment."}],"course_requirements":[{"course_id":"crs_f26_001","experience_required":false,"spoken_english_requirement":"standard_assessment","required_skills":"Python","faculty_notes":"Strong communication and reliable office-hour coverage preferred."},{"course_id":"crs_f26_002","experience_required":true,"spoken_english_requirement":"none","required_skills":"Java","faculty_notes":"Prior completion of the course or equivalent experience preferred."},{"course_id":"crs_f26_003","experience_required":true,"spoken_english_requirement":"none","required_skills":"C++","faculty_notes":"Prior completion of the course or equivalent experience preferred."},{"course_id":"crs_f26_004","experience_required":false,"spoken_english_requirement":"none","required_skills":"SQL","faculty_notes":"Strong communication and reliable office-hour coverage preferred."},{"course_id":"crs_f26_005","experience_required":true,"spoken_english_requirement":"none","required_skills":"Python","faculty_notes":"Prior completion of the course or equivalent experience preferred."},{"course_id":"crs_f26_006","experience_required":true,"spoken_english_requirement":"standard_assessment","required_skills":"Java","faculty_notes":"Prior completion of the course or equivalent experience preferred."}],"ranking_workflow":[{"course_id":"crs_f26_001","ranking_status":"submitted","last_saved_at":"2026-09-10T14:30:00-05:00","submitted_at":"2026-09-12T16:00:00-05:00","admin_reopened":false},{"course_id":"crs_f26_002","ranking_status":"submitted","last_saved_at":"2026-09-11T14:30:00-05:00","submitted_at":"2026-09-13T16:00:00-05:00","admin_reopened":false},{"course_id":"crs_f26_003","ranking_status":"not_started","last_saved_at":"","submitted_at":"","admin_reopened":false},{"course_id":"crs_f26_004","ranking_status":"in_progress","last_saved_at":"2026-09-13T14:30:00-05:00","submitted_at":"","admin_reopened":false},{"course_id":"crs_f26_005","ranking_status":"submitted","last_saved_at":"2026-09-14T14:30:00-05:00","submitted_at":"2026-09-12T16:00:00-05:00","admin_reopened":false},{"course_id":"crs_f26_006","ranking_status":"not_started","last_saved_at":"","submitted_at":"","admin_reopened":false}],"faculty_rankings":[{"ranking_id":"rank_001_1","course_id":"crs_f26_001","application_id":"app_f26_0001","rank":1,"recommendation":"strong_yes","faculty_comment":"Strong course fit.","updated_at":"2026-09-10T14:01:00-05:00"},{"ranking_id":"rank_001_2","course_id":"crs_f26_001","application_id":"app_f26_0002","rank":2,"recommendation":"yes","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-10T14:02:00-05:00"},{"ranking_id":"rank_001_3","course_id":"crs_f26_001","application_id":"app_f26_0003","rank":3,"recommendation":"yes","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-10T14:03:00-05:00"},{"ranking_id":"rank_001_4","course_id":"crs_f26_001","application_id":"app_f26_0007","rank":4,"recommendation":"acceptable","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-10T14:04:00-05:00"},{"ranking_id":"rank_001_5","course_id":"crs_f26_001","application_id":"app_f26_0008","rank":5,"recommendation":"acceptable","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-10T14:05:00-05:00"},{"ranking_id":"rank_002_1","course_id":"crs_f26_002","application_id":"app_f26_0001","rank":1,"recommendation":"strong_yes","faculty_comment":"Strong course fit.","updated_at":"2026-09-11T14:01:00-05:00"},{"ranking_id":"rank_002_2","course_id":"crs_f26_002","application_id":"app_f26_0004","rank":2,"recommendation":"yes","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-11T14:02:00-05:00"},{"ranking_id":"rank_002_3","course_id":"crs_f26_002","application_id":"app_f26_0005","rank":3,"recommendation":"yes","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-11T14:03:00-05:00"},{"ranking_id":"rank_002_4","course_id":"crs_f26_002","application_id":"app_f26_0006","rank":4,"recommendation":"acceptable","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-11T14:04:00-05:00"},{"ranking_id":"rank_002_5","course_id":"crs_f26_002","application_id":"app_f26_0010","rank":5,"recommendation":"acceptable","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-11T14:05:00-05:00"},{"ranking_id":"rank_004_1","course_id":"crs_f26_004","application_id":"app_f26_0010","rank":1,"recommendation":"strong_yes","faculty_comment":"Strong course fit.","updated_at":"2026-09-13T14:01:00-05:00"},{"ranking_id":"rank_004_2","course_id":"crs_f26_004","application_id":"app_f26_0011","rank":2,"recommendation":"yes","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-13T14:02:00-05:00"},{"ranking_id":"rank_005_1","course_id":"crs_f26_005","application_id":"app_f26_0004","rank":1,"recommendation":"strong_yes","faculty_comment":"Strong course fit.","updated_at":"2026-09-14T14:01:00-05:00"},{"ranking_id":"rank_005_2","course_id":"crs_f26_005","application_id":"app_f26_0005","rank":2,"recommendation":"yes","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-14T14:02:00-05:00"},{"ranking_id":"rank_005_3","course_id":"crs_f26_005","application_id":"app_f26_0006","rank":3,"recommendation":"yes","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-14T14:03:00-05:00"},{"ranking_id":"rank_005_4","course_id":"crs_f26_005","application_id":"app_f26_0011","rank":4,"recommendation":"acceptable","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-14T14:04:00-05:00"},{"ranking_id":"rank_005_5","course_id":"crs_f26_005","application_id":"app_f26_0003","rank":5,"recommendation":"acceptable","faculty_comment":"Meets the core requirements.","updated_at":"2026-09-14T14:05:00-05:00"}],"assignment_drafts":[{"draft_id":"draft_f26_01","term_id":"term_fall_2026","name":"Fall 2026 working draft","status":"working","created_at":"2026-09-14T09:00:00-05:00","created_by_user_id":"usr_admin_01"}],"draft_assignments":[{"draft_assignment_id":"draft_01_001","draft_id":"draft_f26_01","course_id":"crs_f26_001","application_id":"app_f26_0001","allocation_fte":1.0,"admin_decision_status":"accepted","publication_status":"published","admin_note":""},{"draft_assignment_id":"draft_01_002","draft_id":"draft_f26_01","course_id":"crs_f26_002","application_id":"app_f26_0001","allocation_fte":1.0,"admin_decision_status":"requested","publication_status":"unpublished","admin_note":""},{"draft_assignment_id":"draft_01_004","draft_id":"draft_f26_01","course_id":"crs_f26_004","application_id":"app_f26_0010","allocation_fte":1.0,"admin_decision_status":"requested","publication_status":"unpublished","admin_note":""},{"draft_assignment_id":"draft_01_005","draft_id":"draft_f26_01","course_id":"crs_f26_005","application_id":"app_f26_0004","allocation_fte":1.0,"admin_decision_status":"accepted","publication_status":"published","admin_note":""}],"publication_batches":[{"publication_id":"pub_f26_v1","term_id":"term_fall_2026","version":1,"status":"published","published_at":"2026-09-15T17:00:00-05:00","published_by_user_id":"usr_admin_01"}],"published_assignments":[{"published_assignment_id":"pub_asn_001","publication_id":"pub_f26_v1","course_id":"crs_f26_001","application_id":"app_f26_0001","allocation_fte":1.0,"published_at":"2026-09-15T17:00:00-05:00","override_note":""},{"published_assignment_id":"pub_asn_002","publication_id":"pub_f26_v1","course_id":"crs_f26_005","application_id":"app_f26_0004","allocation_fte":1.0,"published_at":"2026-09-15T17:00:00-05:00","override_note":"Admin acknowledged pending eligibility review before publication."}],"faculty_concerns":[{"concern_id":"concern_001","publication_id":"pub_f26_v1","published_assignment_id":"pub_asn_001","course_id":"crs_f26_001","faculty_id":"fac_w_young","concern_type":"course_fit","details":"Please review whether another requested candidate has stronger preparation for this section.","status":"under_review","created_at":"2026-09-16T09:15:00-05:00","reviewed_by_user_id":"usr_admin_02","resolved_at":"","resolved_by_user_id":"","resolution_note":""},{"concern_id":"concern_002","publication_id":"pub_f26_v1","published_assignment_id":"pub_asn_002","course_id":"crs_f26_005","faculty_id":"fac_d_parikh","concern_type":"availability","details":"The published assignment may not cover the required office-hour window.","status":"resolved_adjustment","created_at":"2026-09-15T18:10:00-05:00","reviewed_by_user_id":"usr_admin_01","resolved_at":"2026-09-16T10:30:00-05:00","resolved_by_user_id":"usr_admin_01","resolution_note":"Admin opened a revision draft and adjusted the proposed coverage plan."}]};
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const f=n=>{const r=Math.round(n*100)/100;return Number.isInteger(r)?r.toFixed(1):String(r)};
+const sum=a=>Math.round(a.reduce((x,y)=>x+y,0)*100)/100;
+const group=(arr,k)=>arr.reduce((m,x)=>{(m[x[k]]=m[x[k]]||[]).push(x);return m},{});
+const byId=(arr,k)=>Object.fromEntries(arr.map(x=>[x[k],x]));
+const pad=n=>String(Math.floor(Math.abs(n))).padStart(2,'0');
+const isoOf=d=>{const o=-d.getTimezoneOffset();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())+(o>=0?'+':'-')+pad(o/60)+':'+pad(o%60)};
+const nowIso=()=>isoOf(new Date());
+const dur=ms=>{const h=ms/36e5;if(h<1)return '<1h';const r=Math.round(h);return r<24?r+'h':Math.floor(r/24)+'d '+(r%24)+'h'};
+const day=iso=>iso?new Date(iso.length===10?iso+'T12:00:00':iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+const when=iso=>iso?new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';
+
+const TERM=SEED.terms[0];
+const COURSE=byId(SEED.courses,'course_id'), FAC=byId(SEED.faculty,'faculty_id'), APP=byId(SEED.applications,'application_id'), APL=byId(SEED.applicants,'applicant_id'), REQ=byId(SEED.course_requirements,'course_id');
+const SKILLS=group(SEED.applicant_skills,'application_id'), CW=group(SEED.applicant_coursework,'application_id'), TH=group(SEED.teaching_history,'application_id');
+const PREFS_APP=group(SEED.course_preferences,'application_id');
+const ADMIN='Admin Rowan';
+const TIER={PhD:'PhD',Masters:"Master's",Undergraduate:'Undergraduate'};
+const TIER_ORDER={PhD:1,Undergraduate:2,Masters:3};
+const nm=a=>APL[APP[a].applicant_id].display_name;
+const short=a=>nm(a).replace('Candidate ','');
+const cname=c=>COURSE[c].catalog_number+' · '+COURSE[c].section_label;
+const prof=c=>FAC[COURSE[c].faculty_id].display_name;
+const prefOf=(a,c)=>(PREFS_APP[a]||[]).find(p=>p.course_id===c);
+const defaultRole=a=>APP[a].assistant_type==='UGCA'?'UGCA':'TA';
+const isGrad=a=>APP[a].degree_level!=='Undergraduate';
+const facElig=a=>({eligible:'cleared',pending_review:'pending',ineligible:'unavailable'}[APP[a].employment_eligibility_status]);
+const key=r=>r.course+'|'+r.app;
+
+/* ---------- state ---------- */
+let S=null, FID=null, toastT=null;
+
+function initState(){
+  const s={user:{type:'admin'},tab:'dashboard',selCourse:'crs_f26_002',facCourse:null,drawer:null,drawerNew:false,
+    f:{dash:{prof:'',status:'',staffed:''},fac:{tier:'',ret:'',avail:'',elig:''},app:{tier:'',type:''}},
+    facErrors:{},rank:{},overrides:{},concernNotes:{},emailFor:null,confirmClone:null,selPub:null,
+    gra:new Set(),graText:'Candidate Cedar\nCandidate Zephyr',graResult:null,replyBy:'2026-12-04'};
+  SEED.courses.forEach(c=>{
+    const wf=SEED.ranking_workflow.find(w=>w.course_id===c.course_id);
+    s.rank[c.course_id]={status:wf.ranking_status,savedAt:wf.last_saved_at,submittedAt:wf.submitted_at,entries:{}};
+  });
+  SEED.faculty_rankings.forEach(r=>{s.rank[r.course_id].entries[r.application_id]={rank:r.rank,rec:r.recommendation,comment:r.faculty_comment}});
+  s.draft={id:SEED.assignment_drafts[0].draft_id,name:SEED.assignment_drafts[0].name,rows:SEED.draft_assignments.map(d=>({id:d.draft_assignment_id,course:d.course_id,app:d.application_id,fte:d.allocation_fte,role:defaultRole(d.application_id),decision:d.admin_decision_status,published:d.publication_status==='published',note:d.admin_note}))};
+  s.newRow=100;
+  s.overrides['pending:draft_01_005']='Admin acknowledged pending eligibility review before publication.';
+  s.pubs=SEED.publication_batches.map(p=>({id:p.publication_id,version:p.version,at:p.published_at,by:ADMIN,
+    rows:SEED.published_assignments.filter(r=>r.publication_id===p.publication_id).map(r=>({id:r.published_assignment_id,course:r.course_id,app:r.application_id,fte:r.allocation_fte,role:defaultRole(r.application_id),note:r.override_note})),
+    gaps:{},notifiedAt:'2026-09-17T09:00:00-05:00',replyBy:'2026-09-24',responses:{}}));
+  // Synthetic extension (not in the original dataset): student replies logged for v1.
+  s.pubs[0].responses['crs_f26_001|app_f26_0001']={status:'confirmed',at:'2026-09-19'};
+  s.pubs[0].responses['crs_f26_005|app_f26_0004']={status:'declined',at:'2026-09-22'};
+  s.concerns=SEED.faculty_concerns.map(c=>({...c,adjust:c.status==='resolved_adjustment'}));
+  s.audit=[];
+  const A=(ts,actor,action,entity,id,summary)=>s.audit.push({ts,actor,action,entity,id,summary});
+  SEED.ranking_workflow.forEach(w=>{
+    const fac=prof(w.course_id);
+    if(w.submitted_at)A(w.submitted_at,fac,'staffing request submitted','ranking',w.course_id,cname(w.course_id)+' ranking submitted');
+    else if(w.last_saved_at)A(w.last_saved_at,fac,'ranking draft saved','ranking',w.course_id,cname(w.course_id)+' draft saved');
+  });
+  s.pubs.forEach(p=>A(p.at,p.by,'publication created','publication',p.id,'Version '+p.version+' published with '+p.rows.length+' assignments'));
+  s.concerns.forEach(c=>{
+    A(c.created_at,FAC[c.faculty_id].display_name,'faculty concern raised','concern',c.concern_id,cname(c.course_id)+': '+c.concern_type);
+    if(c.resolved_at)A(c.resolved_at,ADMIN,'resolution recorded','concern',c.concern_id,c.status.replace(/_/g,' '));
+  });
+  s.nid=0;s.notifs=[];s.win={};s.bell=false;s.mailView=null;s.winPick='';
+  s.winDue=isoOf(new Date(Date.now()+7*864e5)).slice(0,10);
+  SEED.courses.forEach(c=>{
+    const fid=c.faculty_id,rk=s.rank[c.course_id];
+    if(rk.status==='not_started'){s.win[fid]={state:'not_open',openedAt:'',dueAt:'',closedAt:'',emails:[]};return}
+    // Synthetic history, not in the dataset: started courses had their window opened Sep 8. The in-progress one is due in 3 days so it reads as live.
+    const due=rk.status==='in_progress'?isoOf(new Date(Date.now()+3*864e5)).slice(0,10):'2026-09-18',at='2026-09-08T09:00:00-05:00',m=windowMail(fid,due,'');
+    s.win[fid]={state:'open',openedAt:at,dueAt:due,closedAt:'',emails:[{at,kind:'Window open',to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body,status:'Sent earlier'}]};
+    A(at,ADMIN,'ranking window opened','window',fid,FAC[fid].display_name+' until '+day(due));
+    if(rk.status==='submitted')s.notifs.push({id:'n'+(s.nid++),to:'admin',at:rk.submittedAt,text:FAC[fid].display_name+' submitted the '+cname(c.course_id)+' ranking.',go:{tab:'windows'},read:false});
+  });
+  S=s;
+  applyGra(S.graText,true);
+  return s;
+}
+
+const actor=()=>S.user.type==='admin'?ADMIN:FAC[S.user.fid].display_name;
+function log(action,entity,id,summary){S.audit.unshift({ts:nowIso(),actor:actor(),action,entity,id,summary})}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
+
+/* ---------- faculty windows, notifications, tracker ---------- */
+const me=()=>S.user.type==='admin'?'admin':'fac:'+S.user.fid;
+function notify(to,text,go){S.notifs.push({id:'n'+(S.nid++),to,at:nowIso(),text,go,read:false})}
+const winOpen=fid=>S.win[fid].state==='open';
+const canEdit=cid=>winOpen(COURSE[cid].faculty_id)&&S.rank[cid].status!=='submitted';
+const facEmailAddr=fid=>(SEED.users.find(u=>u.faculty_id===fid)||{}).email||'';
+function windowMail(fid,due,kind){
+  const cs=SEED.courses.filter(c=>c.faculty_id===fid),lab=cs.map(c=>c.catalog_number+' ('+c.section_label+')').join(' and ');
+  const n=sum(cs.map(c=>candidates(c.course_id).length)),rem=kind==='Reminder';
+  const subject=(rem?'Reminder: ':kind==='Ranking reopened'?'Ranking reopened: ':'Ranking window open: ')+lab+', due '+day(due);
+  const body='Subject: '+subject+'\n\nHello '+FAC[fid].display_name+',\n\n'+(rem?'Your TA ranking for '+lab+' is still waiting.':'The TA ranking window for '+lab+' is open.')+' It closes '+day(due)+'. '+n+(n===1?' student chose':' students chose')+' your course. Please rank the ones you want, mark backups, and submit your staffing request.\n\nOpen TA Studio: [link added when the tool is connected]\n\nThank you,\nCS Graduate Office';
+  return{subject,body};
+}
+function queueMail(fid,kind,due){
+  const w=S.win[fid],m=windowMail(fid,due,kind);
+  w.emails.push({at:nowIso(),kind:kind||'Window open',to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body,status:'Queued, not sent (demo)'});
+}
+function openWindow(fid,due,kind){
+  const w=S.win[fid];
+  w.state='open';w.openedAt=nowIso();w.closedAt='';w.dueAt=due;
+  queueMail(fid,kind,due);
+  notify('fac:'+fid,(kind==='Ranking reopened'?'The office reopened your ranking. ':'Your ranking window is open. ')+'Due '+day(due)+'.',{facTab:'courses'});
+  log(kind==='Ranking reopened'?'ranking window reopened':'ranking window opened','window',fid,FAC[fid].display_name+' until '+day(due));
+}
+function trackRows(){
+  const now=Date.now();
+  return SEED.faculty.map(fa=>{
+    const fid=fa.faculty_id,w=S.win[fid],cs=SEED.courses.filter(c=>c.faculty_id===fid).map(c=>c.course_id);
+    const withApps=cs.filter(c=>candidates(c).length),noApps=!withApps.length;
+    const done=withApps.length>0&&withApps.every(c=>S.rank[c].status==='submitted');
+    const respAt=done?withApps.map(c=>S.rank[c].submittedAt).sort().pop():'';
+    const saved=cs.map(c=>S.rank[c].savedAt).filter(Boolean).sort().pop()||'';
+    const dueMs=w.dueAt?Date.parse(w.dueAt.length===10?w.dueAt+'T23:59:00':w.dueAt):0;
+    let st;
+    if(noApps)st='No applicants';
+    else if(w.state==='not_open')st='Not opened';
+    else if(done)st='Responded';
+    else if(w.state==='closed')st='Closed, no response';
+    else st=dueMs&&dueMs<now?'Overdue':'Waiting';
+    return{fid,name:fa.display_name,cl:cs.map(cname).join(', '),w,ranked:sum(cs.map(c=>rankedCount(c))),apps:sum(cs.map(c=>candidates(c).length)),st,respAt,saved,hrs:respAt&&w.openedAt?(Date.parse(respAt)-Date.parse(w.openedAt))/36e5:null,reminders:w.emails.filter(e=>e.kind==='Reminder').length};
+  });
+}
+function trackCsv(){
+  const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const head=['professor','courses','window','opened_at','due','emails_queued','reminders','last_saved_at','responded_at','hours_to_respond','status'];
+  return [head.join(',')].concat(trackRows().map(r=>[r.name,r.cl,r.w.state,r.w.openedAt,r.w.dueAt,r.w.emails.length,r.reminders,r.saved,r.respAt,r.hrs==null?'':Math.round(r.hrs*10)/10,r.st].map(q).join(','))).join('\n');
+}
+
+/* ---------- domain ---------- */
+const live=()=>S.draft.rows.filter(r=>r.decision!=='declined'&&r.fte>0);
+const courseAlloc=c=>sum(live().filter(r=>r.course===c).map(r=>r.fte));
+const courseConf=c=>sum(live().filter(r=>r.course===c&&r.decision==='accepted').map(r=>r.fte));
+const appAlloc=a=>sum(live().filter(r=>r.app===a).map(r=>r.fte));
+const latestPub=()=>S.pubs.length?S.pubs.reduce((m,p)=>p.version>m.version?p:m):null;
+const rankedCount=c=>Object.values(S.rank[c].entries).filter(e=>e.rank!=null).length;
+
+function candidates(cid){
+  return SEED.course_preferences.filter(p=>p.course_id===cid&&APP[p.application_id].application_status==='submitted')
+    .map(p=>({app:p.application_id,pref:p}))
+    .sort((a,b)=>a.pref.preference_rank-b.pref.preference_rank||nm(a.app).localeCompare(nm(b.app)));
+}
+
+function applyGra(text,silent){
+  const names=text.split(/\n/).map(x=>x.trim()).filter(Boolean);
+  const matched=[],unmatched=[];
+  names.forEach(n=>{
+    const k=n.toLowerCase().replace(/^candidate\s+/,'');
+    const hit=SEED.applications.find(a=>short(a.application_id).toLowerCase()===k);
+    if(hit)matched.push(hit.application_id);else unmatched.push(n);
+  });
+  S.gra=new Set(matched);S.graText=text;S.graResult={matched,unmatched,at:nowIso()};
+  if(!silent)log('GRA list applied','applicants','gra_list',matched.length+' matched, '+unmatched.length+' not in this term\'s pool');
+}
+
+function computeIssues(){
+  const out=[],rows=live(),byApp=group(rows,'app');
+  Object.keys(byApp).forEach(a=>{
+    const rs=byApp[a],tot=sum(rs.map(r=>r.fte)),mx=APP[a].max_assignment_fte,cs=[...new Set(rs.map(r=>r.course))];
+    if(tot>mx)out.push({sev:'block',key:'over:'+a,code:'Over capacity',courses:cs,app:a,msg:nm(a)+' is allocated '+f(tot)+' FTE across '+cs.map(cname).join(' and ')+'. The maximum is '+f(mx)+' FTE.'});
+    if(S.gra.has(a))out.push({sev:'block',key:'gra:'+a,code:'On GRA list',courses:cs,app:a,msg:nm(a)+' is on the grant-admin GRA list and cannot hold a TA position.'});
+    if(APP[a].employment_eligibility_status==='ineligible')out.push({sev:'block',key:'inel:'+a,code:'Ineligible',courses:cs,app:a,msg:nm(a)+' is not eligible for employment.'});
+  });
+  rows.forEach((r,i)=>{
+    if(!prefOf(r.app,r.course))out.push({sev:'block',key:'nosel:'+r.id,code:'Not selected',courses:[r.course],app:r.app,msg:nm(r.app)+' did not select '+cname(r.course)+'.'});
+    if(rows.findIndex(x=>x.course===r.course&&x.app===r.app)!==i)out.push({sev:'block',key:'dup:'+r.id,code:'Duplicate',courses:[r.course],app:r.app,msg:nm(r.app)+' appears twice in '+cname(r.course)+'.'});
+    const acc=r.decision==='accepted';
+    if(APP[r.app].employment_eligibility_status==='pending_review')out.push({sev:'warn',key:'pending:'+r.id,code:'Eligibility pending',courses:[r.course],app:r.app,gate:acc,msg:nm(r.app)+' still has eligibility pending review ('+cname(r.course)+').'});
+    const rk=S.rank[r.course],any=rankedCount(r.course)>0;
+    if(rk.status==='submitted'&&any&&(rk.entries[r.app]||{}).rank==null)out.push({sev:'warn',key:'unranked:'+r.id,code:'Not ranked',courses:[r.course],app:r.app,gate:acc,msg:prof(r.course)+' did not rank '+nm(r.app)+' for '+cname(r.course)+'.'});
+  });
+  SEED.courses.forEach(c=>{
+    const cid=c.course_id,rs=rows.filter(r=>r.course===cid),acc=rs.filter(r=>r.decision==='accepted');
+    if(sum(rs.map(r=>r.fte))>c.ta_slots_required)out.push({sev:'block',key:'demand:'+cid,code:'Over demand',courses:[cid],msg:cname(cid)+' is allocated '+f(sum(rs.map(r=>r.fte)))+' FTE but needs '+f(c.ta_slots_required)+'.'});
+    if(rs.length&&S.rank[cid].status!=='submitted')out.push({sev:'warn',key:'noranking:'+cid,code:'No submitted ranking',courses:[cid],gate:acc.length>0,msg:cname(cid)+' has assignments but '+prof(cid)+' has not submitted a ranking.'});
+    const filled=sum(acc.map(r=>r.fte));
+    if(filled<c.ta_slots_required)out.push({sev:'warn',key:'unfilled:'+cid,code:'Position open',courses:[cid],gate:true,msg:candidates(cid).length?cname(cid)+' has '+f(filled)+' of '+f(c.ta_slots_required)+' FTE accepted.':cname(cid)+' has no applicants, so '+f(c.ta_slots_required)+' FTE stays open.'});
+  });
+  return out;
+}
+const snapSig=rows=>rows.map(r=>r.course+'|'+r.app+'|'+r.fte+'|'+r.role).sort().join(';');
+function gate(){
+  const iss=computeIssues(),blocks=iss.filter(i=>i.sev==='block'),warns=iss.filter(i=>i.sev==='warn');
+  const missing=warns.filter(w=>w.gate&&!(S.overrides[w.key]||'').trim());
+  const accepted=live().filter(r=>r.decision==='accepted'),last=latestPub();
+  const changed=!last||snapSig(accepted)!==snapSig(last.rows);
+  return{iss,blocks,warns,missing,accepted,changed,ok:blocks.length===0&&missing.length===0&&accepted.length>0&&changed};
+}
+function needsHome(){
+  return SEED.applications.filter(a=>a.application_status==='submitted'&&(PREFS_APP[a.application_id]||[]).length&&!S.gra.has(a.application_id)&&appAlloc(a.application_id)===0)
+    .map(a=>a.application_id).sort((x,y)=>TIER_ORDER[APP[x].degree_level]-TIER_ORDER[APP[y].degree_level]||nm(x).localeCompare(nm(y)));
+}
+function backupsFor(cid,excludeApp,need){
+  const rows=Object.entries(S.rank[cid].entries).filter(e=>e[1].rank!=null).sort((x,y)=>x[1].rank-y[1].rank);
+  return rows.filter(e=>e[0]!==excludeApp).map(([a,e])=>{
+    let why='';
+    if(S.draft.rows.some(r=>r.course===cid&&r.app===a&&r.decision!=='declined'&&r.fte>0))why='Already assigned here';
+    else if(S.gra.has(a))why='On GRA list';
+    else if(APP[a].employment_eligibility_status==='ineligible')why='Not eligible';
+    else if(appAlloc(a)+need>APP[a].max_assignment_fte)why='No capacity ('+f(appAlloc(a))+' of '+f(APP[a].max_assignment_fte)+' FTE used)';
+    return{app:a,rank:e.rank,rec:e.rec,why};
+  });
+}
+function respOf(pub,r){return pub.responses[key(r)]||{status:'not_notified',at:''}}
+function validateRanking(cid){
+  const rk=S.rank[cid],msgs=[],rs=Object.entries(rk.entries).filter(e=>e[1].rank!=null);
+  if(candidates(cid).length&&!rs.length)msgs.push('Rank at least one candidate before you submit.');
+  const byR=group(rs.map(([a,e])=>({a,r:e.rank})),'r');
+  Object.keys(byR).forEach(r=>{if(byR[r].length>1)msgs.push('Rank '+r+' is used for '+byR[r].map(x=>short(x.a)).join(' and ')+'. Give each candidate a different rank.')});
+  const mx=Math.max(0,...rs.map(e=>e[1].rank)),miss=[];
+  for(let i=1;i<=mx;i++)if(!byR[i])miss.push(i);
+  if(miss.length)msgs.push('Rank '+miss.join(', ')+(miss.length>1?' are':' is')+' skipped. Ranks must run from 1 to '+mx+' without gaps.');
+  return msgs;
+}
+function compact(cid){
+  const rk=S.rank[cid];
+  Object.entries(rk.entries).filter(e=>e[1].rank!=null).sort((x,y)=>x[1].rank-y[1].rank||nm(x[0]).localeCompare(nm(y[0]))).forEach(([a,e],i)=>{e.rank=i+1});
+}
+function touch(cid){const rk=S.rank[cid];rk.savedAt=nowIso();if(rk.status==='not_started')rk.status='in_progress'}
+function csvFor(pub){
+  const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const head=['term','publication_version','course','section','course_title','instructor','assignee_alias','appointment_type','degree_tier','fte','student_response'];
+  return [head.join(',')].concat(pub.rows.map(r=>[TERM.name,pub.version,COURSE[r.course].catalog_number,COURSE[r.course].section_label,COURSE[r.course].title,prof(r.course),nm(r.app),r.role,TIER[APP[r.app].degree_level],f(r.fte),respOf(pub,r).status].map(q).join(','))).join('\n');
+}
+function emailFor(pub,r){
+  const c=COURSE[r.course];
+  return 'Subject: Your '+TERM.name+' assistantship for '+c.catalog_number+' ('+c.section_label+')\n\nHello '+nm(r.app)+',\n\nYou have been assigned as a '+r.role+' for '+c.catalog_number+' '+c.title+', section '+c.section_label+', with '+prof(r.course)+', at '+f(r.fte)+' FTE.\n\nPlease reply by '+day(pub.replyBy||S.replyBy)+' to accept or decline. If you accept, HR will contact you about employment paperwork and training.\n\nThank you,\nCS Graduate Office';
+}
+
+/* ---------- small renderers ---------- */
+const chip=(t,k)=>'<span class="chip '+(k||'')+'">'+esc(t)+'</span>';
+const rkChip=s=>({not_started:chip('Not started'),in_progress:chip('In progress','warn'),submitted:chip('Submitted','ok'),reopened:chip('Reopened','acc')}[s]);
+const eligChipFac=a=>{const e=facElig(a);return chip(e,e==='cleared'?'ok':e==='pending'?'warn':'bad')};
+const eligChipAdm=a=>{const e=APP[a].employment_eligibility_status;return chip({eligible:'Eligible',pending_review:'Pending review',ineligible:'Ineligible'}[e],e==='eligible'?'ok':e==='pending_review'?'warn':'bad')};
+const tierChip=a=>chip(TIER[APP[a].degree_level],'acc');
+const nameBtn=(a,c)=>'<button class="link" data-act="drawer" data-a="'+a+'" data-b="'+c+'">'+esc(nm(a))+'</button>';
+function factsFor(a,cid){
+  const c=COURSE[cid],out=[];
+  const cw=(CW[a]||[]).find(x=>x.catalog_number===c.catalog_number);
+  if(cw)out.push(chip('Took this course ('+cw.grade_band+')','ok'));
+  const th=(TH[a]||[]).find(x=>x.catalog_number===c.catalog_number);
+  if(th)out.push(chip('Was '+th.role+' here, '+th.term,'ok'));
+  const req=REQ[cid].required_skills,sk=(SKILLS[a]||[]).find(x=>x.skill_name===req);
+  out.push(sk?chip(req+' · '+sk.proficiency,'acc'):chip('No '+req+' listed'));
+  if(APP[a].returning_ta)out.push(chip('Returning'));
+  return out.join('');
+}
+const opt=(v,l,cur)=>'<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(l)+'</option>';
+
+/* ---------- views: shell ---------- */
+function bell(){
+  const mine=S.notifs.filter(n=>n.to===me()).sort((a,b)=>Date.parse(b.at)-Date.parse(a.at)),unread=mine.filter(n=>!n.read).length;
+  return '<span class="bellwrap"><button class="btn" data-act="bell" aria-expanded="'+S.bell+'" aria-label="Notifications, '+unread+' unread">Notifications'+(unread?' <span class="badge warn">'+unread+'</span>':'')+'</button>'+
+    (S.bell?'<div class="bellpanel" role="dialog" aria-label="Notifications"><div class="row" style="justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)"><b>Notifications</b><button class="link" data-act="notifAll">Mark all read</button></div>'+
+      (mine.length?mine.slice(0,10).map(n=>'<button class="notif'+(n.read?'':' unread')+'" data-act="notifGo" data-a="'+n.id+'"><span>'+esc(n.text)+'</span><span class="small muted">'+when(n.at)+'</span></button>').join(''):'<div class="muted" style="padding:12px">Nothing yet.</div>')+'</div>':'')+'</span>';
+}
+function header(){
+  const sel=S.user.type==='admin'?'admin':'fac:'+S.user.fid;
+  return '<header class="top"><div class="brand"><small>Computer Science · '+esc(TERM.name)+'</small>TA Studio Desk</div>'+
+    '<div class="who"><span class="chip warn">Synthetic demo data</span>'+bell()+
+    '<label class="f" style="flex-direction:row;align-items:center;gap:6px">View as <select data-chg="role" id="roleSel">'+opt('admin',ADMIN+' (admin)',sel)+SEED.faculty.map(x=>opt('fac:'+x.faculty_id,x.display_name+' (faculty)',sel)).join('')+'</select></label>'+
+    '<button class="btn" data-act="reset">Reset demo</button></div></header>';
+}
+function tabsFor(){
+  const g=gate(),open=S.concerns.filter(c=>c.status==='open'||c.status==='under_review').length;
+  if(S.user.type==='admin'){
+    const lp=latestPub(),declined=lp?lp.rows.filter(r=>respOf(lp,r).status==='declined').length:0;
+    const wt=trackRows().filter(r=>r.st==='Waiting'||r.st==='Overdue').length;
+    return[['dashboard','Dashboard',''],['windows','Faculty windows',wt?'<span class="badge warn">'+wt+'</span>':''],['assign','Assignments',g.blocks.length?'<span class="badge bad">'+g.blocks.length+'</span>':''],['applicants','Applicants',''],['publish','Publish',''],['students','Students',declined?'<span class="badge warn">'+declined+'</span>':''],['concerns','Concerns',open?'<span class="badge warn">'+open+'</span>':''],['audit','Audit log','']];
+  }
+  return[['courses','My course',''],['published','Published plan','']];
+}
+function nav(){
+  return '<nav class="tabs" role="tablist">'+tabsFor().map(t=>'<button class="tab" role="tab" aria-selected="'+(S.tab===t[0])+'" data-act="tab" data-a="'+t[0]+'">'+t[1]+t[2]+'</button>').join('')+'</nav>';
+}
+
+/* ---------- views: admin dashboard ---------- */
+function vDashboard(){
+  const cs=SEED.courses,g=gate(),lp=latestPub();
+  const demand=sum(cs.map(c=>c.ta_slots_required)),draft=sum(live().map(r=>r.fte)),conf=sum(live().filter(r=>r.decision==='accepted').map(r=>r.fte));
+  const pubTot=lp?sum(lp.rows.map(r=>r.fte)):0;
+  const home=needsHome().filter(a=>APP[a].degree_level==='PhD');
+  const withCands=cs.filter(c=>candidates(c.course_id).length),zero=cs.filter(c=>!candidates(c.course_id).length);
+  const behind=withCands.filter(c=>S.rank[c.course_id].status!=='submitted');
+  const resp=lp?lp.rows.map(r=>respOf(lp,r).status):[];
+  const openC=S.concerns.filter(c=>c.status==='open'||c.status==='under_review');
+  const fl=S.f.dash,tk=trackRows();
+  let tr=cs.filter(c=>(!fl.prof||c.faculty_id===fl.prof)&&(!fl.status||S.rank[c.course_id].status===fl.status)&&(!fl.staffed||(fl.staffed==='staffed'?courseConf(c.course_id)>=c.ta_slots_required:courseConf(c.course_id)<c.ta_slots_required)));
+  const rowsHtml=tr.map(c=>{
+    const id=c.course_id,n=g.iss.filter(i=>i.courses.includes(id)).length,rk=S.rank[id];
+    return '<tr><td><b>'+esc(cname(id))+'</b><div class="small muted">'+esc(c.title)+'</div></td><td>'+esc(prof(id))+'</td><td>'+(candidates(id).length?rkChip(rk.status):chip('No applicants'))+'</td><td class="num">'+candidates(id).length+'</td><td class="num">'+rankedCount(id)+'</td><td class="num">'+f(c.ta_slots_required)+'</td><td class="num">'+f(courseAlloc(id))+'</td><td class="num">'+f(courseConf(id))+'</td><td>'+(n?chip(n+' open','warn'):chip('Clear','ok'))+'</td><td class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn sm" data-act="goCourse" data-a="'+id+'">Open</button>'+(rk.status==='submitted'?'<button class="btn sm" data-act="reopen" data-a="'+id+'">Reopen</button>':'')+'</td></tr>';
+  }).join('')||'<tr><td colspan="10" class="muted">No courses match these filters.</td></tr>';
+  return '<div class="stack">'+
+  '<div class="stats">'+[['Courses',cs.length],['Demand (FTE)',f(demand)],['Draft allocation',f(draft)],['Confirmed',f(conf)],['Unfilled',f(Math.max(0,demand-conf))],['Published v'+(lp?lp.version:'—'),f(pubTot)]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
+  '<details class="card guide" open><summary>Try this: a short walkthrough</summary><ol>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="windows">Faculty windows</button>: open J Biswas\'s ranking window and read the email it would send. Switch to J Biswas to see the notification, submit a ranking, then return to watch the tracker update.</li>'+
+   '<li>Atlas is double-booked at 2.0 FTE and blocks publishing. <button class="link" data-act="goCourse" data-a="crs_f26_002">Open 303E · 002</button>, move that spot to Delta or Ember, and accept it.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="applicants">Applicants</button>: edit the grant-admin list and run the GRA check again.</li>'+
+   '<li><button class="link" data-act="goCourse" data-a="crs_f26_003">304I</button> has no faculty ranking. Use the pool facts and copy a list for the professor.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="publish">Publish</button>: add the open-position notes, then publish version 2.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="students">Students</button>: Delta declined 311H. Pick the next backup from the professor\'s list.</li>'+
+   '<li><button class="link" data-act="go" data-a="fac:fac_v_ravishankar" data-b="courses">Switch to V Ravishankar</button>: finish the 311 ranking and submit it.</li></ol></details>'+
+  '<div class="grid2">'+
+   '<div class="card"><h3>Needs attention</h3>'+
+    (g.blocks.length?g.blocks.map(i=>'<div class="issue"><div>'+chip(i.code,'bad')+'<div>'+esc(i.msg)+'</div></div><div class="row" style="gap:4px">'+i.courses.map(c=>'<button class="btn sm" data-act="goCourse" data-a="'+c+'">'+esc(cname(c))+'</button>').join('')+'</div></div>').join(''):'<div class="issue"><div>'+chip('No blocking issues','ok')+'</div></div>')+
+    (g.missing.length?'<div class="issue"><div>'+chip(g.missing.length+' notes needed','warn')+'<div>Warnings need an admin note before publishing.</div></div><button class="btn sm" data-act="go" data-a="admin" data-b="publish">Publish</button></div>':'')+
+    (home.length?'<div class="issue"><div>'+chip('PhDs to place first','warn')+'<div>'+home.map(a=>esc(short(a))).join(', ')+' still need a position.</div></div></div>':'')+
+   '</div>'+
+   '<div class="card"><h3>Faculty and students</h3>'+
+    '<div class="issue"><div><b>Rankings:</b> '+['submitted','in_progress','reopened','not_started'].map(s=>chip(withCands.filter(c=>S.rank[c.course_id].status===s).length+' '+s.replace('_',' '),s==='submitted'?'ok':s==='not_started'?'':'warn')).join(' ')+'<div class="small muted">'+(zero.length?zero.map(c=>cname(c.course_id)).join(', ')+' has no applicants (not counted as behind).':'')+'</div></div></div>'+
+    '<div class="issue"><div><b>Behind:</b> '+(behind.length?behind.map(c=>esc(prof(c.course_id))+' ('+esc(cname(c.course_id))+')').join(', '):'None')+'</div></div>'+
+    '<div class="issue"><div><b>Ranking windows:</b> '+chip(tk.filter(r=>r.st==='Responded').length+' responded','ok')+' '+chip(tk.filter(r=>r.st==='Waiting'||r.st==='Overdue').length+' waiting',tk.some(r=>r.st==='Overdue')?'bad':'')+' '+chip(tk.filter(r=>r.st==='Not opened').length+' not opened',tk.some(r=>r.st==='Not opened')?'warn':'')+'</div><button class="btn sm" data-act="go" data-a="admin" data-b="windows">Track</button></div>'+
+    '<div class="issue"><div><b>Student replies, v'+(lp?lp.version:'—')+':</b> '+chip(resp.filter(x=>x==='confirmed').length+' confirmed','ok')+' '+chip(resp.filter(x=>x==='awaiting').length+' waiting')+' '+chip(resp.filter(x=>x==='declined').length+' declined',resp.includes('declined')?'bad':'')+'</div></div>'+
+    '<div class="issue"><div><b>Concerns:</b> '+(openC.length?chip(openC.length+' open or in review','warn'):chip('None open','ok'))+'</div><button class="btn sm" data-act="go" data-a="admin" data-b="concerns">Review</button></div>'+
+   '</div></div>'+
+  '<div><div class="filters"><h3 style="margin-right:auto">Courses</h3>'+
+    '<label class="f">Professor<select data-chg="dashFilter" data-a="prof">'+opt('','All',fl.prof)+SEED.faculty.map(x=>opt(x.faculty_id,x.display_name,fl.prof)).join('')+'</select></label>'+
+    '<label class="f">Ranking<select data-chg="dashFilter" data-a="status">'+opt('','All',fl.status)+['not_started','in_progress','submitted','reopened'].map(x=>opt(x,x.replace('_',' '),fl.status)).join('')+'</select></label>'+
+    '<label class="f">Staffing<select data-chg="dashFilter" data-a="staffed">'+opt('','All',fl.staffed)+opt('staffed','Staffed',fl.staffed)+opt('unstaffed','Not fully staffed',fl.staffed)+'</select></label></div>'+
+  '<div class="tbl"><table><thead><tr><th>Course</th><th>Professor</th><th>Ranking</th><th class="num">Applicants</th><th class="num">Ranked</th><th class="num">Need</th><th class="num">Draft</th><th class="num">Confirmed</th><th>Issues</th><th></th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div></div></div>';
+}
+
+/* ---------- views: faculty windows ---------- */
+function vWindows(){
+  const tr=trackRows(),cnt=k=>tr.filter(r=>k.includes(r.st)).length;
+  const openable=tr.filter(r=>r.st!=='No applicants'&&r.w.state!=='open');
+  const pick=openable.some(r=>r.fid===S.winPick)?S.winPick:(openable[0]||{}).fid||'';
+  const stk={Responded:'ok',Waiting:'warn',Overdue:'bad','Closed, no response':'bad','Not opened':'','No applicants':''};
+  const rows=tr.map(r=>{
+    const w=r.w;let act='';
+    if(r.st==='No applicants')act='<span class="small muted">Nothing to rank</span>';
+    else if(w.state==='not_open')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'">Open</button>';
+    else if(w.state==='closed')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'" data-b="Ranking reopened">Reopen</button>';
+    else if(r.st!=='Responded')act='<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="remind" data-a="'+r.fid+'">Remind</button><button class="btn sm" data-act="closeWin" data-a="'+r.fid+'">Close</button></div>';
+    else act='<span class="small muted">Done</span>';
+    const due=w.dueAt?(r.st==='Overdue'?'<b>'+day(w.dueAt)+'</b>':day(w.dueAt)):'—';
+    return '<tr><td><b>'+esc(r.name)+'</b><div class="small muted">'+esc(r.cl)+'</div></td><td>'+chip(r.st,stk[r.st])+'</td><td>'+(w.openedAt?when(w.openedAt):'—')+'</td><td>'+due+'</td><td class="num">'+r.ranked+' / '+r.apps+'</td><td>'+(r.respAt?when(r.respAt):'—')+(r.hrs!=null?'<div class="small muted">after '+dur(r.hrs*36e5)+'</div>':'')+'</td><td class="num">'+w.emails.length+(r.reminders?'<div class="small muted">'+r.reminders+' reminder'+(r.reminders>1?'s':'')+'</div>':'')+'</td><td>'+act+'</td></tr>';
+  }).join('');
+  const mails=[];SEED.faculty.forEach(fa=>S.win[fa.faculty_id].emails.forEach((m,i)=>mails.push({k:fa.faculty_id+'|'+i,m})));
+  mails.sort((a,b)=>Date.parse(b.m.at)-Date.parse(a.m.at));
+  const mv=S.mailView&&mails.find(x=>x.k===S.mailView);
+  return '<div class="stack"><div class="note"><b>Email is not connected yet.</b> Opening a window queues the email text and shows it below. Nothing leaves this demo. When the office approves a sender, the same step will send it for real.</div>'+
+   '<div class="stats">'+[['Professors',tr.length],['Not opened',cnt(['Not opened'])],['Waiting',cnt(['Waiting','Overdue'])],['Responded',cnt(['Responded'])],['Closed, no reply',cnt(['Closed, no response'])]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
+   '<div class="card"><h3>Open a ranking window</h3><div class="small muted" style="margin-bottom:8px">Pick one professor, or open everyone who is left. The professor gets a notification and a queued email. Until then their ranking page is locked.</div>'+
+   (openable.length?'<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Professor<select data-chg="winPick" id="winPick">'+openable.map(r=>opt(r.fid,r.name+' ('+r.cl+')',pick)).join('')+'</select></label><label class="f">Due date<input type="date" id="winDue" data-chg="winDue" value="'+esc(S.winDue)+'"></label><button class="btn primary" data-act="openWin" data-a="'+esc(pick)+'">Open window and queue email</button>'+(openable.length>1?'<button class="btn" data-act="openAll">Open all remaining ('+openable.length+')</button>':'')+'</div>':'<div class="muted">Every professor with applicants already has a window.</div>')+'</div>'+
+   '<div class="card"><h3>Who has responded</h3><div class="tbl"><table><thead><tr><th>Professor</th><th>Status</th><th>Opened</th><th>Due</th><th class="num">Ranked / applicants</th><th>Responded</th><th class="num">Emails</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+   '<div class="card"><h3>Tracking sheet</h3><div class="small muted" style="margin-bottom:6px">The same table as a spreadsheet. Copy it and paste into Excel or Sheets. It updates as professors respond.</div><textarea id="trackBox" rows="6" readonly>'+esc(trackCsv())+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyTrack">Copy as CSV</button></div></div>'+
+   '<div class="card"><h3>Email outbox</h3><div class="tbl"><table><thead><tr><th>Queued</th><th>To</th><th>Type</th><th>Status</th><th></th></tr></thead><tbody>'+(mails.length?mails.map(x=>'<tr><td>'+when(x.m.at)+'</td><td>'+esc(x.m.to)+'<div class="small muted">'+esc(x.m.address)+'</div></td><td>'+esc(x.m.kind)+'</td><td>'+chip(x.m.status,x.m.status==='Sent earlier'?'ok':'warn')+'</td><td><button class="btn sm" data-act="showMail" data-a="'+esc(x.k)+'">View text</button></td></tr>').join(''):'<tr><td colspan="5" class="muted">No emails yet.</td></tr>')+'</tbody></table></div>'+
+   (mv?'<div style="margin-top:10px"><label class="f" for="mailBox">'+esc(mv.m.subject)+'</label><textarea id="mailBox" rows="10" readonly>'+esc(mv.m.body)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyMail">Copy</button><button class="btn" data-act="hideMail">Close</button></div></div>':'')+'</div></div>';
+}
+
+/* ---------- views: assignments ---------- */
+function vAssign(){
+  const g=gate(),sel=S.selCourse,c=COURSE[sel];
+  const list=SEED.courses.map(x=>{
+    const id=x.course_id,n=g.iss.filter(i=>i.courses.includes(id)).length,need=x.ta_slots_required;
+    return '<button class="course-btn" data-act="goCourse" data-a="'+id+'" aria-pressed="'+(id===sel)+'"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b>'+esc(cname(id))+'</b>'+(n?chip(n,'warn'):chip('ok','ok'))+'</div><div class="small muted">'+esc(prof(id))+' · '+esc(x.title)+'</div><div class="bar" style="margin:8px 0 4px"><i class="d" style="width:'+Math.min(100,courseAlloc(id)/need*100)+'%"></i><i class="c" style="width:'+Math.min(100,courseConf(id)/need*100)+'%"></i></div><div class="small mono">'+f(courseConf(id))+' accepted · '+f(courseAlloc(id))+' of '+f(need)+' FTE</div></button>';
+  }).join('');
+  const home=needsHome(),graList=[...S.gra];
+  const queue=['PhD','Undergraduate','Masters'].map(t=>{
+    const ns=home.filter(a=>APP[a].degree_level===t);
+    return ns.length?'<div style="margin-top:8px"><div class="eyebrow">'+(t==='PhD'?'1 · PhD, place first':t==='Undergraduate'?'2 · Undergraduate':'3 · Master\'s, last')+'</div>'+ns.map(a=>'<div>'+nameBtn(a,sel)+' <span class="small muted">'+esc(APP[a].assistant_type)+'</span></div>').join('')+'</div>':'';
+  }).join('');
+  return '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">Courses</div>'+list+
+    '<div class="card" style="margin-top:16px"><h3>Still needs a position</h3><div class="small muted">Order follows how the office places people.</div>'+(queue||'<div class="muted" style="margin-top:8px">Everyone with a preference has a position.</div>')+
+    (graList.length?'<div style="margin-top:12px"><div class="eyebrow">Excluded: on GRA list</div>'+graList.map(a=>'<div class="muted">'+esc(nm(a))+'</div>').join('')+'</div>':'')+'</div></div>'+
+    '<div class="stack">'+vWorkspace(sel,g)+'</div></div>';
+}
+function vWorkspace(cid,g){
+  const c=COURSE[cid],rq=REQ[cid],rk=S.rank[cid],cands=candidates(cid),need=c.ta_slots_required;
+  const issues=g.iss.filter(i=>i.courses.includes(cid));
+  const head='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(c.catalog_number)+' · '+esc(c.section_label)+' <span class="muted" style="font-weight:500">'+esc(c.title)+'</span></h2><div class="muted">'+esc(prof(cid))+' · needs '+f(need)+' FTE</div></div><div class="row">'+(cands.length?rkChip(rk.status):chip('No applicants'))+(live().some(r=>r.course===cid&&r.decision==='requested')?'<button class="btn sm" data-act="acceptAll" data-a="'+cid+'">Accept all requested</button>':'')+'</div></div>'+
+    '<div class="small muted" style="margin-top:8px">Requirements: '+(rq.experience_required?'prior experience required · ':'')+'skill '+esc(rq.required_skills)+' · '+esc(rq.faculty_notes)+'</div></div>';
+  const iss=issues.length?'<div class="card"><h3>Issues for this course</h3>'+issues.map(i=>'<div class="issue"><div>'+chip(i.code,i.sev==='block'?'bad':'warn')+' '+esc(i.msg)+'</div>'+(i.courses.length>1?'<div class="row" style="gap:4px">'+i.courses.filter(x=>x!==cid).map(x=>'<button class="btn sm" data-act="goCourse" data-a="'+x+'">'+esc(cname(x))+'</button>').join('')+'</div>':'')+'</div>').join('')+'</div>':'';
+  if(!cands.length)return head+iss+'<div class="note">No applicants selected this course. That is zero demand from students, not unfinished faculty work.</div>';
+  const info=rk.status!=='submitted'?'<div class="note warn"><b>'+esc(prof(cid))+' has not submitted a ranking</b> (status: '+rk.status.replace('_',' ')+'). Below is everyone who applied for this course, with facts only and no match score. <button class="btn sm" data-act="copyPool" data-a="'+cid+'" style="margin-left:6px">Copy list for the professor</button></div>':'';
+  const rows=cands.map(x=>{
+    const a=x.app,row=S.draft.rows.find(r=>r.course===cid&&r.app===a&&r.decision!=='declined');
+    const e=rk.entries[a]||{},mine=issues.filter(i=>i.app===a);
+    const else_=[];
+    SEED.courses.forEach(o=>{if(o.course_id===cid)return;const oe=S.rank[o.course_id].entries[a];if(oe&&oe.rank!=null)else_.push('Ranked #'+oe.rank+' by '+prof(o.course_id)+' ('+cname(o.course_id)+')')});
+    S.draft.rows.filter(r=>r.app===a&&r.course!==cid&&r.decision!=='declined').forEach(r=>else_.push(f(r.fte)+' FTE '+r.decision+' in '+cname(r.course)));
+    const cur=row&&row.decision!=='declined'?row.fte:0,cap=Math.max(0,Math.min(1,Math.round((need-courseAlloc(cid)+cur)*100)/100));
+    const opts=[0,.25,.5,.75,1].filter(v=>v<=cap+1e-9||v===cur);
+    return '<tr><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+(S.gra.has(a)?chip('GRA','bad'):'')+eligChipAdm(a)+'</div></td>'+
+      '<td class="num">#'+x.pref.preference_rank+'</td>'+
+      '<td>'+(e.rank!=null?'<b class="mono">#'+e.rank+'</b> '+chip(e.rec.replace('_',' '),e.rec==='strong_yes'?'ok':'')+(e.comment?'<div class="small muted">'+esc(e.comment)+'</div>':''):(e.rec==='do_not_rank'?chip('Do not rank','bad'):'<span class="muted">Not ranked</span>'))+'</td>'+
+      '<td><div class="chips">'+factsFor(a,cid)+'</div>'+(else_.length?'<div class="small muted" style="margin-top:4px">'+else_.map(esc).join('<br>')+'</div>':'')+'</td>'+
+      '<td class="num">'+f(appAlloc(a))+' / '+f(APP[a].max_assignment_fte)+'</td>'+
+      '<td><select data-chg="setAlloc" data-a="'+cid+'" data-b="'+a+'" data-fid="alloc:'+cid+':'+a+'" aria-label="Allocation for '+esc(nm(a))+'">'+opts.map(v=>opt(v,f(v)+' FTE',cur)).join('')+'</select>'+
+        (row&&row.decision!=='declined'?'<div style="margin-top:4px"><select data-chg="setDecision" data-a="'+row.id+'" aria-label="Decision">'+opt('requested','Requested',row.decision)+opt('accepted','Accepted',row.decision)+opt('declined','Declined',row.decision)+'</select></div><div style="margin-top:4px"><select data-chg="setRole" data-a="'+row.id+'" aria-label="Appointment">'+(isGrad(a)?opt('TA','TA',row.role)+opt('AI','AI (assistant instructor)',row.role):opt('UGCA','UGCA',row.role))+'</select></div>':'')+'</td>'+
+      '<td>'+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
+  }).join('');
+  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th class="num">Pref</th><th>Professor</th><th>Facts and other requests</th><th class="num">Total FTE</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="small muted">Candidates are listed by their own preference, then name. Nothing here is scored. Accepting an assignment keeps the applicant within their 1.0 FTE maximum unless an exception is set.</div>';
+}
+
+/* ---------- views: applicants ---------- */
+function vApplicants(){
+  const fl=S.f.app;
+  const apps=SEED.applications.filter(a=>(!fl.tier||a.degree_level===fl.tier)&&(!fl.type||a.assistant_type===fl.type)).sort((x,y)=>TIER_ORDER[x.degree_level]-TIER_ORDER[y.degree_level]||nm(x.application_id).localeCompare(nm(y.application_id)));
+  const gr=S.graResult;
+  const rows=apps.map(a=>{
+    const id=a.application_id,al=appAlloc(id);
+    const state=a.application_status==='draft'?chip('Draft application','warn'):S.gra.has(id)?chip('GRA, excluded','bad'):al>0?chip('Assigned '+f(al)+' FTE','ok'):chip('Needs a position',a.degree_level==='PhD'?'warn':'');
+    return '<tr><td>'+nameBtn(id,'')+'</td><td>'+tierChip(id)+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="num">'+(PREFS_APP[id]||[]).length+'</td><td class="num">'+f(al)+' / '+f(a.max_assignment_fte)+'</td><td>'+state+'</td><td><button class="btn sm" data-act="toggleGra" data-a="'+id+'">'+(S.gra.has(id)?'Remove GRA flag':'Flag as GRA')+'</button></td></tr>';
+  }).join('');
+  return '<div class="stack"><div class="card"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste it here, one name per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand.</p>'+
+    '<div class="grid2"><div><label class="f" for="graText">Grant-admin list (synthetic aliases)</label><textarea id="graText" rows="5" data-inp="graText">'+esc(S.graText)+'</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="applyGra">Run GRA check</button></div></div>'+
+    '<div>'+(gr?'<div class="eyebrow">Result</div><div style="margin-top:6px">'+chip(gr.matched.length+' matched in this term\'s pool','ok')+' '+chip(gr.unmatched.length+' not in the pool',gr.unmatched.length?'warn':'')+'</div>'+(gr.matched.length?'<div style="margin-top:8px"><b>Flagged:</b> '+gr.matched.map(a=>esc(nm(a))).join(', ')+'</div>':'')+(gr.unmatched.length?'<div style="margin-top:4px"><b>No match:</b> '+gr.unmatched.map(esc).join(', ')+'</div>':'')+'<div class="small muted" style="margin-top:8px">The real version would match on a stable student key held outside this tool, not on names.</div>':'')+'</div></div></div>'+
+    '<div><div class="filters"><h3 style="margin-right:auto">Applicant pool</h3><label class="f">Level<select data-chg="appFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label><label class="f">Type<select data-chg="appFilter" data-a="type">'+opt('','All',fl.type)+opt('TA','TA',fl.type)+opt('UGCA','UGCA',fl.type)+'</select></label></div>'+
+    '<div class="tbl"><table><thead><tr><th>Candidate</th><th>Level</th><th>Type</th><th>Program</th><th>Application</th><th>Eligibility (admin only)</th><th class="num">Courses chosen</th><th class="num">Assigned / max</th><th>Placement</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div></div>';
+}
+
+/* ---------- views: publish ---------- */
+function vPublish(){
+  const g=gate(),lp=latestPub(),next=lp?lp.version+1:1;
+  const why=!g.ok?(g.blocks.length?'Fix the blocking issues first.':g.missing.length?'Add a note for each warning.':!g.accepted.length?'Accept at least one assignment.':'Nothing has changed since version '+(lp?lp.version:'')+'.'):'';
+  const warnRows=g.warns.filter(w=>w.gate).map(w=>'<div class="issue"><div style="flex:1">'+chip(w.code,'warn')+' '+esc(w.msg)+'<textarea rows="2" data-inp="setOverride" data-a="'+esc(w.key)+'" placeholder="Why is it acceptable to publish with this?" aria-label="Override note" style="margin-top:6px">'+esc(S.overrides[w.key]||'')+'</textarea></div></div>').join('');
+  const sel=S.selPub&&S.pubs.find(p=>p.version===S.selPub)||lp;
+  return '<div class="stack"><div class="card"><div class="row" style="justify-content:space-between"><h3>Ready to publish version '+next+'?</h3><div class="row"><button class="btn" data-act="fillNotes">Demo shortcut: fill empty notes</button><button class="btn primary" id="pubBtn" data-act="publish"'+(g.ok?'':' disabled')+'>Publish to faculty (v'+next+')</button></div></div>'+
+    '<div id="pubWhy" class="small muted" style="margin:6px 0 10px">'+esc(why)+'</div>'+
+    (g.blocks.length?'<div class="note bad" style="margin-bottom:10px"><b>Blocking</b>'+g.blocks.map(i=>'<div class="issue" style="border-color:transparent"><div>'+esc(i.msg)+'</div><div class="row" style="gap:4px">'+i.courses.map(c=>'<button class="btn sm" data-act="goCourse" data-a="'+c+'">'+esc(cname(c))+'</button>').join('')+'</div></div>').join('')+'</div>':'<div class="note" style="margin-bottom:10px">No blocking issues.</div>')+
+    (warnRows?'<h3 style="margin-bottom:4px">Warnings that need a note</h3>'+warnRows:'<div class="muted">No warnings need a note.</div>')+
+    '<div class="small muted" style="margin-top:10px">Only accepted assignments are published ('+g.accepted.length+' now, '+f(sum(g.accepted.map(r=>r.fte)))+' FTE). Published versions can never be edited.</div></div>'+
+    '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">Versions</div>'+S.pubs.slice().sort((a,b)=>b.version-a.version).map(p=>'<button class="course-btn" data-act="selPub" data-a="'+p.version+'" aria-pressed="'+(sel&&p.version===sel.version)+'"><b>Version '+p.version+'</b> '+(lp&&p.version===lp.version?chip('Latest','acc'):'')+'<div class="small muted">'+when(p.at)+' · '+esc(p.by)+'</div><div class="small mono">'+p.rows.length+' assignments · '+f(sum(p.rows.map(r=>r.fte)))+' FTE</div></button>').join('')+'</div>'+
+    (sel?vVersion(sel):'')+'</div></div>';
+}
+function vVersion(p){
+  const prev=S.pubs.filter(x=>x.version<p.version).sort((a,b)=>b.version-a.version)[0];
+  let diff='';
+  if(prev){
+    const pk=Object.fromEntries(prev.rows.map(r=>[key(r),r])),ck=Object.fromEntries(p.rows.map(r=>[key(r),r]));
+    const add=p.rows.filter(r=>!pk[key(r)]),rem=prev.rows.filter(r=>!ck[key(r)]),chg=p.rows.filter(r=>pk[key(r)]&&(pk[key(r)].fte!==r.fte||pk[key(r)].role!==r.role));
+    diff='<div style="margin-top:12px"><h3>Changes from version '+prev.version+'</h3>'+(add.length||rem.length||chg.length?'<ul class="plain">'+add.map(r=>'<li>'+chip('Added','ok')+' '+esc(nm(r.app))+' · '+esc(cname(r.course))+'</li>').join('')+rem.map(r=>'<li>'+chip('Removed','bad')+' '+esc(nm(r.app))+' · '+esc(cname(r.course))+'</li>').join('')+chg.map(r=>'<li>'+chip('Changed')+' '+esc(nm(r.app))+' · '+esc(cname(r.course))+'</li>').join('')+'</ul>':'<div class="muted">No changes.</div>')+'</div>';
+  }
+  const gaps=SEED.courses.filter(c=>sum(p.rows.filter(r=>r.course===c.course_id).map(r=>r.fte))<c.ta_slots_required);
+  const csv=csvFor(p);
+  return '<div class="card"><div class="row" style="justify-content:space-between"><h3>Version '+p.version+' snapshot</h3><div class="row">'+chip('Locked','acc')+(S.confirmClone===p.version?'<button class="btn sm danger" data-act="cloneDo" data-a="'+p.version+'">Replace working draft with this version</button><button class="btn sm" data-act="cloneCancel">Cancel</button>':'<button class="btn sm" data-act="cloneAsk" data-a="'+p.version+'">Start a fresh draft from this version</button>')+'</div></div>'+
+    '<div class="tbl" style="margin-top:8px"><table><thead><tr><th>Course</th><th>Professor</th><th>Assignee</th><th>Role</th><th class="num">FTE</th><th>Override note</th></tr></thead><tbody>'+p.rows.map(r=>'<tr><td>'+esc(cname(r.course))+'</td><td>'+esc(prof(r.course))+'</td><td>'+esc(nm(r.app))+'</td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td class="small">'+esc(r.note||'')+'</td></tr>').join('')+'</tbody></table></div>'+
+    '<div class="small muted" style="margin-top:8px"><b>Open positions at publication:</b> '+(gaps.length?gaps.map(c=>esc(cname(c.course_id))+(p.gaps[c.course_id]?' ('+esc(p.gaps[c.course_id])+')':'')).join('; '):'None')+'</div>'+diff+
+    '<div style="margin-top:12px"><h3>HR export (CSV)</h3><p class="small muted" style="margin-bottom:6px">Citizenship, gender, and pay tier come from the HR system and are not stored here.</p><textarea id="csvBox" class="csv" rows="'+Math.min(10,p.rows.length+2)+'" readonly>'+esc(csv)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyCsv" data-a="'+p.version+'">Copy CSV</button><span class="small muted">Downloads are blocked in this viewer, so copy it into a spreadsheet.</span></div></div></div>';
+}
+
+/* ---------- views: students ---------- */
+function vStudents(){
+  const p=latestPub();
+  if(!p)return '<div class="note">Nothing is published yet.</div>';
+  const R=p.rows.map(r=>({r,s:respOf(p,r)}));
+  const cnt=k=>R.filter(x=>x.s.status===k).length;
+  const rows=R.map(({r,s})=>{
+    const k=key(r);
+    return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td><select data-chg="setResp" data-a="'+k+'" aria-label="Reply from '+esc(nm(r.app))+'">'+opt('not_notified','Not notified yet',s.status)+opt('awaiting','Waiting for reply',s.status)+opt('confirmed','Confirmed',s.status)+opt('declined','Declined',s.status)+'</select><div class="small muted">'+(s.at?day(s.at):'')+'</div></td><td><button class="btn sm" data-act="showEmail" data-a="'+k+'">Email text</button></td></tr>';
+  }).join('');
+  const declined=R.filter(x=>x.s.status==='declined').map(({r})=>{
+    const bs=backupsFor(r.course,r.app,r.fte);
+    return '<div class="card"><h3>'+esc(nm(r.app))+' declined '+esc(cname(r.course))+'</h3><div class="small muted" style="margin-bottom:8px">Next on '+esc(prof(r.course))+'\'s ranked list. Anyone who cannot be used says why.</div>'+(bs.length?'<ul class="plain">'+bs.map(b=>'<li class="issue"><div><b class="mono">#'+b.rank+'</b> '+esc(nm(b.app))+' '+tierChip(b.app)+' '+(b.why?chip(b.why,'bad'):chip('Available','ok'))+'</div>'+(b.why?'':'<button class="btn sm primary" data-act="useBackup" data-a="'+r.course+'" data-b="'+r.app+'" data-c="'+b.app+'">Use as replacement</button>')+'</li>').join('')+'</ul>':'<div class="muted">The professor ranked nobody else. Open the course pool.</div> <button class="btn sm" data-act="goCourse" data-a="'+r.course+'">Open pool</button>')+'</div>';
+  }).join('');
+  const em=S.emailFor&&R.find(x=>key(x.r)===S.emailFor);
+  return '<div class="stack"><div class="stats">'+[['Confirmed',cnt('confirmed')],['Waiting',cnt('awaiting')],['Declined',cnt('declined')],['Not notified',cnt('not_notified')]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
+  '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Notify students for version '+p.version+'</h3><div class="small muted">Last notified: '+when(p.notifiedAt)+(p.replyBy?' · reply by '+day(p.replyBy):'')+'. This demo does not send email. It records the date and drafts the text.</div></div><div class="row"><label class="f" style="flex-direction:row;align-items:center;gap:6px">Reply by <input type="date" id="replyBy" value="'+esc(S.replyBy)+'" data-inp="replyBy"></label><button class="btn primary" data-act="notify">Mark students notified</button></div></div></div>'+
+  '<div class="tbl"><table><thead><tr><th>Student</th><th>Course</th><th>Role</th><th class="num">FTE</th><th>Reply</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+  (em?'<div class="card"><h3>Email text for '+esc(nm(em.r.app))+'</h3><textarea id="emailBox" rows="10" readonly>'+esc(emailFor(p,em.r))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyEmail">Copy</button><button class="btn" data-act="hideEmail">Close</button></div></div>':'')+declined+'</div>';
+}
+
+/* ---------- views: concerns + audit ---------- */
+function vConcerns(){
+  const cs=S.concerns.slice().sort((a,b)=>(a.status.startsWith('resolved')?1:0)-(b.status.startsWith('resolved')?1:0)||b.created_at.localeCompare(a.created_at));
+  const stChip=s=>({open:chip('Open','warn'),under_review:chip('Under review','acc'),resolved_no_change:chip('Closed, no change','ok'),resolved_adjustment:chip('Resolved by adjustment','ok')}[s]);
+  return '<div class="stack">'+(cs.length?cs.map(c=>{
+    const done=c.status.startsWith('resolved');
+    return '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>'+esc(cname(c.course_id))+' · '+esc(FAC[c.faculty_id].display_name)+'</h3><div class="small muted">'+esc(c.concern_type.replace('_',' '))+' · raised '+when(c.created_at)+'</div></div>'+stChip(c.status)+'</div><p style="margin:8px 0" class="pre">'+esc(c.details)+'</p>'+
+      (done||c.resolution_note?'<div class="note"><b>'+(done?'Resolution':'Planned change')+':</b> '+esc(c.resolution_note||'')+(c.resolved_at?'<div class="small muted">'+esc(ADMIN)+' · '+when(c.resolved_at)+'</div>':'')+'</div>':'')+
+      (done?'':'<label class="f" style="margin-top:8px">Resolution note (required to close or adjust)<textarea rows="2" data-inp="concernNote" data-a="'+c.concern_id+'">'+esc(S.concernNotes[c.concern_id]||'')+'</textarea></label><div class="row" style="margin-top:8px">'+(c.status==='open'?'<button class="btn" data-act="cReview" data-a="'+c.concern_id+'">Start review</button>':'')+'<button class="btn" data-act="cClose" data-a="'+c.concern_id+'">Close, no change</button><button class="btn primary" data-act="cAdjust" data-a="'+c.concern_id+'">Needs an adjustment</button></div>')+'</div>';
+  }).join(''):'<div class="note">No concerns yet.</div>')+'<div class="small muted">Closing with an adjustment opens the working draft for this course. When you publish the next version, the concern resolves automatically. Earlier versions stay unchanged.</div></div>';
+}
+function vAudit(){
+  const a=S.audit.slice().sort((x,y)=>new Date(y.ts)-new Date(x.ts)).slice(0,120);
+  return '<div class="tbl"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>What</th></tr></thead><tbody>'+a.map(e=>'<tr><td class="small">'+when(e.ts)+'</td><td>'+esc(e.actor)+'</td><td>'+esc(e.action)+'</td><td>'+esc(e.summary)+'</td></tr>').join('')+'</tbody></table></div><div class="small muted" style="margin-top:8px">Events before today are rebuilt from the dataset timestamps.</div>';
+}
+
+/* ---------- views: faculty ---------- */
+function vFacCourses(){
+  const fid=S.user.fid;
+  const mine=SEED.courses.filter(c=>c.faculty_id===fid);
+  if(S.facCourse)return vFacCourse(S.facCourse);
+  return '<div class="stack"><div><h2>Your course</h2><div class="muted">You only see courses assigned to you, and applicants who chose them.</div></div><div class="tbl"><table><thead><tr><th>Course</th><th class="num">Need (FTE)</th><th class="num">Applicants</th><th class="num">Ranked</th><th>Status</th><th>Ranking due</th><th></th></tr></thead><tbody>'+mine.map(c=>{
+    const id=c.course_id,rk=S.rank[id];
+    return '<tr><td><b>'+esc(cname(id))+'</b><div class="small muted">'+esc(c.title)+'</div></td><td class="num">'+f(c.ta_slots_required)+'</td><td class="num">'+candidates(id).length+'</td><td class="num">'+rankedCount(id)+'</td><td>'+rkChip(rk.status)+'</td><td>'+(S.win[c.faculty_id].state==='not_open'?'Not open yet':day(S.win[c.faculty_id].dueAt))+'</td><td><button class="btn primary sm" data-act="facOpen" data-a="'+id+'">'+(rk.status==='submitted'?'View ranking':S.win[c.faculty_id].state==='not_open'?'Details':'Review and rank')+'</button></td></tr>';
+  }).join('')+'</tbody></table></div></div>';
+}
+function vFacCourse(cid){
+  const c=COURSE[cid],rk=S.rank[cid],w=S.win[c.faculty_id],ro=!canEdit(cid),need=c.ta_slots_required,rq=REQ[cid],fl=S.f.fac;
+  const pass=a=>(!fl.tier||APP[a].degree_level===fl.tier)&&(!fl.ret||(fl.ret==='yes')===APP[a].returning_ta)&&(!fl.avail||APP[a].availability_status===fl.avail)&&(!fl.elig||facElig(a)===fl.elig);
+  const all=candidates(cid),cands=all.filter(x=>pass(x.app));
+  const ranked=cands.filter(x=>(rk.entries[x.app]||{}).rank!=null).sort((a,b)=>rk.entries[a.app].rank-rk.entries[b.app].rank||nm(a.app).localeCompare(nm(b.app)));
+  const unranked=cands.filter(x=>(rk.entries[x.app]||{}).rank==null);
+  const prim=Math.ceil(need);
+  const errs=S.facErrors[cid]||[];
+  const rRows=ranked.map(x=>{
+    const a=x.app,e=rk.entries[a],r=e.rank;
+    return '<tr><td>'+(ro?'<b class="mono">'+r+'</b>':'<input type="number" min="1" value="'+r+'" data-chg="setRank" data-a="'+cid+'" data-b="'+a+'" data-fid="rank:'+a+'" aria-label="Rank for '+esc(nm(a))+'">')+'<div class="small muted">'+(r<=prim?'Primary':'Backup '+(r-prim))+'</div></td>'+
+      '<td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+'</div></td>'+
+      '<td><div class="chips">'+factsFor(a,cid)+'</div><div class="small muted" style="margin-top:4px">Their choice #'+x.pref.preference_rank+' · preparedness: '+esc(x.pref.preparedness)+'</div></td><td>'+eligChipFac(a)+'</td>'+
+      '<td>'+(ro?chip(e.rec.replace('_',' ')):'<select data-chg="setRec" data-a="'+cid+'" data-b="'+a+'" aria-label="Recommendation">'+['strong_yes','yes','acceptable','do_not_rank'].map(v=>opt(v,v.replace('_',' '),e.rec)).join('')+'</select>')+'</td>'+
+      '<td>'+(ro?esc(e.comment):'<input data-chg="setComment" data-a="'+cid+'" data-b="'+a+'" value="'+esc(e.comment)+'" placeholder="Optional comment" aria-label="Comment" style="width:180px">')+'</td>'+
+      '<td>'+(ro?'':'<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="move" data-a="'+cid+'" data-b="'+a+'" data-c="-1" aria-label="Move up">↑</button><button class="btn sm" data-act="move" data-a="'+cid+'" data-b="'+a+'" data-c="1" aria-label="Move down">↓</button><button class="btn sm" data-act="unrank" data-a="'+cid+'" data-b="'+a+'">Remove</button></div>')+'</td></tr>';
+  }).join('')||'<tr><td colspan="7" class="muted">No one ranked yet.</td></tr>';
+  const uRows=unranked.map(x=>{
+    const a=x.app,e=rk.entries[a]||{};
+    return '<tr><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+'</div></td><td><div class="chips">'+factsFor(a,cid)+'</div><div class="small muted" style="margin-top:4px">Their choice #'+x.pref.preference_rank+' · preparedness: '+esc(x.pref.preparedness)+' · '+esc(APP[a].availability_status)+'</div></td><td>'+eligChipFac(a)+'</td><td>'+(e.rec==='do_not_rank'?chip('Do not rank','bad'):'')+'</td><td>'+(ro?'':'<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm primary" data-act="addRank" data-a="'+cid+'" data-b="'+a+'">Add to ranking</button><button class="btn sm" data-act="dnr" data-a="'+cid+'" data-b="'+a+'">'+(e.rec==='do_not_rank'?'Undo':'Do not rank')+'</button></div>')+'</td></tr>';
+  }).join('');
+  return '<div class="stack"><div><button class="link" data-act="facBack">← Your course</button><div class="row" style="justify-content:space-between;margin-top:6px"><h2>'+esc(c.catalog_number)+' · '+esc(c.section_label)+' <span class="muted" style="font-weight:500">'+esc(c.title)+'</span></h2>'+rkChip(rk.status)+'</div><div class="muted">Needs '+f(need)+' FTE · '+(w.state==='not_open'?'window not open yet':'window due '+day(w.dueAt))+'</div></div>'+
+   '<div class="note"><b>Your requirements:</b> '+(rq.experience_required?'prior experience required. ':'')+'Skill: '+esc(rq.required_skills)+'. '+esc(rq.faculty_notes)+'</div>'+
+   (rk.status==='submitted'?'<div class="note">Submitted '+when(rk.submittedAt)+'. This ranking is read-only. Ask an administrator to reopen it if you need to change it.</div>':'')+
+   (w.state==='not_open'?'<div class="note warn"><b>Your ranking window is not open yet.</b> The office will email you and send a notification here when it opens.</div>':w.state==='closed'&&rk.status!=='submitted'?'<div class="note warn"><b>Your ranking window is closed.</b> Ask the office if you still need to rank.</div>':rk.status!=='submitted'?'<div class="note">Your ranking window is open until '+day(w.dueAt)+'.</div>':'')+
+   (errs.length?'<div class="note bad" role="alert"><b>Fix these before submitting:</b><ul style="margin:4px 0 0;padding-left:18px">'+errs.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul></div>':'')+
+   (w.state==='not_open'?'':!all.length?'<div class="note">No applicants selected this course yet. The course stays on your list with zero applicants.</div>':
+   '<div class="filters"><label class="f">Level<select data-chg="facFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label><label class="f">Returning<select data-chg="facFilter" data-a="ret">'+opt('','All',fl.ret)+opt('yes','Returning',fl.ret)+opt('no','New',fl.ret)+'</select></label><label class="f">Availability<select data-chg="facFilter" data-a="avail">'+opt('','All',fl.avail)+opt('available','Available',fl.avail)+opt('limited','Limited',fl.avail)+'</select></label><label class="f">Clearance<select data-chg="facFilter" data-a="elig">'+opt('','All',fl.elig)+opt('cleared','Cleared',fl.elig)+opt('pending','Pending',fl.elig)+opt('unavailable','Unavailable',fl.elig)+'</select></label></div>'+
+   '<div><h3 style="margin-bottom:8px">Your ranking ('+rankedCount(cid)+')</h3><div class="tbl"><table><thead><tr><th>Rank</th><th>Candidate</th><th>Preparation</th><th>Clearance</th><th>Recommendation</th><th>Comment</th><th></th></tr></thead><tbody>'+rRows+'</tbody></table></div></div>'+
+   (unranked.length?'<div><h3 style="margin-bottom:8px">Applicants not ranked ('+unranked.length+')</h3><div class="tbl"><table><thead><tr><th>Candidate</th><th>Preparation</th><th>Clearance</th><th></th><th></th></tr></thead><tbody>'+uRows+'</tbody></table></div></div>':'')+
+   '<div class="small muted">Applicants are listed by their own preference, then name. There is no match score. Open a name to see the full application.</div>'+
+   (ro?'':'<div class="row"><button class="btn" data-act="saveDraft" data-a="'+cid+'">Save draft</button><button class="btn primary" data-act="submit" data-a="'+cid+'">Submit staffing request</button></div>'))+'</div>';
+}
+function vFacPublished(){
+  const fid=S.user.fid,lp=latestPub(),mine=SEED.courses.filter(c=>c.faculty_id===fid);
+  return '<div class="stack"><div><h2>Published plan</h2><div class="muted">'+(lp?'Version '+lp.version+' · published '+when(lp.at):'Nothing is published yet.')+'</div></div>'+mine.map(c=>{
+    const id=c.course_id,rows=lp?lp.rows.filter(r=>r.course===id):[],cs=S.concerns.filter(x=>x.course_id===id&&x.faculty_id===fid);
+    return '<div class="card"><h3>'+esc(cname(id))+' · '+esc(c.title)+'</h3>'+
+     (rows.length?'<div class="tbl" style="margin-top:8px"><table><thead><tr><th>Assigned</th><th>Role</th><th class="num">FTE</th><th>Student reply</th></tr></thead><tbody>'+rows.map(r=>{const s=respOf(lp,r).status;return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td>'+({confirmed:chip('Confirmed','ok'),declined:chip('Declined','bad'),awaiting:chip('Waiting'),not_notified:chip('Not notified')}[s])+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="note" style="margin-top:8px">No one is published for this course yet. The office is still working on it.</div>')+
+     (rows.length?'<h3 style="margin:16px 0 6px">Raise a concern</h3><div class="grid2"><label class="f">Assignment<select id="cc-row-'+id+'">'+rows.map(r=>opt(r.id,nm(r.app)+' · '+f(r.fte)+' FTE','')).join('')+'</select></label><label class="f">Category<select id="cc-type-'+id+'">'+['course_fit','availability','prior_commitment','other'].map(t=>opt(t,t.replace('_',' '),'')).join('')+'</select></label></div><label class="f" style="margin-top:8px">Explanation (required)<textarea id="cc-det-'+id+'" rows="3"></textarea></label><div style="margin-top:8px"><button class="btn primary" data-act="raiseConcern" data-a="'+id+'">Send to the office</button></div>':'')+
+     (cs.length?'<h3 style="margin:16px 0 6px">Your concerns</h3>'+cs.map(x=>'<div class="issue"><div>'+chip(x.status.replace(/_/g,' '),x.status.startsWith('resolved')?'ok':'warn')+' <b>'+esc(x.concern_type.replace('_',' '))+'</b><div class="pre">'+esc(x.details)+'</div>'+(x.resolution_note?'<div class="note" style="margin-top:6px"><b>Office response:</b> '+esc(x.resolution_note)+'</div>':'')+'</div></div>').join(''):'')+'</div>';
+  }).join('')+'</div>';
+}
+
+/* ---------- drawer ---------- */
+function drawerHtml(){
+  if(!S.drawer)return '';
+  const a=S.drawer.app,cid=S.drawer.course,ap=APP[a],adm=S.user.type==='admin';
+  const pr=cid&&prefOf(a,cid);
+  const dd=(k,v)=>'<dt>'+k+'</dt><dd>'+(v==null||v===''?'<span class="muted">Not provided</span>':v)+'</dd>';
+  const sk=(SKILLS[a]||[]).map(s=>esc(s.skill_name)+' ('+esc(s.proficiency)+', '+s.years_experience+' yr)').join(', ');
+  const cw=(CW[a]||[]).map(x=>esc(x.catalog_number)+' '+esc(x.course_title)+' · '+esc(x.grade_band)).join('<br>');
+  const th=(TH[a]||[]).map(x=>esc(x.term)+' · '+esc(x.catalog_number)+' '+esc(x.role)+' · '+f(x.allocation_fte)+' FTE').join('<br>');
+  let h='<div class="scrim" data-act="closeDrawer"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Applicant detail"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2>'+esc(nm(a))+'</h2><button class="btn sm" id="drawerClose" data-act="closeDrawer">Close</button></div><div class="chips">'+tierChip(a)+chip(ap.assistant_type)+(adm?eligChipAdm(a):eligChipFac(a))+(ap.application_status==='draft'?chip('Draft application','warn'):'')+'</div><dl>'+
+   dd('Program',esc(ap.program))+dd('Expected graduation',esc(ap.expected_graduation_term))+dd('Availability',esc(ap.availability_status))+dd('Returning TA',ap.returning_ta?'Yes':'No')+dd('Prior TA terms',ap.prior_ta_terms)+dd('Skills',sk)+dd('Relevant coursework',cw)+dd('Prior teaching',th);
+  if(pr)h+=dd('Their choice for this course','#'+pr.preference_rank)+dd('Preparedness',esc(pr.preparedness))+dd('Note for this course',esc(pr.applicant_note));
+  h+='</dl><h3>Experience</h3><div class="pre">'+(esc(ap.experience_summary)||'<span class="muted">Not provided</span>')+'</div><h3>Teaching statement</h3><div class="stmt">'+(esc(ap.teaching_statement)||'<span class="muted">Not provided</span>')+'</div>';
+  if(adm){
+    h+='<h3>Admin only</h3><dl>'+dd('Employment eligibility',esc(ap.employment_eligibility_status.replace('_',' ')))+dd('Spoken-English assessment',esc(ap.spoken_english_assessment))+dd('Max assignment',f(ap.max_assignment_fte)+' FTE')+dd('GRA list',S.gra.has(a)?'On the list':'Not on the list')+'</dl><h3>Faculty requests</h3>';
+    const rs=SEED.courses.map(c=>({c:c.course_id,e:S.rank[c.course_id].entries[a]})).filter(x=>x.e&&(x.e.rank!=null||x.e.rec));
+    h+=rs.length?rs.map(x=>'<div class="issue"><div><b>'+esc(cname(x.c))+'</b> · '+esc(prof(x.c))+'<div class="small muted">'+(x.e.rank!=null?'Rank #'+x.e.rank+' · ':'')+esc((x.e.rec||'').replace('_',' '))+(x.e.comment?' · '+esc(x.e.comment):'')+'</div></div></div>').join(''):'<div class="muted">No professor has ranked this applicant.</div>';
+  }
+  return h+'</aside>';
+}
+
+/* ---------- render ---------- */
+function render(){
+  const y=S.toTop?0:window.scrollY;S.toTop=false;
+  let main;
+  if(S.user.type==='admin')main={dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,students:vStudents,concerns:vConcerns,audit:vAudit}[S.tab]();
+  else main=S.tab==='published'?vFacPublished():vFacCourses();
+  $('#app').innerHTML=header()+nav()+'<main>'+main+'</main><footer class="foot">Every applicant here is fictional and labeled as synthetic. The page resets when you refresh, and picking a profile is not sign-in. Course titles and faculty names come from public Fall 2026 UT Austin Computer Science listings.</footer>';
+  const d=$('#drawer');d.innerHTML=drawerHtml();
+  if(S.drawer&&S.drawerNew){const b=$('#drawerClose');if(b)b.focus();S.drawerNew=false}
+  window.scrollTo(0,y);
+  if(FID){const el=document.querySelector('[data-fid="'+FID+'"]');if(el)el.focus();FID=null}
+}
+function updateGate(){
+  const g=gate(),b=$('#pubBtn');
+  if(b)b.disabled=!g.ok;
+  const w=$('#pubWhy');
+  if(w)w.textContent=!g.ok?(g.blocks.length?'Fix the blocking issues first.':g.missing.length?'Add a note for each warning.':!g.accepted.length?'Accept at least one assignment.':'Nothing has changed since the latest version.'):'';
+}
+async function copyText(text,el){
+  try{await navigator.clipboard.writeText(text);toast('Copied')}
+  catch(e){if(el){el.focus();el.select()}toast('Select the text and copy it')}
+}
+
+/* ---------- actions ---------- */
+const ACT={
+  reset(){initState();render();toast('Demo reset')},
+  role(a,b,v){
+    S.toTop=true;S.drawer=null;S.facCourse=null;S.bell=false;
+    if(v==='admin'){S.user={type:'admin'};S.tab='dashboard'}else{S.user={type:'faculty',fid:v.slice(4)};S.tab='courses'}
+    render();
+  },
+  tab(a){S.toTop=true;S.tab=a;S.facCourse=null;render()},
+  go(a,b){S.toTop=true;ACT.role(null,null,a);S.tab=b;render()},
+  goCourse(a){S.toTop=true;if(S.user.type!=='admin'){ACT.role(null,null,'admin')}S.tab='assign';S.selCourse=a;S.drawer=null;render()},
+  dashFilter(a,b,v){S.f.dash[a]=v;render()},
+  appFilter(a,b,v){S.f.app[a]=v;render()},
+  facFilter(a,b,v){S.f.fac[a]=v;render()},
+  drawer(a,b){S.drawer={app:a,course:b||null};S.drawerNew=true;render()},
+  closeDrawer(){S.drawer=null;render()},
+  /* faculty ranking */
+  facOpen(a){S.toTop=true;S.facCourse=a;render()},
+  facBack(){S.toTop=true;S.facCourse=null;render()},
+  setRank(a,b,v){
+    const rk=S.rank[a];if(!canEdit(a))return;
+    const n=parseInt(v,10);const e=rk.entries[b]=rk.entries[b]||{rank:null,rec:'yes',comment:''};
+    e.rank=n>0?n:null;if(e.rank&&e.rec==='do_not_rank')e.rec='yes';
+    touch(a);S.facErrors[a]=[];render();
+  },
+  setRec(a,b,v){
+    const rk=S.rank[a];if(!canEdit(a))return;
+    const e=rk.entries[b];e.rec=v;if(v==='do_not_rank'){e.rank=null;compact(a)}
+    touch(a);render();
+  },
+  setComment(a,b,v){const rk=S.rank[a];if(!canEdit(a))return;rk.entries[b].comment=v;touch(a);render()},
+  addRank(a,b){
+    const rk=S.rank[a];if(!canEdit(a))return;
+    const mx=Math.max(0,...Object.values(rk.entries).map(e=>e.rank||0));
+    rk.entries[b]={rank:mx+1,rec:'yes',comment:(rk.entries[b]||{}).comment||''};
+    touch(a);S.facErrors[a]=[];render();
+  },
+  unrank(a,b){const rk=S.rank[a];if(!canEdit(a))return;rk.entries[b].rank=null;compact(a);touch(a);render()},
+  dnr(a,b){
+    const rk=S.rank[a];if(!canEdit(a))return;
+    const e=rk.entries[b]=rk.entries[b]||{rank:null,rec:'',comment:''};
+    e.rec=e.rec==='do_not_rank'?'':'do_not_rank';e.rank=null;compact(a);touch(a);render();
+  },
+  move(a,b,d){
+    const rk=S.rank[a];if(!canEdit(a))return;
+    compact(a);
+    const list=Object.entries(rk.entries).filter(e=>e[1].rank!=null).sort((x,y)=>x[1].rank-y[1].rank);
+    const i=list.findIndex(e=>e[0]===b),j=i+parseInt(d,10);
+    if(j<0||j>=list.length)return;
+    const t=list[i][1].rank;list[i][1].rank=list[j][1].rank;list[j][1].rank=t;
+    touch(a);render();
+  },
+  saveDraft(a){if(!canEdit(a))return;touch(a);log('ranking draft saved','ranking',a,cname(a)+' draft saved ('+rankedCount(a)+' ranked)');toast('Draft saved. Nothing was sent to the office.');render()},
+  submit(a){
+    if(!canEdit(a))return;
+    const m=validateRanking(a);S.facErrors[a]=m;
+    if(m.length){render();return}
+    const rk=S.rank[a];rk.status='submitted';rk.submittedAt=nowIso();rk.savedAt=rk.submittedAt;
+    log('staffing request submitted','ranking',a,cname(a)+' ranking submitted with '+rankedCount(a)+' candidates');
+    notify('admin',prof(a)+' submitted the '+cname(a)+' ranking.',{tab:'windows'});
+    toast('Staffing request submitted');render();
+  },
+  reopen(a){
+    const fid=COURSE[a].faculty_id;S.rank[a].status='reopened';log('ranking reopened','ranking',a,cname(a)+' reopened for '+prof(a));
+    if(!winOpen(fid)){const d=S.win[fid].dueAt&&Date.parse(S.win[fid].dueAt)>Date.now()?S.win[fid].dueAt:S.winDue;openWindow(fid,d,'Ranking reopened')}
+    else{queueMail(fid,'Ranking reopened',S.win[fid].dueAt);notify('fac:'+fid,'The office reopened your '+cname(a)+' ranking.',{facTab:'courses'})}
+    toast('Ranking reopened for '+prof(a)+'. Email queued, not sent.');render()},
+  /* notifications and windows */
+  bell(){S.bell=!S.bell;render()},
+  notifAll(){S.notifs.filter(n=>n.to===me()).forEach(n=>{n.read=true});render()},
+  notifGo(a){
+    const n=S.notifs.find(x=>x.id===a);if(!n)return;n.read=true;S.bell=false;S.toTop=true;
+    if(n.go&&n.go.tab){S.tab=n.go.tab;S.facCourse=null}
+    if(n.go&&n.go.facTab){S.tab=n.go.facTab;S.facCourse=null}
+    render();
+  },
+  winPick(a,b,v){S.winPick=v;render()},
+  winDue(a,b,v){if(v)S.winDue=v;render()},
+  openWin(a,b){
+    const w=S.win[a];if(!w||w.state==='open')return;
+    const d=S.winDue;if(!d||Date.parse(d+'T23:59:00')<Date.now()){toast('Pick a due date in the future');return}
+    openWindow(a,d,b||'');toast('Window opened for '+FAC[a].display_name+'. Email queued, not sent.');render();
+  },
+  openAll(){
+    const d=S.winDue;if(!d||Date.parse(d+'T23:59:00')<Date.now()){toast('Pick a due date in the future');return}
+    const t=trackRows().filter(r=>r.st==='Not opened');
+    t.forEach(r=>openWindow(r.fid,d,''));toast(t.length+' windows opened. Emails queued, not sent.');render();
+  },
+  remind(a){
+    const w=S.win[a];if(!w||w.state!=='open')return;
+    queueMail(a,'Reminder',w.dueAt);notify('fac:'+a,'Reminder: your ranking is due '+day(w.dueAt)+'.',{facTab:'courses'});
+    log('reminder queued','window',a,FAC[a].display_name);toast('Reminder queued, not sent.');render();
+  },
+  closeWin(a){const w=S.win[a];if(!w||w.state!=='open')return;w.state='closed';w.closedAt=nowIso();log('ranking window closed','window',a,FAC[a].display_name);toast('Window closed');render()},
+  showMail(a){S.mailView=a;render()},
+  hideMail(){S.mailView=null;render()},
+  copyMail(){copyText(($('#mailBox')||{}).value||'',$('#mailBox'));return false},
+  copyTrack(){copyText(trackCsv(),$('#trackBox'));return false},
+  /* admin assignments */
+  setAlloc(a,b,v){
+    const val=parseFloat(v);let row=S.draft.rows.find(r=>r.course===a&&r.app===b&&r.decision!=='declined');
+    if(!val){
+      if(row){S.draft.rows=S.draft.rows.filter(r=>r!==row);log('draft assignment removed','assignment',row.id,nm(b)+' removed from '+cname(a))}
+    }else if(row){const was=row.fte;row.fte=val;log('draft assignment changed','assignment',row.id,nm(b)+' in '+cname(a)+': '+f(was)+' to '+f(val)+' FTE')}
+    else{row={id:'draft_new_'+(S.newRow++),course:a,app:b,fte:val,role:defaultRole(b),decision:'requested',published:false,note:''};S.draft.rows.push(row);log('draft assignment added','assignment',row.id,nm(b)+' to '+cname(a)+' at '+f(val)+' FTE')}
+    render();
+  },
+  setDecision(a,b,v){const r=S.draft.rows.find(x=>x.id===a);if(!r)return;const was=r.decision;r.decision=v;log('admin decision changed','assignment',a,nm(r.app)+' in '+cname(r.course)+': '+was+' to '+v);render()},
+  setRole(a,b,v){const r=S.draft.rows.find(x=>x.id===a);if(!r)return;r.role=v;log('draft assignment changed','assignment',a,nm(r.app)+' appointment set to '+v);render()},
+  setNote(a,b,v){const r=S.draft.rows.find(x=>x.id===a);if(r)r.note=v;return false},
+  acceptAll(a){S.draft.rows.filter(r=>r.course===a&&r.decision==='requested').forEach(r=>{r.decision='accepted';log('admin decision changed','assignment',r.id,nm(r.app)+' in '+cname(a)+': requested to accepted')});render()},
+  copyPool(a){
+    const t=candidates(a).map(x=>nm(x.app)+' · '+TIER[APP[x.app].degree_level]+' · '+APP[x.app].assistant_type+' · their choice #'+x.pref.preference_rank+(((TH[x.app]||[]).find(h=>h.catalog_number===COURSE[a].catalog_number))?' · was '+(TH[x.app].find(h=>h.catalog_number===COURSE[a].catalog_number).role)+' here':'')).join('\n');
+    copyText('Applicants for '+cname(a)+' '+COURSE[a].title+':\n'+t);return false;
+  },
+  /* applicants */
+  applyGra(){const t=$('#graText');applyGra(t?t.value:S.graText);toast('GRA check applied');render()},
+  graText(a,b,v){S.graText=v;return false},
+  toggleGra(a){if(S.gra.has(a))S.gra.delete(a);else S.gra.add(a);log('GRA flag changed','applicant',a,nm(a)+(S.gra.has(a)?' flagged':' unflagged')+' as GRA');render()},
+  /* publish */
+  setOverride(a,b,v){S.overrides[a]=v;updateGate();return false},
+  fillNotes(){gate().warns.filter(w=>w.gate&&!(S.overrides[w.key]||'').trim()).forEach(w=>{S.overrides[w.key]='Acknowledged. Will be filled after faculty review.'});render()},
+  selPub(a){S.selPub=parseInt(a,10);S.confirmClone=null;render()},
+  publish(){
+    const g=gate();if(!g.ok)return;
+    const prev=latestPub(),v=prev?prev.version+1:1;
+    let n=S.pubs.reduce((m,p)=>m+p.rows.length,0);
+    const rows=g.accepted.map(r=>{
+      const notes=[S.overrides['pending:'+r.id],S.overrides['unranked:'+r.id],S.overrides['noranking:'+r.course]].filter(x=>x&&x.trim());
+      return{id:'pub_asn_'+String(++n).padStart(3,'0'),course:r.course,app:r.app,fte:r.fte,role:r.role,note:notes.join(' ')};
+    });
+    const gaps={};SEED.courses.forEach(c=>{if(sum(rows.filter(r=>r.course===c.course_id).map(r=>r.fte))<c.ta_slots_required)gaps[c.course_id]=S.overrides['unfilled:'+c.course_id]||''});
+    const pub={id:'pub_f26_v'+v,version:v,at:nowIso(),by:ADMIN,rows,gaps,notifiedAt:prev?prev.notifiedAt:null,replyBy:null,responses:{}};
+    if(prev)rows.forEach(r=>{const o=prev.responses[key(r)];if(o)pub.responses[key(r)]={...o}});
+    S.pubs.push(pub);
+    g.accepted.forEach(r=>{r.published=true});
+    S.concerns.forEach(c=>{if(c.status==='under_review'&&c.adjust){c.status='resolved_adjustment';c.resolved_at=pub.at;c.resolved_by_user_id='usr_admin_01';c.resolution_note=(c.resolution_note||'')+' Published in version '+v+'.';log('resolution recorded','concern',c.concern_id,'Resolved by adjustment in version '+v)}});
+    log('publication created','publication',pub.id,'Version '+v+' published with '+rows.length+' assignments');
+    [...new Set(rows.map(r=>COURSE[r.course].faculty_id))].forEach(fid=>notify('fac:'+fid,'Version '+v+' is published. See who is assigned to your course.',{facTab:'published'}));
+    S.selPub=v;toast('Version '+v+' published to faculty');render();
+  },
+  cloneAsk(a){S.confirmClone=parseInt(a,10);render()},
+  cloneCancel(){S.confirmClone=null;render()},
+  cloneDo(a){
+    const p=S.pubs.find(x=>x.version===parseInt(a,10));
+    S.draft={id:'draft_from_v'+p.version+'_'+(S.newRow++),name:'Revision of version '+p.version,rows:p.rows.map(r=>({id:'draft_new_'+(S.newRow++),course:r.course,app:r.app,fte:r.fte,role:r.role,decision:'accepted',published:true,note:''}))};
+    S.confirmClone=null;log('revision draft created','draft',S.draft.id,'Working draft rebuilt from version '+p.version);toast('Working draft rebuilt from version '+p.version);render();
+  },
+  copyCsv(a){const p=S.pubs.find(x=>x.version===parseInt(a,10));copyText(csvFor(p),$('#csvBox'));return false},
+  /* students */
+  replyBy(a,b,v){S.replyBy=v;return false},
+  notify(){
+    const p=latestPub(),d=($('#replyBy')||{}).value||S.replyBy;S.replyBy=d;
+    p.notifiedAt=nowIso();p.replyBy=d;
+    p.rows.forEach(r=>{const k=key(r);if(!p.responses[k]||p.responses[k].status==='not_notified')p.responses[k]={status:'awaiting',at:p.notifiedAt}});
+    log('students notified','publication',p.id,'Version '+p.version+' notified, reply by '+day(d));toast('Recorded. Copy each email from the table.');render();
+  },
+  setResp(a,b,v){const p=latestPub();p.responses[a]={status:v,at:nowIso()};log('student reply logged','publication',p.id,a.split('|').map((x,i)=>i?short(x):cname(x)).join(' · ')+': '+v);render()},
+  showEmail(a){S.emailFor=a;render()},
+  hideEmail(){S.emailFor=null;render()},
+  copyEmail(){copyText(($('#emailBox')||{}).value||'',$('#emailBox'));return false},
+  useBackup(a,b,c){
+    const old=S.draft.rows.find(r=>r.course===a&&r.app===b&&r.decision!=='declined');
+    const fte=old?old.fte:1;
+    if(old){old.decision='declined';old.note='Student declined.'}
+    const bk=S.rank[a].entries[c];
+    S.draft.rows.push({id:'draft_new_'+(S.newRow++),course:a,app:c,fte,role:defaultRole(c),decision:'requested',published:false,note:'Backup #'+(bk?bk.rank:'?')+' from '+prof(a)+' after '+short(b)+' declined.'});
+    log('draft assignment added','assignment',a,nm(c)+' added to '+cname(a)+' as a replacement for '+nm(b));
+    S.toTop=true;S.tab='assign';S.selCourse=a;toast(short(c)+' requested for '+cname(a)+'. Accept and publish when ready.');render();
+  },
+  /* concerns */
+  concernNote(a,b,v){S.concernNotes[a]=v;return false},
+  cReview(a){const c=S.concerns.find(x=>x.concern_id===a);c.status='under_review';c.reviewed_by_user_id='usr_admin_01';log('concern status changed','concern',a,'Under review');render()},
+  cClose(a){
+    const c=S.concerns.find(x=>x.concern_id===a),n=(S.concernNotes[a]||'').trim();
+    if(!n){toast('Add a resolution note first');return false}
+    c.status='resolved_no_change';c.resolved_at=nowIso();c.resolved_by_user_id='usr_admin_01';c.resolution_note=n;
+    log('resolution recorded','concern',a,'Closed with no change');render();
+  },
+  cAdjust(a){
+    const c=S.concerns.find(x=>x.concern_id===a),n=(S.concernNotes[a]||'').trim();
+    if(!n){toast('Describe the planned change first');return false}
+    c.status='under_review';c.adjust=true;c.resolution_note=n;c.reviewed_by_user_id='usr_admin_01';
+    log('revision draft created','concern',a,'Working draft opened for '+cname(c.course_id)+': '+n);
+    S.toTop=true;S.tab='assign';S.selCourse=c.course_id;toast('Change the assignment, then publish the next version');render();
+  },
+  raiseConcern(a){
+    const lp=latestPub(),det=($('#cc-det-'+a)||{}).value||'',rowId=($('#cc-row-'+a)||{}).value,type=($('#cc-type-'+a)||{}).value;
+    if(!det.trim()){toast('Add an explanation first');return false}
+    const row=lp.rows.find(r=>r.id===rowId);
+    const c={concern_id:'concern_'+String(S.concerns.length+1).padStart(3,'0'),publication_id:lp.id,published_assignment_id:rowId,course_id:a,faculty_id:S.user.fid,concern_type:type,details:det.trim(),status:'open',created_at:nowIso(),reviewed_by_user_id:'',resolved_at:'',resolved_by_user_id:'',resolution_note:'',adjust:false};
+    S.concerns.push(c);log('faculty concern raised','concern',c.concern_id,cname(a)+' · '+type+(row?' · '+short(row.app):''));notify('admin',FAC[S.user.fid].display_name+' raised a concern on '+cname(a)+'.',{tab:'concerns'});toast('Concern sent to the office');render();
+  }
+};
+
+document.addEventListener('click',e=>{
+  if(S&&S.bell&&!e.target.closest('.bellwrap')){S.bell=false;render()}
+  const el=e.target.closest('[data-act]');if(!el||!ACT[el.dataset.act])return;
+  if(ACT[el.dataset.act](el.dataset.a,el.dataset.b,el.dataset.c,el)===false)return;
+});
+document.addEventListener('change',e=>{
+  const el=e.target.closest('[data-chg]');if(!el||!ACT[el.dataset.chg])return;
+  FID=el.dataset.fid||null;ACT[el.dataset.chg](el.dataset.a,el.dataset.b,el.value,el);
+});
+document.addEventListener('input',e=>{
+  const el=e.target.closest('[data-inp]');if(!el||!ACT[el.dataset.inp])return;
+  ACT[el.dataset.inp](el.dataset.a,el.dataset.b,el.value,el);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S&&(S.drawer||S.bell)){S.drawer=null;S.bell=false;render()}});
+
+window.__ta={state:()=>S,trackRows,trackCsv,ACT,computeIssues,gate,csvFor,backupsFor,validateRanking,needsHome,render};
+initState();render();
+})();
+</script>

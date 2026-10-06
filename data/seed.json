@@ -1,0 +1,1484 @@
+{
+ "terms": [
+  {
+   "term_id": "term_fall_2026",
+   "name": "Fall 2026",
+   "application_deadline": "2026-08-31T23:59:00-05:00",
+   "faculty_ranking_deadline": "2026-09-18T17:00:00-05:00",
+   "status": "faculty_ranking"
+  }
+ ],
+ "faculty": [
+  {
+   "faculty_id": "fac_w_young",
+   "display_name": "W Young",
+   "department": "Computer Science"
+  },
+  {
+   "faculty_id": "fac_c_dey",
+   "display_name": "C Dey",
+   "department": "Computer Science"
+  },
+  {
+   "faculty_id": "fac_j_biswas",
+   "display_name": "J Biswas",
+   "department": "Computer Science"
+  },
+  {
+   "faculty_id": "fac_v_ravishankar",
+   "display_name": "V Ravishankar",
+   "department": "Computer Science"
+  },
+  {
+   "faculty_id": "fac_d_parikh",
+   "display_name": "D Parikh",
+   "department": "Computer Science"
+  },
+  {
+   "faculty_id": "fac_a_beasley",
+   "display_name": "A Beasley",
+   "department": "Computer Science"
+  }
+ ],
+ "users": [
+  {
+   "user_id": "usr_admin_01",
+   "role": "admin",
+   "display_name": "Admin Rowan",
+   "email": "admin.rowan@example.test",
+   "faculty_id": ""
+  },
+  {
+   "user_id": "usr_admin_02",
+   "role": "admin",
+   "display_name": "Admin Sky",
+   "email": "admin.sky@example.test",
+   "faculty_id": ""
+  },
+  {
+   "user_id": "usr_fac_001",
+   "role": "faculty",
+   "display_name": "W Young",
+   "email": "faculty001@example.test",
+   "faculty_id": "fac_w_young"
+  },
+  {
+   "user_id": "usr_fac_002",
+   "role": "faculty",
+   "display_name": "C Dey",
+   "email": "faculty002@example.test",
+   "faculty_id": "fac_c_dey"
+  },
+  {
+   "user_id": "usr_fac_003",
+   "role": "faculty",
+   "display_name": "J Biswas",
+   "email": "faculty003@example.test",
+   "faculty_id": "fac_j_biswas"
+  },
+  {
+   "user_id": "usr_fac_004",
+   "role": "faculty",
+   "display_name": "V Ravishankar",
+   "email": "faculty004@example.test",
+   "faculty_id": "fac_v_ravishankar"
+  },
+  {
+   "user_id": "usr_fac_005",
+   "role": "faculty",
+   "display_name": "D Parikh",
+   "email": "faculty005@example.test",
+   "faculty_id": "fac_d_parikh"
+  },
+  {
+   "user_id": "usr_fac_006",
+   "role": "faculty",
+   "display_name": "A Beasley",
+   "email": "faculty006@example.test",
+   "faculty_id": "fac_a_beasley"
+  }
+ ],
+ "courses": [
+  {
+   "course_id": "crs_f26_001",
+   "term_id": "term_fall_2026",
+   "catalog_number": "303E",
+   "title": "Elements of Computers and Programming",
+   "section_label": "001",
+   "faculty_id": "fac_w_young",
+   "ta_slots_required": 1.0,
+   "status": "open"
+  },
+  {
+   "course_id": "crs_f26_002",
+   "term_id": "term_fall_2026",
+   "catalog_number": "303E",
+   "title": "Elements of Computers and Programming",
+   "section_label": "002",
+   "faculty_id": "fac_c_dey",
+   "ta_slots_required": 1.0,
+   "status": "open"
+  },
+  {
+   "course_id": "crs_f26_003",
+   "term_id": "term_fall_2026",
+   "catalog_number": "304I",
+   "title": "Essentials of AI Life and Society",
+   "section_label": "WB1",
+   "faculty_id": "fac_j_biswas",
+   "ta_slots_required": 1.0,
+   "status": "open"
+  },
+  {
+   "course_id": "crs_f26_004",
+   "term_id": "term_fall_2026",
+   "catalog_number": "311",
+   "title": "Discrete Math for Computer Science",
+   "section_label": "001",
+   "faculty_id": "fac_v_ravishankar",
+   "ta_slots_required": 1.0,
+   "status": "open"
+  },
+  {
+   "course_id": "crs_f26_005",
+   "term_id": "term_fall_2026",
+   "catalog_number": "311H",
+   "title": "Discrete Math for Computer Science Honors",
+   "section_label": "H01",
+   "faculty_id": "fac_d_parikh",
+   "ta_slots_required": 1.0,
+   "status": "open"
+  },
+  {
+   "course_id": "crs_f26_006",
+   "term_id": "term_fall_2026",
+   "catalog_number": "312",
+   "title": "Introduction to Programming",
+   "section_label": "001",
+   "faculty_id": "fac_a_beasley",
+   "ta_slots_required": 1.0,
+   "status": "open"
+  }
+ ],
+ "applicants": [
+  {
+   "applicant_id": "apl_0001",
+   "display_name": "Candidate Atlas",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0002",
+   "display_name": "Candidate Birch",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0003",
+   "display_name": "Candidate Cedar",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0004",
+   "display_name": "Candidate Delta",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0005",
+   "display_name": "Candidate Ember",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0006",
+   "display_name": "Candidate Finch",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0007",
+   "display_name": "Candidate Grove",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0008",
+   "display_name": "Candidate Harbor",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0009",
+   "display_name": "Candidate Indigo",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0010",
+   "display_name": "Candidate Juniper",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0011",
+   "display_name": "Candidate Kestrel",
+   "synthetic_person": true
+  },
+  {
+   "applicant_id": "apl_0012",
+   "display_name": "Candidate Linden",
+   "synthetic_person": true
+  }
+ ],
+ "applications": [
+  {
+   "application_id": "app_f26_0001",
+   "applicant_id": "apl_0001",
+   "term_id": "term_fall_2026",
+   "degree_level": "Undergraduate",
+   "assistant_type": "UGCA",
+   "program": "Computer Science",
+   "expected_graduation_term": "Spring 2027",
+   "returning_ta": true,
+   "prior_ta_terms": 0,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "verified",
+   "availability_status": "limited",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Led weekly study groups and reviewed programming assignments.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-01T09:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0002",
+   "applicant_id": "apl_0002",
+   "term_id": "term_fall_2026",
+   "degree_level": "Masters",
+   "assistant_type": "TA",
+   "program": "Computational Science",
+   "expected_graduation_term": "Fall 2028",
+   "returning_ta": false,
+   "prior_ta_terms": 1,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "verified",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Mentored peers in introductory programming and debugging.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-02T10:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0003",
+   "applicant_id": "apl_0003",
+   "term_id": "term_fall_2026",
+   "degree_level": "PhD",
+   "assistant_type": "TA",
+   "program": "Electrical and Computer Engineering",
+   "expected_graduation_term": "Spring 2029",
+   "returning_ta": false,
+   "prior_ta_terms": 2,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "not_required",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Supported office hours and wrote practice problems for a computing course.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-03T11:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0004",
+   "applicant_id": "apl_0004",
+   "term_id": "term_fall_2026",
+   "degree_level": "Undergraduate",
+   "assistant_type": "UGCA",
+   "program": "Information Studies",
+   "expected_graduation_term": "Fall 2027",
+   "returning_ta": false,
+   "prior_ta_terms": 3,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "pending_review",
+   "spoken_english_assessment": "pending",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "No formal teaching role yet; interested in gaining classroom experience.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-04T12:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0005",
+   "applicant_id": "apl_0005",
+   "term_id": "term_fall_2026",
+   "degree_level": "Masters",
+   "assistant_type": "TA",
+   "program": "Computer Science",
+   "expected_graduation_term": "Spring 2028",
+   "returning_ta": true,
+   "prior_ta_terms": 0,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "verified",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Led weekly study groups and reviewed programming assignments.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-05T13:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0006",
+   "applicant_id": "apl_0006",
+   "term_id": "term_fall_2026",
+   "degree_level": "PhD",
+   "assistant_type": "TA",
+   "program": "Computational Science",
+   "expected_graduation_term": "Fall 2029",
+   "returning_ta": false,
+   "prior_ta_terms": 1,
+   "max_assignment_fte": 0.5,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "verified",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Mentored peers in introductory programming and debugging.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-06T14:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0007",
+   "applicant_id": "apl_0007",
+   "term_id": "term_fall_2026",
+   "degree_level": "Undergraduate",
+   "assistant_type": "UGCA",
+   "program": "Electrical and Computer Engineering",
+   "expected_graduation_term": "Spring 2027",
+   "returning_ta": false,
+   "prior_ta_terms": 2,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "not_required",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Supported office hours and wrote practice problems for a computing course.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-07T15:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0008",
+   "applicant_id": "apl_0008",
+   "term_id": "term_fall_2026",
+   "degree_level": "Masters",
+   "assistant_type": "TA",
+   "program": "Information Studies",
+   "expected_graduation_term": "Fall 2028",
+   "returning_ta": false,
+   "prior_ta_terms": 3,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "pending",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "No formal teaching role yet; interested in gaining classroom experience.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-08T16:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0009",
+   "applicant_id": "apl_0009",
+   "term_id": "term_fall_2026",
+   "degree_level": "PhD",
+   "assistant_type": "TA",
+   "program": "Computer Science",
+   "expected_graduation_term": "Spring 2029",
+   "returning_ta": true,
+   "prior_ta_terms": 0,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "verified",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Led weekly study groups and reviewed programming assignments.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-09T09:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0010",
+   "applicant_id": "apl_0010",
+   "term_id": "term_fall_2026",
+   "degree_level": "Undergraduate",
+   "assistant_type": "UGCA",
+   "program": "Computational Science",
+   "expected_graduation_term": "Fall 2027",
+   "returning_ta": false,
+   "prior_ta_terms": 1,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "verified",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Mentored peers in introductory programming and debugging.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-10T10:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0011",
+   "applicant_id": "apl_0011",
+   "term_id": "term_fall_2026",
+   "degree_level": "Masters",
+   "assistant_type": "TA",
+   "program": "Electrical and Computer Engineering",
+   "expected_graduation_term": "Spring 2028",
+   "returning_ta": false,
+   "prior_ta_terms": 2,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "not_required",
+   "availability_status": "available",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "Supported office hours and wrote practice problems for a computing course.",
+   "application_status": "submitted",
+   "submitted_at": "2026-08-11T11:00:00-05:00"
+  },
+  {
+   "application_id": "app_f26_0012",
+   "applicant_id": "apl_0012",
+   "term_id": "term_fall_2026",
+   "degree_level": "PhD",
+   "assistant_type": "TA",
+   "program": "Information Studies",
+   "expected_graduation_term": "Fall 2029",
+   "returning_ta": false,
+   "prior_ta_terms": 3,
+   "max_assignment_fte": 1.0,
+   "employment_eligibility_status": "eligible",
+   "spoken_english_assessment": "pending",
+   "availability_status": "limited",
+   "teaching_statement": "Explains technical ideas with examples, checks understanding, and guides students without giving away solutions.",
+   "experience_summary": "No formal teaching role yet; interested in gaining classroom experience.",
+   "application_status": "draft",
+   "submitted_at": ""
+  }
+ ],
+ "applicant_skills": [
+  {
+   "application_id": "app_f26_0001",
+   "skill_name": "Python",
+   "proficiency": "coursework",
+   "years_experience": 0.5
+  },
+  {
+   "application_id": "app_f26_0001",
+   "skill_name": "C",
+   "proficiency": "working",
+   "years_experience": 1.5
+  },
+  {
+   "application_id": "app_f26_0002",
+   "skill_name": "Java",
+   "proficiency": "working",
+   "years_experience": 1.5
+  },
+  {
+   "application_id": "app_f26_0002",
+   "skill_name": "JavaScript",
+   "proficiency": "advanced",
+   "years_experience": 2.5
+  },
+  {
+   "application_id": "app_f26_0002",
+   "skill_name": "Swift",
+   "proficiency": "coursework",
+   "years_experience": 3.5
+  },
+  {
+   "application_id": "app_f26_0003",
+   "skill_name": "C++",
+   "proficiency": "advanced",
+   "years_experience": 2.5
+  },
+  {
+   "application_id": "app_f26_0003",
+   "skill_name": "SQL",
+   "proficiency": "coursework",
+   "years_experience": 3.5
+  },
+  {
+   "application_id": "app_f26_0003",
+   "skill_name": "React",
+   "proficiency": "working",
+   "years_experience": 4.5
+  },
+  {
+   "application_id": "app_f26_0003",
+   "skill_name": "Java",
+   "proficiency": "advanced",
+   "years_experience": 5.5
+  },
+  {
+   "application_id": "app_f26_0004",
+   "skill_name": "C",
+   "proficiency": "coursework",
+   "years_experience": 3.5
+  },
+  {
+   "application_id": "app_f26_0004",
+   "skill_name": "Unix",
+   "proficiency": "working",
+   "years_experience": 4.5
+  },
+  {
+   "application_id": "app_f26_0005",
+   "skill_name": "JavaScript",
+   "proficiency": "working",
+   "years_experience": 4.5
+  },
+  {
+   "application_id": "app_f26_0005",
+   "skill_name": "Swift",
+   "proficiency": "advanced",
+   "years_experience": 5.5
+  },
+  {
+   "application_id": "app_f26_0005",
+   "skill_name": "Python",
+   "proficiency": "coursework",
+   "years_experience": 0.5
+  },
+  {
+   "application_id": "app_f26_0006",
+   "skill_name": "SQL",
+   "proficiency": "advanced",
+   "years_experience": 5.5
+  },
+  {
+   "application_id": "app_f26_0006",
+   "skill_name": "React",
+   "proficiency": "coursework",
+   "years_experience": 0.5
+  },
+  {
+   "application_id": "app_f26_0006",
+   "skill_name": "Java",
+   "proficiency": "working",
+   "years_experience": 1.5
+  },
+  {
+   "application_id": "app_f26_0006",
+   "skill_name": "JavaScript",
+   "proficiency": "advanced",
+   "years_experience": 2.5
+  },
+  {
+   "application_id": "app_f26_0007",
+   "skill_name": "Unix",
+   "proficiency": "coursework",
+   "years_experience": 0.5
+  },
+  {
+   "application_id": "app_f26_0007",
+   "skill_name": "Assembly",
+   "proficiency": "working",
+   "years_experience": 1.5
+  },
+  {
+   "application_id": "app_f26_0008",
+   "skill_name": "Swift",
+   "proficiency": "working",
+   "years_experience": 1.5
+  },
+  {
+   "application_id": "app_f26_0008",
+   "skill_name": "Python",
+   "proficiency": "advanced",
+   "years_experience": 2.5
+  },
+  {
+   "application_id": "app_f26_0008",
+   "skill_name": "C",
+   "proficiency": "coursework",
+   "years_experience": 3.5
+  },
+  {
+   "application_id": "app_f26_0009",
+   "skill_name": "React",
+   "proficiency": "advanced",
+   "years_experience": 2.5
+  },
+  {
+   "application_id": "app_f26_0009",
+   "skill_name": "Java",
+   "proficiency": "coursework",
+   "years_experience": 3.5
+  },
+  {
+   "application_id": "app_f26_0009",
+   "skill_name": "JavaScript",
+   "proficiency": "working",
+   "years_experience": 4.5
+  },
+  {
+   "application_id": "app_f26_0009",
+   "skill_name": "Swift",
+   "proficiency": "advanced",
+   "years_experience": 5.5
+  },
+  {
+   "application_id": "app_f26_0010",
+   "skill_name": "Assembly",
+   "proficiency": "coursework",
+   "years_experience": 3.5
+  },
+  {
+   "application_id": "app_f26_0010",
+   "skill_name": "C++",
+   "proficiency": "working",
+   "years_experience": 4.5
+  },
+  {
+   "application_id": "app_f26_0011",
+   "skill_name": "Python",
+   "proficiency": "working",
+   "years_experience": 4.5
+  },
+  {
+   "application_id": "app_f26_0011",
+   "skill_name": "C",
+   "proficiency": "advanced",
+   "years_experience": 5.5
+  },
+  {
+   "application_id": "app_f26_0011",
+   "skill_name": "Unix",
+   "proficiency": "coursework",
+   "years_experience": 0.5
+  },
+  {
+   "application_id": "app_f26_0012",
+   "skill_name": "Java",
+   "proficiency": "advanced",
+   "years_experience": 5.5
+  },
+  {
+   "application_id": "app_f26_0012",
+   "skill_name": "JavaScript",
+   "proficiency": "coursework",
+   "years_experience": 0.5
+  },
+  {
+   "application_id": "app_f26_0012",
+   "skill_name": "Swift",
+   "proficiency": "working",
+   "years_experience": 1.5
+  },
+  {
+   "application_id": "app_f26_0012",
+   "skill_name": "Python",
+   "proficiency": "advanced",
+   "years_experience": 2.5
+  }
+ ],
+ "applicant_coursework": [
+  {
+   "application_id": "app_f26_0001",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  },
+  {
+   "application_id": "app_f26_0001",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0002",
+   "catalog_number": "304I",
+   "course_title": "Essentials of AI Life and Society",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0002",
+   "catalog_number": "311",
+   "course_title": "Discrete Math for Computer Science",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0003",
+   "catalog_number": "311H",
+   "course_title": "Discrete Math for Computer Science Honors",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0003",
+   "catalog_number": "312",
+   "course_title": "Introduction to Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  },
+  {
+   "application_id": "app_f26_0004",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  },
+  {
+   "application_id": "app_f26_0004",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0005",
+   "catalog_number": "304I",
+   "course_title": "Essentials of AI Life and Society",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0005",
+   "catalog_number": "311",
+   "course_title": "Discrete Math for Computer Science",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0006",
+   "catalog_number": "311H",
+   "course_title": "Discrete Math for Computer Science Honors",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0006",
+   "catalog_number": "312",
+   "course_title": "Introduction to Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  },
+  {
+   "application_id": "app_f26_0007",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  },
+  {
+   "application_id": "app_f26_0007",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0008",
+   "catalog_number": "304I",
+   "course_title": "Essentials of AI Life and Society",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0008",
+   "catalog_number": "311",
+   "course_title": "Discrete Math for Computer Science",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0009",
+   "catalog_number": "311H",
+   "course_title": "Discrete Math for Computer Science Honors",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0009",
+   "catalog_number": "312",
+   "course_title": "Introduction to Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  },
+  {
+   "application_id": "app_f26_0010",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  },
+  {
+   "application_id": "app_f26_0010",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0011",
+   "catalog_number": "304I",
+   "course_title": "Essentials of AI Life and Society",
+   "completion_status": "completed",
+   "grade_band": "A-"
+  },
+  {
+   "application_id": "app_f26_0011",
+   "catalog_number": "311",
+   "course_title": "Discrete Math for Computer Science",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0012",
+   "catalog_number": "311H",
+   "course_title": "Discrete Math for Computer Science Honors",
+   "completion_status": "completed",
+   "grade_band": "B+"
+  },
+  {
+   "application_id": "app_f26_0012",
+   "catalog_number": "312",
+   "course_title": "Introduction to Programming",
+   "completion_status": "completed",
+   "grade_band": "A"
+  }
+ ],
+ "teaching_history": [
+  {
+   "application_id": "app_f26_0001",
+   "catalog_number": "303E",
+   "course_title": "Elements of Computers and Programming",
+   "term": "Fall 2024",
+   "role": "Course Assistant",
+   "allocation_fte": 0.5
+  },
+  {
+   "application_id": "app_f26_0005",
+   "catalog_number": "311H",
+   "course_title": "Discrete Math for Computer Science Honors",
+   "term": "Fall 2024",
+   "role": "TA",
+   "allocation_fte": 1.0
+  },
+  {
+   "application_id": "app_f26_0009",
+   "catalog_number": "304I",
+   "course_title": "Essentials of AI Life and Society",
+   "term": "Fall 2024",
+   "role": "TA",
+   "allocation_fte": 1.0
+  }
+ ],
+ "course_preferences": [
+  {
+   "preference_id": "pref_0001_1",
+   "application_id": "app_f26_0001",
+   "course_id": "crs_f26_001",
+   "preference_rank": 1,
+   "preparedness": "strong",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0001_2",
+   "application_id": "app_f26_0001",
+   "course_id": "crs_f26_002",
+   "preference_rank": 2,
+   "preparedness": "moderate",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0002_1",
+   "application_id": "app_f26_0002",
+   "course_id": "crs_f26_001",
+   "preference_rank": 1,
+   "preparedness": "moderate",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0002_2",
+   "application_id": "app_f26_0002",
+   "course_id": "crs_f26_004",
+   "preference_rank": 2,
+   "preparedness": "learning",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0002_3",
+   "application_id": "app_f26_0002",
+   "course_id": "crs_f26_002",
+   "preference_rank": 3,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0003_1",
+   "application_id": "app_f26_0003",
+   "course_id": "crs_f26_001",
+   "preference_rank": 1,
+   "preparedness": "learning",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0003_2",
+   "application_id": "app_f26_0003",
+   "course_id": "crs_f26_004",
+   "preference_rank": 2,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0003_3",
+   "application_id": "app_f26_0003",
+   "course_id": "crs_f26_002",
+   "preference_rank": 3,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0003_4",
+   "application_id": "app_f26_0003",
+   "course_id": "crs_f26_005",
+   "preference_rank": 4,
+   "preparedness": "moderate",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0004_1",
+   "application_id": "app_f26_0004",
+   "course_id": "crs_f26_002",
+   "preference_rank": 1,
+   "preparedness": "strong",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0004_2",
+   "application_id": "app_f26_0004",
+   "course_id": "crs_f26_005",
+   "preference_rank": 2,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0005_1",
+   "application_id": "app_f26_0005",
+   "course_id": "crs_f26_002",
+   "preference_rank": 1,
+   "preparedness": "strong",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0005_2",
+   "application_id": "app_f26_0005",
+   "course_id": "crs_f26_005",
+   "preference_rank": 2,
+   "preparedness": "moderate",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0005_3",
+   "application_id": "app_f26_0005",
+   "course_id": "crs_f26_003",
+   "preference_rank": 3,
+   "preparedness": "learning",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0006_1",
+   "application_id": "app_f26_0006",
+   "course_id": "crs_f26_002",
+   "preference_rank": 1,
+   "preparedness": "moderate",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0006_2",
+   "application_id": "app_f26_0006",
+   "course_id": "crs_f26_005",
+   "preference_rank": 2,
+   "preparedness": "learning",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0006_3",
+   "application_id": "app_f26_0006",
+   "course_id": "crs_f26_003",
+   "preference_rank": 3,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0006_4",
+   "application_id": "app_f26_0006",
+   "course_id": "crs_f26_001",
+   "preference_rank": 4,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0007_1",
+   "application_id": "app_f26_0007",
+   "course_id": "crs_f26_003",
+   "preference_rank": 1,
+   "preparedness": "learning",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0007_2",
+   "application_id": "app_f26_0007",
+   "course_id": "crs_f26_001",
+   "preference_rank": 2,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0008_1",
+   "application_id": "app_f26_0008",
+   "course_id": "crs_f26_003",
+   "preference_rank": 1,
+   "preparedness": "strong",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0008_2",
+   "application_id": "app_f26_0008",
+   "course_id": "crs_f26_001",
+   "preference_rank": 2,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0008_3",
+   "application_id": "app_f26_0008",
+   "course_id": "crs_f26_004",
+   "preference_rank": 3,
+   "preparedness": "moderate",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0009_1",
+   "application_id": "app_f26_0009",
+   "course_id": "crs_f26_003",
+   "preference_rank": 1,
+   "preparedness": "strong",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0009_2",
+   "application_id": "app_f26_0009",
+   "course_id": "crs_f26_001",
+   "preference_rank": 2,
+   "preparedness": "moderate",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0009_3",
+   "application_id": "app_f26_0009",
+   "course_id": "crs_f26_004",
+   "preference_rank": 3,
+   "preparedness": "learning",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0009_4",
+   "application_id": "app_f26_0009",
+   "course_id": "crs_f26_002",
+   "preference_rank": 4,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0010_1",
+   "application_id": "app_f26_0010",
+   "course_id": "crs_f26_004",
+   "preference_rank": 1,
+   "preparedness": "moderate",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0010_2",
+   "application_id": "app_f26_0010",
+   "course_id": "crs_f26_002",
+   "preference_rank": 2,
+   "preparedness": "learning",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0011_1",
+   "application_id": "app_f26_0011",
+   "course_id": "crs_f26_004",
+   "preference_rank": 1,
+   "preparedness": "learning",
+   "applicant_note": "Completed related coursework and can support labs, office hours, and grading."
+  },
+  {
+   "preference_id": "pref_0011_2",
+   "application_id": "app_f26_0011",
+   "course_id": "crs_f26_002",
+   "preference_rank": 2,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  },
+  {
+   "preference_id": "pref_0011_3",
+   "application_id": "app_f26_0011",
+   "course_id": "crs_f26_005",
+   "preference_rank": 3,
+   "preparedness": "strong",
+   "applicant_note": "Interested and available for this assignment."
+  }
+ ],
+ "course_requirements": [
+  {
+   "course_id": "crs_f26_001",
+   "experience_required": false,
+   "spoken_english_requirement": "standard_assessment",
+   "required_skills": "Python",
+   "faculty_notes": "Strong communication and reliable office-hour coverage preferred."
+  },
+  {
+   "course_id": "crs_f26_002",
+   "experience_required": true,
+   "spoken_english_requirement": "none",
+   "required_skills": "Java",
+   "faculty_notes": "Prior completion of the course or equivalent experience preferred."
+  },
+  {
+   "course_id": "crs_f26_003",
+   "experience_required": true,
+   "spoken_english_requirement": "none",
+   "required_skills": "C++",
+   "faculty_notes": "Prior completion of the course or equivalent experience preferred."
+  },
+  {
+   "course_id": "crs_f26_004",
+   "experience_required": false,
+   "spoken_english_requirement": "none",
+   "required_skills": "SQL",
+   "faculty_notes": "Strong communication and reliable office-hour coverage preferred."
+  },
+  {
+   "course_id": "crs_f26_005",
+   "experience_required": true,
+   "spoken_english_requirement": "none",
+   "required_skills": "Python",
+   "faculty_notes": "Prior completion of the course or equivalent experience preferred."
+  },
+  {
+   "course_id": "crs_f26_006",
+   "experience_required": true,
+   "spoken_english_requirement": "standard_assessment",
+   "required_skills": "Java",
+   "faculty_notes": "Prior completion of the course or equivalent experience preferred."
+  }
+ ],
+ "ranking_workflow": [
+  {
+   "course_id": "crs_f26_001",
+   "ranking_status": "submitted",
+   "last_saved_at": "2026-09-10T14:30:00-05:00",
+   "submitted_at": "2026-09-12T16:00:00-05:00",
+   "admin_reopened": false
+  },
+  {
+   "course_id": "crs_f26_002",
+   "ranking_status": "submitted",
+   "last_saved_at": "2026-09-11T14:30:00-05:00",
+   "submitted_at": "2026-09-13T16:00:00-05:00",
+   "admin_reopened": false
+  },
+  {
+   "course_id": "crs_f26_003",
+   "ranking_status": "not_started",
+   "last_saved_at": "",
+   "submitted_at": "",
+   "admin_reopened": false
+  },
+  {
+   "course_id": "crs_f26_004",
+   "ranking_status": "in_progress",
+   "last_saved_at": "2026-09-13T14:30:00-05:00",
+   "submitted_at": "",
+   "admin_reopened": false
+  },
+  {
+   "course_id": "crs_f26_005",
+   "ranking_status": "submitted",
+   "last_saved_at": "2026-09-14T14:30:00-05:00",
+   "submitted_at": "2026-09-12T16:00:00-05:00",
+   "admin_reopened": false
+  },
+  {
+   "course_id": "crs_f26_006",
+   "ranking_status": "not_started",
+   "last_saved_at": "",
+   "submitted_at": "",
+   "admin_reopened": false
+  }
+ ],
+ "faculty_rankings": [
+  {
+   "ranking_id": "rank_001_1",
+   "course_id": "crs_f26_001",
+   "application_id": "app_f26_0001",
+   "rank": 1,
+   "recommendation": "strong_yes",
+   "faculty_comment": "Strong course fit.",
+   "updated_at": "2026-09-10T14:01:00-05:00"
+  },
+  {
+   "ranking_id": "rank_001_2",
+   "course_id": "crs_f26_001",
+   "application_id": "app_f26_0002",
+   "rank": 2,
+   "recommendation": "yes",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-10T14:02:00-05:00"
+  },
+  {
+   "ranking_id": "rank_001_3",
+   "course_id": "crs_f26_001",
+   "application_id": "app_f26_0003",
+   "rank": 3,
+   "recommendation": "yes",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-10T14:03:00-05:00"
+  },
+  {
+   "ranking_id": "rank_001_4",
+   "course_id": "crs_f26_001",
+   "application_id": "app_f26_0007",
+   "rank": 4,
+   "recommendation": "acceptable",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-10T14:04:00-05:00"
+  },
+  {
+   "ranking_id": "rank_001_5",
+   "course_id": "crs_f26_001",
+   "application_id": "app_f26_0008",
+   "rank": 5,
+   "recommendation": "acceptable",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-10T14:05:00-05:00"
+  },
+  {
+   "ranking_id": "rank_002_1",
+   "course_id": "crs_f26_002",
+   "application_id": "app_f26_0001",
+   "rank": 1,
+   "recommendation": "strong_yes",
+   "faculty_comment": "Strong course fit.",
+   "updated_at": "2026-09-11T14:01:00-05:00"
+  },
+  {
+   "ranking_id": "rank_002_2",
+   "course_id": "crs_f26_002",
+   "application_id": "app_f26_0004",
+   "rank": 2,
+   "recommendation": "yes",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-11T14:02:00-05:00"
+  },
+  {
+   "ranking_id": "rank_002_3",
+   "course_id": "crs_f26_002",
+   "application_id": "app_f26_0005",
+   "rank": 3,
+   "recommendation": "yes",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-11T14:03:00-05:00"
+  },
+  {
+   "ranking_id": "rank_002_4",
+   "course_id": "crs_f26_002",
+   "application_id": "app_f26_0006",
+   "rank": 4,
+   "recommendation": "acceptable",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-11T14:04:00-05:00"
+  },
+  {
+   "ranking_id": "rank_002_5",
+   "course_id": "crs_f26_002",
+   "application_id": "app_f26_0010",
+   "rank": 5,
+   "recommendation": "acceptable",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-11T14:05:00-05:00"
+  },
+  {
+   "ranking_id": "rank_004_1",
+   "course_id": "crs_f26_004",
+   "application_id": "app_f26_0010",
+   "rank": 1,
+   "recommendation": "strong_yes",
+   "faculty_comment": "Strong course fit.",
+   "updated_at": "2026-09-13T14:01:00-05:00"
+  },
+  {
+   "ranking_id": "rank_004_2",
+   "course_id": "crs_f26_004",
+   "application_id": "app_f26_0011",
+   "rank": 2,
+   "recommendation": "yes",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-13T14:02:00-05:00"
+  },
+  {
+   "ranking_id": "rank_005_1",
+   "course_id": "crs_f26_005",
+   "application_id": "app_f26_0004",
+   "rank": 1,
+   "recommendation": "strong_yes",
+   "faculty_comment": "Strong course fit.",
+   "updated_at": "2026-09-14T14:01:00-05:00"
+  },
+  {
+   "ranking_id": "rank_005_2",
+   "course_id": "crs_f26_005",
+   "application_id": "app_f26_0005",
+   "rank": 2,
+   "recommendation": "yes",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-14T14:02:00-05:00"
+  },
+  {
+   "ranking_id": "rank_005_3",
+   "course_id": "crs_f26_005",
+   "application_id": "app_f26_0006",
+   "rank": 3,
+   "recommendation": "yes",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-14T14:03:00-05:00"
+  },
+  {
+   "ranking_id": "rank_005_4",
+   "course_id": "crs_f26_005",
+   "application_id": "app_f26_0011",
+   "rank": 4,
+   "recommendation": "acceptable",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-14T14:04:00-05:00"
+  },
+  {
+   "ranking_id": "rank_005_5",
+   "course_id": "crs_f26_005",
+   "application_id": "app_f26_0003",
+   "rank": 5,
+   "recommendation": "acceptable",
+   "faculty_comment": "Meets the core requirements.",
+   "updated_at": "2026-09-14T14:05:00-05:00"
+  }
+ ],
+ "assignment_drafts": [
+  {
+   "draft_id": "draft_f26_01",
+   "term_id": "term_fall_2026",
+   "name": "Fall 2026 working draft",
+   "status": "working",
+   "created_at": "2026-09-14T09:00:00-05:00",
+   "created_by_user_id": "usr_admin_01"
+  }
+ ],
+ "draft_assignments": [
+  {
+   "draft_assignment_id": "draft_01_001",
+   "draft_id": "draft_f26_01",
+   "course_id": "crs_f26_001",
+   "application_id": "app_f26_0001",
+   "allocation_fte": 1.0,
+   "admin_decision_status": "accepted",
+   "publication_status": "published",
+   "admin_note": ""
+  },
+  {
+   "draft_assignment_id": "draft_01_002",
+   "draft_id": "draft_f26_01",
+   "course_id": "crs_f26_002",
+   "application_id": "app_f26_0001",
+   "allocation_fte": 1.0,
+   "admin_decision_status": "requested",
+   "publication_status": "unpublished",
+   "admin_note": ""
+  },
+  {
+   "draft_assignment_id": "draft_01_004",
+   "draft_id": "draft_f26_01",
+   "course_id": "crs_f26_004",
+   "application_id": "app_f26_0010",
+   "allocation_fte": 1.0,
+   "admin_decision_status": "requested",
+   "publication_status": "unpublished",
+   "admin_note": ""
+  },
+  {
+   "draft_assignment_id": "draft_01_005",
+   "draft_id": "draft_f26_01",
+   "course_id": "crs_f26_005",
+   "application_id": "app_f26_0004",
+   "allocation_fte": 1.0,
+   "admin_decision_status": "accepted",
+   "publication_status": "published",
+   "admin_note": ""
+  }
+ ],
+ "publication_batches": [
+  {
+   "publication_id": "pub_f26_v1",
+   "term_id": "term_fall_2026",
+   "version": 1,
+   "status": "published",
+   "published_at": "2026-09-15T17:00:00-05:00",
+   "published_by_user_id": "usr_admin_01"
+  }
+ ],
+ "published_assignments": [
+  {
+   "published_assignment_id": "pub_asn_001",
+   "publication_id": "pub_f26_v1",
+   "course_id": "crs_f26_001",
+   "application_id": "app_f26_0001",
+   "allocation_fte": 1.0,
+   "published_at": "2026-09-15T17:00:00-05:00",
+   "override_note": ""
+  },
+  {
+   "published_assignment_id": "pub_asn_002",
+   "publication_id": "pub_f26_v1",
+   "course_id": "crs_f26_005",
+   "application_id": "app_f26_0004",
+   "allocation_fte": 1.0,
+   "published_at": "2026-09-15T17:00:00-05:00",
+   "override_note": "Admin acknowledged pending eligibility review before publication."
+  }
+ ],
+ "faculty_concerns": [
+  {
+   "concern_id": "concern_001",
+   "publication_id": "pub_f26_v1",
+   "published_assignment_id": "pub_asn_001",
+   "course_id": "crs_f26_001",
+   "faculty_id": "fac_w_young",
+   "concern_type": "course_fit",
+   "details": "Please review whether another requested candidate has stronger preparation for this section.",
+   "status": "under_review",
+   "created_at": "2026-09-16T09:15:00-05:00",
+   "reviewed_by_user_id": "usr_admin_02",
+   "resolved_at": "",
+   "resolved_by_user_id": "",
+   "resolution_note": ""
+  },
+  {
+   "concern_id": "concern_002",
+   "publication_id": "pub_f26_v1",
+   "published_assignment_id": "pub_asn_002",
+   "course_id": "crs_f26_005",
+   "faculty_id": "fac_d_parikh",
+   "concern_type": "availability",
+   "details": "The published assignment may not cover the required office-hour window.",
+   "status": "resolved_adjustment",
+   "created_at": "2026-09-15T18:10:00-05:00",
+   "reviewed_by_user_id": "usr_admin_01",
+   "resolved_at": "2026-09-16T10:30:00-05:00",
+   "resolved_by_user_id": "usr_admin_01",
+   "resolution_note": "Admin opened a revision draft and adjusted the proposed coverage plan."
+  }
+ ]
+}
