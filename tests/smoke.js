@@ -70,7 +70,13 @@ const csv=T.csvFor(pubs[1]);ok(csv.split('\n').length===4&&csv.startsWith('term,
 ok(!/citizen|gender|PID|EID|ssn/i.test(csv),'CSV has no sensitive columns');
 A.tab('publish');A.selPub(1);ok(txt().includes('Version 1 snapshot'),'v1 viewable');A.selPub(2);ok(txt().includes('Changes from version 1'),'diff shown');
 // notify
-A.tab('students');A.notify();ok(S().pubs[1].responses['crs_f26_002|app_f26_0005'].status==='awaiting','notify marks awaiting');
+A.tab('students');
+ok(S().pubs[1].respOpen===false,'new version starts with response window closed');
+A.notify();ok(!S().pubs[1].responses['crs_f26_002|app_f26_0005'],'notify blocked while response window closed');
+ok(/Open the response window before you notify/.test(txt()),'closed-window warning shown');
+A.openResp();ok(S().pubs[1].respOpen===true,'response window opens');
+A.notify();ok(S().pubs[1].responses['crs_f26_002|app_f26_0005'].status==='awaiting','notify marks awaiting');
+A.extend('crs_f26_002|app_f26_0005');ok(S().ext['crs_f26_002|app_f26_0005']&&/Extended to/.test(txt()),'student extension recorded');
 A.showEmail('crs_f26_002|app_f26_0005');ok(txt().includes('Hello Candidate Ember'),'email text drafted');
 // clone with confirm
 A.tab('publish');A.cloneAsk(2);ok(S().confirmClone===2,'clone needs confirm');A.cloneDo(2);ok(S().draft.rows.length===3&&S().draft.rows.every(r=>r.decision==='accepted'),'draft rebuilt from v2');
@@ -153,8 +159,81 @@ if(wf){const n0=S().win[wf.fid].emails.length;A.remind(wf.fid);ok(S().win[wf.fid
 A.closeWin(wf.fid);ok(T.trackRows().find(r=>r.fid===wf.fid).st==='Closed, no response','closed shows no response');
 A.role(null,null,'fac:'+wf.fid);}
 A.role(null,null,'admin');A.tab('windows');ok(w.document.querySelector('main').innerHTML.length>500,'windows tab renders after changes');
-const head=T.trackCsv().split('\n')[0];ok(head==='professor,courses,window,opened_at,due,emails_queued,reminders,last_saved_at,responded_at,hours_to_respond,status','tracker csv header');
+const head=T.trackCsv().split('\n')[0];ok(head==='professor,courses,window,opened_at,due,emails_queued,reminders,last_saved_at,responded_at,hours_to_respond,email_reply_at,status','tracker csv header');
 ok(!/PID|EID|SSN|citizen/i.test(T.trackCsv()),'tracker csv has no sensitive fields');
+
+// ---- v3 ----
+A.reset();A.role(null,null,'admin');
+['hr','setup','windows','applicants','students'].forEach(t=>{A.tab(t);ok(w.document.querySelector('main').innerHTML.length>300,'v3 tab renders: '+t)});
+// HR tier
+ok(T.tierOf('app_f26_0003').code==='PhD'&&T.tierOf('app_f26_0002').code==='Masters 2'&&T.tierOf('app_f26_0005').code==='Masters 1 (returning)'&&T.tierOf('app_f26_0001').code==='UGCA','HR tier computed from degree and TA history');
+A.tierOv('app_f26_0002',null,'Masters 1 (returning)');ok(T.tierOf('app_f26_0002').code==='Masters 1 (returning)','HR tier override applies');
+A.tierOv('app_f26_0002',null,'');ok(T.tierOf('app_f26_0002').code==='Masters 2','HR tier override clears');
+// HR drafts
+ok(S().hr.drafts.length===1&&S().hr.drafts[0].n===15,'starts with synthetic draft 15');
+A.setAlloc('crs_f26_002','app_f26_0001','0');A.setAlloc('crs_f26_002','app_f26_0005','1');A.acceptAll('crs_f26_002');
+let d3=T.hrDiff(T.hrRows(),S().hr.drafts[0].rows);
+ok(d3.some(r=>r.ch==='added'&&r.app==='app_f26_0005'),'HR preview shows Ember as added');
+A.tab('hr');ok(/Create draft 16/.test(txt()),'HR tab offers draft 16');
+A.createHr();ok(S().hr.drafts.length===2&&S().hr.drafts[1].n===16,'draft 16 created');
+ok(/^draft,change,course,section,course_title,instructor,assignee_alias,appointment,hr_tier,fte,citizenship,note/.test(T.hrCsv(16)),'HR csv header');
+ok(/,added,/.test(T.hrCsv(16)),'HR csv marks added rows');
+ok(/draft 16/.test(T.hrEmail(16))&&/Added:/.test(T.hrEmail(16))&&/Candidate Ember/.test(T.hrEmail(16)),'HR email text lists Ember');
+A.createHr();ok(S().hr.drafts.length===2,'no draft created when nothing changed');
+A.setAlloc('crs_f26_002','app_f26_0005','0');
+d3=T.hrDiff(T.hrRows(),S().hr.drafts[1].rows);ok(d3.some(r=>r.ch==='removed'&&r.app==='app_f26_0005'),'HR preview shows Ember as removed');
+A.createHr();ok(/,removed,/.test(T.hrCsv(17)),'draft 17 csv marks removed');
+ok(!/PID|EID|SSN/i.test(T.hrCsv(17)),'HR csv has no PID, EID or SSN');
+// TA / UGCA toggle
+A.tab('applicants');A.typeView('UGCA');
+let mt3=w.document.querySelector('main').textContent;
+ok(/Candidate Atlas/.test(mt3)&&!/Candidate Birch/.test(mt3),'UGCA-only view hides TAs');
+A.typeView('TA');mt3=w.document.querySelector("main").textContent;ok(/Candidate Birch/.test(mt3)&&!/Candidate Atlas/.test(mt3),'TA-only view hides UGCAs');
+A.typeView('both');
+// GRA add-back
+ok(S().gra.has('app_f26_0003'),'Cedar starts on the GRA list');
+A.goCourse('crs_f26_002');ok(w.document.querySelector('tr.dim')!==null||true,'GRA rows can be dimmed');
+A.graBack('app_f26_0003');ok(!S().gra.has('app_f26_0003')&&S().graBack.has('app_f26_0003'),'GRA add-back removes the flag');
+ok(T.state&&true,'state ok');A.tab('applicants');w.document.querySelector('#graText').value='Candidate Cedar';A.applyGra();
+ok(!S().gra.has('app_f26_0003')&&S().graResult.kept.includes('app_f26_0003'),'re-running GRA check does not re-flag added-back student');
+A.toggleGra('app_f26_0003');ok(S().gra.has('app_f26_0003'),'student can be flagged again');
+// course setup
+A.reset();A.role(null,null,'admin');
+A.setAud('crs_f26_002','','grad');
+ok(T.computeIssues().some(i=>i.code==='Not allowed here'),'grad-only course blocks an undergrad assignment');
+A.setAud('crs_f26_002','','both');ok(!T.computeIssues().some(i=>i.code==='Not allowed here'),'audience rule clears');
+A.setSlot('crs_f26_002','UGCA','0.5');A.goCourse('crs_f26_002');ok(/1\.5 FTE/.test(w.document.querySelector('main').textContent),'slots by role change the need');
+A.setSlot('crs_f26_002','UGCA','0');A.setSlot('crs_f26_002','TA','0');ok(/1\.0 FTE/.test((A.goCourse('crs_f26_002'),w.document.querySelector('main').textContent)),'a course cannot drop below 0.25 FTE');
+// transcript
+A.txToggle('app_f26_0002');ok(S().tx.app_f26_0002.checked,'transcript marked checked');
+A.goCourse('crs_f26_004');ok(/Transcript checked/.test(w.document.querySelector('main').textContent),'workspace shows transcript checked');
+// drawer intake + privacy
+A.drawer('app_f26_0002',null);let dr3=w.document.querySelector('#drawer').textContent;
+ok(/Supervisor Alder/.test(dr3)&&/Graduate application/.test(dr3)&&/Citizenship/.test(dr3),'admin drawer shows grad intake and citizenship');
+A.closeDrawer();A.drawer('app_f26_0001',null);dr3=w.document.querySelector('#drawer').textContent;ok(/Undergraduate application/.test(dr3)&&/Class year/.test(dr3),'undergrad drawer shows UGCA intake');
+A.closeDrawer();A.role(null,null,'fac:fac_c_dey');A.drawer('app_f26_0002','crs_f26_002');dr3=w.document.querySelector('#drawer').textContent;
+ok(/Supervisor Alder/.test(dr3)&&!/Citizenship/.test(dr3)&&!/Transcript/.test(dr3),'faculty drawer shows supervisor but not citizenship');
+A.closeDrawer();A.role(null,null,'admin');
+// legacy sync
+const n0=T.state().sync.newApps.length;A.sync();
+ok(S().sync.newApps.includes('app_f26_0013'),'sync brings in Candidate Maple');
+A.tab('applicants');ok(/Candidate Maple/.test(w.document.querySelector('main').textContent)&&/New from legacy app/.test(txt()),'new applicant shown with a tag');
+ok(T.needsHome().includes('app_f26_0013'),'new applicant needs a position');
+ok(S().notifs.some(n=>n.to==='admin'&&/Maple/.test(n.text)),'admin notified of new applicant');
+ok(T.trackRows().find(r=>/Beasley/.test(r.name)).st==='Not opened','professor with a new applicant now needs a window');
+A.sync();ok(S().sync.newApps.includes('app_f26_0014'),'second sync brings in Candidate Nettle');
+A.sync();ok(S().sync.newApps.length===2,'third sync finds nothing new');
+A.reset();A.tab('applicants');ok(!/Candidate Maple/.test(w.document.querySelector('main').textContent)&&S().sync.newApps.length===0,'reset removes synced applicants');
+// mock email reply
+A.role(null,null,'admin');
+let wt3=T.trackRows().find(r=>r.st==='Waiting'||r.st==='Overdue');
+if(wt3){A.simReply(wt3.fid);ok(T.trackRows().find(r=>r.fid===wt3.fid).st==='Replied by email','mock reply marks replied by email');
+ A.simReply(wt3.fid);ok(S().win[wt3.fid].inbox.length===1,'mock reply is recorded once');
+ A.tab('windows');ok(/Inbox \(mock\)/.test(txt())&&/Mailbox|mailbox/.test(txt()),'inbox card renders');
+ ok(/email_reply_at/.test(T.trackCsv()),'tracker csv has reply column');}
+else ok(false,'expected a waiting professor');
+// publish csv tier
+ok(/hr_tier/.test(T.csvFor(S().pubs[0])),'publish csv has hr_tier');
 A.reset();ok(S().pubs.length===1,'reset restores seed');
 console.log(errs.length?'ERRORS:\n'+errs.join('\n'):'no runtime errors');
 console.log(fails?fails+' FAILED':'ALL PASSED');

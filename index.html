@@ -128,6 +128,18 @@ ul.plain{list-style:none;margin:0;padding:0}
 .notif.unread{background:var(--accent-soft)}
 .notif.unread span:first-child{font-weight:600}
 
+/* v3 */
+.seg{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.seg .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+tr.dim td{opacity:.62}
+tr.dim td:last-child,tr.dim td:nth-last-child(2){opacity:1}
+tr.add td{background:var(--ok-soft)}
+tr.rem td{background:var(--bad-soft)}
+tr.rem td:not(:last-child){text-decoration:line-through}
+tr.chg td{background:var(--warn-soft)}
+.cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:800px){.cols3{grid-template-columns:minmax(0,1fr)}}
+ul.plain.tight li{padding:3px 0}
 /* drawer */
 .scrim{position:fixed;inset:0;background:rgba(5,15,10,.45);z-index:20}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--surface);z-index:21;box-shadow:var(--shadow);overflow-y:auto;padding:20px 20px 40px;border-left:1px solid var(--line)}
@@ -175,6 +187,74 @@ const PREFS_APP=group(SEED.course_preferences,'application_id');
 const ADMIN='Admin Rowan';
 const TIER={PhD:'PhD',Masters:"Master's",Undergraduate:'Undergraduate'};
 const TIER_ORDER={PhD:1,Undergraduate:2,Masters:3};
+/* ---------- synthetic extension (NOT in Eric's dataset) ----------
+   Fields Doug asked for in the Oct 6 meeting. Every value is fictional.
+   In the real build these come from the legacy app / application form, in the same shape (see docs/INTEGRATION.md). */
+const EXT={
+ apps:{
+  app_f26_0001:{cit:'US citizen',yr:'Sophomore',hrs:10},
+  app_f26_0002:{cit:'International',ita:'English test passed',sup:'Supervisor Alder',area:'Systems',intern:'Cloud services intern, summer 2025',tex:'Wants first teaching experience'},
+  app_f26_0003:{cit:'International',ita:'ITA workshop passed',sup:'Supervisor Alder',area:'Machine learning',intern:'',tex:'Has TA experience'},
+  app_f26_0004:{cit:'US citizen',yr:'Junior',hrs:8},
+  app_f26_0005:{cit:'US citizen',ita:'Not required',sup:'Supervisor Birch',area:'Theory',intern:'Backend developer intern, summer 2025',tex:'Returning TA'},
+  app_f26_0006:{cit:'International',ita:'ITA workshop needed',sup:'Supervisor Cobalt',area:'Security',intern:'',tex:'Wants teaching experience'},
+  app_f26_0007:{cit:'US citizen',yr:'Senior',hrs:12},
+  app_f26_0008:{cit:'International',ita:'English test pending',sup:'Supervisor Dune',area:'Databases',intern:'Data engineering intern, summer 2024',tex:'Wants first teaching experience'},
+  app_f26_0009:{cit:'US citizen',ita:'Not required',sup:'Supervisor Cobalt',area:'Networks',intern:'',tex:'Returning TA'},
+  app_f26_0010:{cit:'International',yr:'Sophomore',hrs:10},
+  app_f26_0011:{cit:'US citizen',ita:'Not required',sup:'Supervisor Dune',area:'Human-computer interaction',intern:'Web applications intern, summer 2025',tex:'Wants teaching experience'},
+  app_f26_0012:{cit:'International',ita:'English test passed',sup:'Supervisor Dune',area:'Graphics',intern:'',tex:'Wants teaching experience'}
+ },
+ courses:{
+  crs_f26_001:{aud:'both',slots:{TA:0.5,UGCA:0.5,Proctor:0}},
+  crs_f26_002:{aud:'both',slots:{TA:1,UGCA:0,Proctor:0}},
+  crs_f26_003:{aud:'both',slots:{TA:1,UGCA:0,Proctor:0}},
+  crs_f26_004:{aud:'both',slots:{TA:1,UGCA:0,Proctor:0}},
+  crs_f26_005:{aud:'both',slots:{TA:1,UGCA:0,Proctor:0}},
+  crs_f26_006:{aud:'both',slots:{TA:1,UGCA:0,Proctor:0}}
+ }
+};
+/* Pretend legacy-app feed. Each item has the same table shapes as the dataset, so a real scraper can emit it unchanged. */
+const LEGACY_FEED=[
+ {label:'Candidate Maple',payload:{
+  applicants:[{applicant_id:'apl_0013',display_name:'Candidate Maple',synthetic_person:true}],
+  applications:[{application_id:'app_f26_0013',applicant_id:'apl_0013',term_id:'term_fall_2026',degree_level:'Masters',assistant_type:'TA',program:'Computer Science',expected_graduation_term:'Spring 2028',returning_ta:false,prior_ta_terms:0,max_assignment_fte:1.0,employment_eligibility_status:'eligible',spoken_english_assessment:'verified',availability_status:'available',teaching_statement:'Likes walking students through debugging and keeping office hours relaxed.',experience_summary:'Built internal tools during an internship and tutored algorithms.',application_status:'submitted',submitted_at:'2026-10-07T09:30:00-05:00'}],
+  course_preferences:[{preference_id:'pref_0013_1',application_id:'app_f26_0013',course_id:'crs_f26_006',preference_rank:1,preparedness:'strong',applicant_note:'Strong Java background and tutoring experience.'},{preference_id:'pref_0013_2',application_id:'app_f26_0013',course_id:'crs_f26_004',preference_rank:2,preparedness:'moderate',applicant_note:'Comfortable with SQL from an internship.'}],
+  applicant_skills:[{application_id:'app_f26_0013',skill_name:'Java',proficiency:'advanced',years_experience:3},{application_id:'app_f26_0013',skill_name:'SQL',proficiency:'working',years_experience:1.5}],
+  applicant_coursework:[{application_id:'app_f26_0013',catalog_number:'312',course_title:'Introduction to Software Design',completion_status:'completed',grade_band:'A'}],
+  teaching_history:[],
+  ext:{app_f26_0013:{cit:'US citizen',ita:'Not required',sup:'Supervisor Alder',area:'Software engineering',intern:'Internal tools intern, summer 2025',tex:'Wants first teaching experience'}}}},
+ {label:'Candidate Nettle',payload:{
+  applicants:[{applicant_id:'apl_0014',display_name:'Candidate Nettle',synthetic_person:true}],
+  applications:[{application_id:'app_f26_0014',applicant_id:'apl_0014',term_id:'term_fall_2026',degree_level:'Undergraduate',assistant_type:'UGCA',program:'Computer Science BS',expected_graduation_term:'Spring 2028',returning_ta:false,prior_ta_terms:0,max_assignment_fte:1.0,employment_eligibility_status:'eligible',spoken_english_assessment:'not_required',availability_status:'limited',teaching_statement:'Patient with beginners and good at explaining loops and functions.',experience_summary:'Helped classmates in a first-year programming course.',application_status:'submitted',submitted_at:'2026-10-07T14:10:00-05:00'}],
+  course_preferences:[{preference_id:'pref_0014_1',application_id:'app_f26_0014',course_id:'crs_f26_001',preference_rank:1,preparedness:'moderate',applicant_note:'Took the course last year and enjoyed lab sessions.'}],
+  applicant_skills:[{application_id:'app_f26_0014',skill_name:'Python',proficiency:'working',years_experience:1.5}],
+  applicant_coursework:[{application_id:'app_f26_0014',catalog_number:'303E',course_title:'Elements of Computers and Programming',completion_status:'completed',grade_band:'A-'}],
+  teaching_history:[],
+  ext:{app_f26_0014:{cit:'International',yr:'Sophomore',hrs:6}}}}
+];
+const ADDED=[];
+function ingest(p){
+  (p.applicants||[]).forEach(x=>{SEED.applicants.push(x);APL[x.applicant_id]=x});
+  (p.applications||[]).forEach(x=>{SEED.applications.push(x);APP[x.application_id]=x;ADDED.push(x.application_id)});
+  (p.course_preferences||[]).forEach(x=>{SEED.course_preferences.push(x);(PREFS_APP[x.application_id]=PREFS_APP[x.application_id]||[]).push(x)});
+  (p.applicant_skills||[]).forEach(x=>{SEED.applicant_skills.push(x);(SKILLS[x.application_id]=SKILLS[x.application_id]||[]).push(x)});
+  (p.applicant_coursework||[]).forEach(x=>{SEED.applicant_coursework.push(x);(CW[x.application_id]=CW[x.application_id]||[]).push(x)});
+  (p.teaching_history||[]).forEach(x=>{SEED.teaching_history.push(x);(TH[x.application_id]=TH[x.application_id]||[]).push(x)});
+  Object.assign(EXT.apps,p.ext||{});
+}
+function removeAdded(){
+  if(!ADDED.length)return;
+  const ids=new Set(ADDED),aps=new Set(ADDED.map(a=>APP[a].applicant_id));
+  SEED.applications=SEED.applications.filter(x=>!ids.has(x.application_id));
+  SEED.applicants=SEED.applicants.filter(x=>!aps.has(x.applicant_id));
+  SEED.course_preferences=SEED.course_preferences.filter(x=>!ids.has(x.application_id));
+  SEED.applicant_skills=SEED.applicant_skills.filter(x=>!ids.has(x.application_id));
+  SEED.applicant_coursework=SEED.applicant_coursework.filter(x=>!ids.has(x.application_id));
+  SEED.teaching_history=SEED.teaching_history.filter(x=>!ids.has(x.application_id));
+  ADDED.forEach(a=>{aps.has(APP[a].applicant_id)&&delete APL[APP[a].applicant_id];delete APP[a];delete PREFS_APP[a];delete SKILLS[a];delete CW[a];delete TH[a];delete EXT.apps[a]});
+  ADDED.length=0;
+}
 const nm=a=>APL[APP[a].applicant_id].display_name;
 const short=a=>nm(a).replace('Candidate ','');
 const cname=c=>COURSE[c].catalog_number+' · '+COURSE[c].section_label;
@@ -182,6 +262,14 @@ const prof=c=>FAC[COURSE[c].faculty_id].display_name;
 const prefOf=(a,c)=>(PREFS_APP[a]||[]).find(p=>p.course_id===c);
 const defaultRole=a=>APP[a].assistant_type==='UGCA'?'UGCA':'TA';
 const isGrad=a=>APP[a].degree_level!=='Undergraduate';
+const audOk=(a,c)=>{const cs=S&&S.course&&S.course[c];if(!cs)return true;return cs.aud==='both'||(cs.aud==='grad')===isGrad(a)};
+const priorTa=a=>APP[a].returning_ta||(TH[a]||[]).length>0;
+const TIER_CODES=['PhD','Masters 1 (returning)','Masters 2','UGCA'];
+/* Assumed rule, to confirm with Doug: PhD; master's with prior TA service = Masters 1 (returning); other master's = Masters 2; undergrad = UGCA. */
+function tierAuto(a){const d=APP[a].degree_level;return d==='PhD'?'PhD':d==='Undergraduate'?'UGCA':(priorTa(a)?'Masters 1 (returning)':'Masters 2')}
+function tierOf(a){const o=S&&S.tierOv&&S.tierOv[a];return o?{code:o,auto:false}:{code:tierAuto(a),auto:true}}
+const typeOk=a=>!S.typeView||S.typeView==='both'||APP[a].assistant_type===S.typeView;
+const ex=a=>EXT.apps[a]||{};
 const facElig=a=>({eligible:'cleared',pending_review:'pending',ineligible:'unavailable'}[APP[a].employment_eligibility_status]);
 const key=r=>r.course+'|'+r.app;
 
@@ -189,10 +277,13 @@ const key=r=>r.course+'|'+r.app;
 let S=null, FID=null, toastT=null;
 
 function initState(){
+  S=null;removeAdded();
   const s={user:{type:'admin'},tab:'dashboard',selCourse:'crs_f26_002',facCourse:null,drawer:null,drawerNew:false,
     f:{dash:{prof:'',status:'',staffed:''},fac:{tier:'',ret:'',avail:'',elig:''},app:{tier:'',type:''}},
     facErrors:{},rank:{},overrides:{},concernNotes:{},emailFor:null,confirmClone:null,selPub:null,
-    gra:new Set(),graText:'Candidate Cedar\nCandidate Zephyr',graResult:null,replyBy:'2026-12-04'};
+    gra:new Set(),graText:'Candidate Cedar\nCandidate Zephyr',graResult:null,replyBy:isoOf(new Date(Date.now()+14*864e5)).slice(0,10),typeView:'both',tierOv:{},tx:{},graBack:new Set(),ext:{},mailAddrNote:'',hrSel:null,
+    sync:{cursor:0,at:'2026-10-05T08:00:00-05:00',newApps:[]}};
+  s.course={};SEED.courses.forEach(c=>{s.course[c.course_id]=JSON.parse(JSON.stringify(EXT.courses[c.course_id]));COURSE[c.course_id].ta_slots_required=sum(Object.values(s.course[c.course_id].slots))});
   SEED.courses.forEach(c=>{
     const wf=SEED.ranking_workflow.find(w=>w.course_id===c.course_id);
     s.rank[c.course_id]={status:wf.ranking_status,savedAt:wf.last_saved_at,submittedAt:wf.submitted_at,entries:{}};
@@ -203,7 +294,7 @@ function initState(){
   s.overrides['pending:draft_01_005']='Admin acknowledged pending eligibility review before publication.';
   s.pubs=SEED.publication_batches.map(p=>({id:p.publication_id,version:p.version,at:p.published_at,by:ADMIN,
     rows:SEED.published_assignments.filter(r=>r.publication_id===p.publication_id).map(r=>({id:r.published_assignment_id,course:r.course_id,app:r.application_id,fte:r.allocation_fte,role:defaultRole(r.application_id),note:r.override_note})),
-    gaps:{},notifiedAt:'2026-09-17T09:00:00-05:00',replyBy:'2026-09-24',responses:{}}));
+    gaps:{},notifiedAt:'2026-09-17T09:00:00-05:00',replyBy:'2026-09-24',responses:{},respOpen:true}));
   // Synthetic extension (not in the original dataset): student replies logged for v1.
   s.pubs[0].responses['crs_f26_001|app_f26_0001']={status:'confirmed',at:'2026-09-19'};
   s.pubs[0].responses['crs_f26_005|app_f26_0004']={status:'declined',at:'2026-09-22'};
@@ -224,14 +315,18 @@ function initState(){
   s.winDue=isoOf(new Date(Date.now()+7*864e5)).slice(0,10);
   SEED.courses.forEach(c=>{
     const fid=c.faculty_id,rk=s.rank[c.course_id];
-    if(rk.status==='not_started'){s.win[fid]={state:'not_open',openedAt:'',dueAt:'',closedAt:'',emails:[]};return}
+    if(rk.status==='not_started'){s.win[fid]={state:'not_open',openedAt:'',dueAt:'',closedAt:'',emails:[],inbox:[],replyAt:''};return}
     // Synthetic history, not in the dataset: started courses had their window opened Sep 8. The in-progress one is due in 3 days so it reads as live.
     const due=rk.status==='in_progress'?isoOf(new Date(Date.now()+3*864e5)).slice(0,10):'2026-09-18',at='2026-09-08T09:00:00-05:00',m=windowMail(fid,due,'');
-    s.win[fid]={state:'open',openedAt:at,dueAt:due,closedAt:'',emails:[{at,kind:'Window open',to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body,status:'Sent earlier'}]};
+    s.win[fid]={state:'open',openedAt:at,dueAt:due,closedAt:'',inbox:[],replyAt:'',emails:[{at,kind:'Window open',to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body,status:'Sent earlier'}]};
     A(at,ADMIN,'ranking window opened','window',fid,FAC[fid].display_name+' until '+day(due));
     if(rk.status==='submitted')s.notifs.push({id:'n'+(s.nid++),to:'admin',at:rk.submittedAt,text:FAC[fid].display_name+' submitted the '+cname(c.course_id)+' ranking.',go:{tab:'windows'},read:false});
   });
+  // Synthetic: HR draft 15 was sent on Sep 16 and matches published version 1.
+  s.hr={drafts:[{n:15,at:'2026-09-16T10:00:00-05:00',by:ADMIN,rows:s.pubs[0].rows.map(r=>({course:r.course,app:r.app,fte:r.fte,role:r.role,tier:'',cit:'',note:r.note||''}))}]};
   S=s;
+  s.hr.drafts[0].rows.forEach(r=>{r.tier=tierOf(r.app).code;r.cit=ex(r.app).cit||''});
+  s.hrSel=15;
   applyGra(S.graText,true);
   return s;
 }
@@ -278,14 +373,39 @@ function trackRows(){
     else if(w.state==='not_open')st='Not opened';
     else if(done)st='Responded';
     else if(w.state==='closed')st='Closed, no response';
+    else if(w.replyAt)st='Replied by email';
     else st=dueMs&&dueMs<now?'Overdue':'Waiting';
-    return{fid,name:fa.display_name,cl:cs.map(cname).join(', '),w,ranked:sum(cs.map(c=>rankedCount(c))),apps:sum(cs.map(c=>candidates(c).length)),st,respAt,saved,hrs:respAt&&w.openedAt?(Date.parse(respAt)-Date.parse(w.openedAt))/36e5:null,reminders:w.emails.filter(e=>e.kind==='Reminder').length};
+    return{fid,name:fa.display_name,cl:cs.map(cname).join(', '),w,ranked:sum(cs.map(c=>rankedCount(c))),apps:sum(cs.map(c=>candidates(c).length)),st,respAt,saved,replyAt:w.replyAt,hrs:respAt&&w.openedAt?(Date.parse(respAt)-Date.parse(w.openedAt))/36e5:null,reminders:w.emails.filter(e=>e.kind==='Reminder').length};
   });
 }
 function trackCsv(){
   const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  const head=['professor','courses','window','opened_at','due','emails_queued','reminders','last_saved_at','responded_at','hours_to_respond','status'];
-  return [head.join(',')].concat(trackRows().map(r=>[r.name,r.cl,r.w.state,r.w.openedAt,r.w.dueAt,r.w.emails.length,r.reminders,r.saved,r.respAt,r.hrs==null?'':Math.round(r.hrs*10)/10,r.st].map(q).join(','))).join('\n');
+  const head=['professor','courses','window','opened_at','due','emails_queued','reminders','last_saved_at','responded_at','hours_to_respond','email_reply_at','status'];
+  return [head.join(',')].concat(trackRows().map(r=>[r.name,r.cl,r.w.state,r.w.openedAt,r.w.dueAt,r.w.emails.length,r.reminders,r.saved,r.respAt,r.hrs==null?'':Math.round(r.hrs*10)/10,r.replyAt,r.st].map(q).join(','))).join('\n');
+}
+
+/* ---------- HR drafts ---------- */
+const hrLatest=()=>S.hr.drafts[S.hr.drafts.length-1];
+function hrRows(){return live().filter(r=>r.decision==='accepted').map(r=>({course:r.course,app:r.app,fte:r.fte,role:r.role,tier:tierOf(r.app).code,cit:ex(r.app).cit||'',note:r.note||''}))}
+function hrDiff(cur,prev){
+  const pk=Object.fromEntries((prev||[]).map(r=>[key(r),r])),ck=Object.fromEntries(cur.map(r=>[key(r),r]));
+  const out=cur.map(r=>{const o=pk[key(r)];return{...r,ch:prev?(o?((o.fte!==r.fte||o.role!==r.role||o.tier!==r.tier)?'changed':''):'added'):'',was:o}});
+  (prev||[]).filter(r=>!ck[key(r)]).forEach(r=>out.push({...r,ch:'removed'}));
+  return out.sort((x,y)=>cname(x.course).localeCompare(cname(y.course))||nm(x.app).localeCompare(nm(y.app)));
+}
+const hrChanged=()=>hrDiff(hrRows(),hrLatest().rows).some(r=>r.ch);
+function hrPrev(n){const i=S.hr.drafts.findIndex(d=>d.n===n);return i>0?S.hr.drafts[i-1]:null}
+function hrCsv(n){
+  const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const d=S.hr.drafts.find(x=>x.n===n),pv=hrPrev(n),rows=hrDiff(d.rows,pv&&pv.rows);
+  const head=['draft','change','course','section','course_title','instructor','assignee_alias','appointment','hr_tier','fte','citizenship','note'];
+  return [head.join(',')].concat(rows.map(r=>[n,r.ch,COURSE[r.course].catalog_number,COURSE[r.course].section_label,COURSE[r.course].title,prof(r.course),nm(r.app),r.role,r.tier,f(r.fte),r.cit,r.note].map(q).join(','))).join('\n');
+}
+function hrEmail(n){
+  const d=S.hr.drafts.find(x=>x.n===n),pv=hrPrev(n),rows=hrDiff(d.rows,pv&&pv.rows);
+  const L=k=>rows.filter(r=>r.ch===k).map(r=>'  - '+nm(r.app)+', '+cname(r.course)+', '+r.role+', '+r.tier+', '+f(r.fte)+' FTE'+(k==='changed'&&r.was?' (was '+f(r.was.fte)+' FTE, '+r.was.role+', '+r.was.tier+')':''));
+  const a=L('added'),m=L('removed'),c=L('changed');
+  return 'Subject: '+TERM.name+' TA and UGCA assignments, draft '+n+(pv?' ('+a.length+' added, '+m.length+' removed, '+c.length+' changed)':'')+'\n\nHello HR team,\n\nDraft '+n+' of the '+TERM.name+' assignments is ready. The full list is in the attached spreadsheet.\n\n'+(pv?'Changes since draft '+pv.n+':\n\nAdded:\n'+(a.join('\n')||'  none')+'\n\nRemoved:\n'+(m.join('\n')||'  none')+'\n\nChanged:\n'+(c.join('\n')||'  none'):'This is the first draft.')+'\n\nThank you,\nCS Graduate Office';
 }
 
 /* ---------- domain ---------- */
@@ -297,20 +417,20 @@ const latestPub=()=>S.pubs.length?S.pubs.reduce((m,p)=>p.version>m.version?p:m):
 const rankedCount=c=>Object.values(S.rank[c].entries).filter(e=>e.rank!=null).length;
 
 function candidates(cid){
-  return SEED.course_preferences.filter(p=>p.course_id===cid&&APP[p.application_id].application_status==='submitted')
+  return SEED.course_preferences.filter(p=>p.course_id===cid&&APP[p.application_id].application_status==='submitted'&&audOk(p.application_id,cid))
     .map(p=>({app:p.application_id,pref:p}))
     .sort((a,b)=>a.pref.preference_rank-b.pref.preference_rank||nm(a.app).localeCompare(nm(b.app)));
 }
 
 function applyGra(text,silent){
   const names=text.split(/\n/).map(x=>x.trim()).filter(Boolean);
-  const matched=[],unmatched=[];
+  const matched=[],unmatched=[],kept=[];
   names.forEach(n=>{
     const k=n.toLowerCase().replace(/^candidate\s+/,'');
     const hit=SEED.applications.find(a=>short(a.application_id).toLowerCase()===k);
-    if(hit)matched.push(hit.application_id);else unmatched.push(n);
+    if(hit){if(S.graBack&&S.graBack.has(hit.application_id))kept.push(hit.application_id);else matched.push(hit.application_id)}else unmatched.push(n);
   });
-  S.gra=new Set(matched);S.graText=text;S.graResult={matched,unmatched,at:nowIso()};
+  S.gra=new Set(matched);S.graText=text;S.graResult={matched,unmatched,kept,at:nowIso()};
   if(!silent)log('GRA list applied','applicants','gra_list',matched.length+' matched, '+unmatched.length+' not in this term\'s pool');
 }
 
@@ -324,6 +444,9 @@ function computeIssues(){
   });
   rows.forEach((r,i)=>{
     if(!prefOf(r.app,r.course))out.push({sev:'block',key:'nosel:'+r.id,code:'Not selected',courses:[r.course],app:r.app,msg:nm(r.app)+' did not select '+cname(r.course)+'.'});
+    if(!audOk(r.app,r.course))out.push({sev:'block',key:'aud:'+r.id,code:'Not allowed here',courses:[r.course],app:r.app,msg:nm(r.app)+' is '+(isGrad(r.app)?'a graduate':'an undergraduate')+' student, and '+cname(r.course)+' is set to '+(S.course[r.course].aud==='grad'?'graduate':'undergraduate')+' students only.'});
+    const ita=ex(r.app).ita;
+    if(ita==='ITA workshop needed'||ita==='English test pending')out.push({sev:'warn',key:'ita:'+r.id,code:'English / ITA',courses:[r.course],app:r.app,gate:false,msg:nm(r.app)+': '+ita.toLowerCase()+' ('+cname(r.course)+').'});
     if(rows.findIndex(x=>x.course===r.course&&x.app===r.app)!==i)out.push({sev:'block',key:'dup:'+r.id,code:'Duplicate',courses:[r.course],app:r.app,msg:nm(r.app)+' appears twice in '+cname(r.course)+'.'});
     const acc=r.decision==='accepted';
     if(APP[r.app].employment_eligibility_status==='pending_review')out.push({sev:'warn',key:'pending:'+r.id,code:'Eligibility pending',courses:[r.course],app:r.app,gate:acc,msg:nm(r.app)+' still has eligibility pending review ('+cname(r.course)+').'});
@@ -380,8 +503,8 @@ function compact(cid){
 function touch(cid){const rk=S.rank[cid];rk.savedAt=nowIso();if(rk.status==='not_started')rk.status='in_progress'}
 function csvFor(pub){
   const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  const head=['term','publication_version','course','section','course_title','instructor','assignee_alias','appointment_type','degree_tier','fte','student_response'];
-  return [head.join(',')].concat(pub.rows.map(r=>[TERM.name,pub.version,COURSE[r.course].catalog_number,COURSE[r.course].section_label,COURSE[r.course].title,prof(r.course),nm(r.app),r.role,TIER[APP[r.app].degree_level],f(r.fte),respOf(pub,r).status].map(q).join(','))).join('\n');
+  const head=['term','publication_version','course','section','course_title','instructor','assignee_alias','appointment_type','hr_tier','fte','student_response'];
+  return [head.join(',')].concat(pub.rows.map(r=>[TERM.name,pub.version,COURSE[r.course].catalog_number,COURSE[r.course].section_label,COURSE[r.course].title,prof(r.course),nm(r.app),r.role,tierOf(r.app).code,f(r.fte),respOf(pub,r).status].map(q).join(','))).join('\n');
 }
 function emailFor(pub,r){
   const c=COURSE[r.course];
@@ -417,7 +540,7 @@ function bell(){
 }
 function header(){
   const sel=S.user.type==='admin'?'admin':'fac:'+S.user.fid;
-  return '<header class="top"><div class="brand"><small>Computer Science · '+esc(TERM.name)+'</small>TA Studio Desk</div>'+
+  return '<header class="top"><div class="brand"><small>Computer Science · '+esc(TERM.name)+' · demo v3</small>TA Studio Desk</div>'+
     '<div class="who"><span class="chip warn">Synthetic demo data</span>'+bell()+
     '<label class="f" style="flex-direction:row;align-items:center;gap:6px">View as <select data-chg="role" id="roleSel">'+opt('admin',ADMIN+' (admin)',sel)+SEED.faculty.map(x=>opt('fac:'+x.faculty_id,x.display_name+' (faculty)',sel)).join('')+'</select></label>'+
     '<button class="btn" data-act="reset">Reset demo</button></div></header>';
@@ -426,8 +549,8 @@ function tabsFor(){
   const g=gate(),open=S.concerns.filter(c=>c.status==='open'||c.status==='under_review').length;
   if(S.user.type==='admin'){
     const lp=latestPub(),declined=lp?lp.rows.filter(r=>respOf(lp,r).status==='declined').length:0;
-    const wt=trackRows().filter(r=>r.st==='Waiting'||r.st==='Overdue').length;
-    return[['dashboard','Dashboard',''],['windows','Faculty windows',wt?'<span class="badge warn">'+wt+'</span>':''],['assign','Assignments',g.blocks.length?'<span class="badge bad">'+g.blocks.length+'</span>':''],['applicants','Applicants',''],['publish','Publish',''],['students','Students',declined?'<span class="badge warn">'+declined+'</span>':''],['concerns','Concerns',open?'<span class="badge warn">'+open+'</span>':''],['audit','Audit log','']];
+    const wt=trackRows().filter(r=>r.st==='Waiting'||r.st==='Overdue'||r.st==='Replied by email').length;
+    return[['dashboard','Dashboard',''],['windows','Faculty windows',wt?'<span class="badge warn">'+wt+'</span>':''],['assign','Assignments',g.blocks.length?'<span class="badge bad">'+g.blocks.length+'</span>':''],['applicants','Applicants',S.sync.newApps.length?'<span class="badge warn">'+S.sync.newApps.length+' new</span>':''],['publish','Publish',''],['hr','HR drafts',hrChanged()?'<span class="badge warn">changes</span>':''],['students','Students',declined?'<span class="badge warn">'+declined+'</span>':''],['concerns','Concerns',open?'<span class="badge warn">'+open+'</span>':''],['setup','Setup',''],['audit','Audit log','']];
   }
   return[['courses','My course',''],['published','Published plan','']];
 }
@@ -460,6 +583,10 @@ function vDashboard(){
    '<li><button class="link" data-act="goCourse" data-a="crs_f26_003">304I</button> has no faculty ranking. Use the pool facts and copy a list for the professor.</li>'+
    '<li><button class="link" data-act="go" data-a="admin" data-b="publish">Publish</button>: add the open-position notes, then publish version 2.</li>'+
    '<li><button class="link" data-act="go" data-a="admin" data-b="students">Students</button>: Delta declined 311H. Pick the next backup from the professor\'s list.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="hr">HR drafts</button>: accept an assignment, then create the next draft. Added students show green, removed red, with the spreadsheet and email text ready to copy.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="setup">Setup</button>: set a course to graduate-only or change its TA, UGCA and proctor slots, then check the pools. The same tab shows the different questions for graduate and undergraduate applicants.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="applicants">Applicants</button>: press Refresh from legacy app to see a late applicant arrive, then try Add back to pool on a GRA-listed student.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="students">Students</button>: after publishing, open the student response window before marking students notified.</li>'+
    '<li><button class="link" data-act="go" data-a="fac:fac_v_ravishankar" data-b="courses">Switch to V Ravishankar</button>: finish the 311 ranking and submit it.</li></ol></details>'+
   '<div class="grid2">'+
    '<div class="card"><h3>Needs attention</h3>'+
@@ -481,18 +608,58 @@ function vDashboard(){
   '<div class="tbl"><table><thead><tr><th>Course</th><th>Professor</th><th>Ranking</th><th class="num">Applicants</th><th class="num">Ranked</th><th class="num">Need</th><th class="num">Draft</th><th class="num">Confirmed</th><th>Issues</th><th></th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div></div></div>';
 }
 
+/* ---------- views: v3 additions ---------- */
+function typeToggle(){
+  return '<div class="seg" role="group" aria-label="Show applicant type"><span class="small muted" style="margin-right:4px">Show</span>'+[['both','TA and UGCA'],['TA','TA only'],['UGCA','UGCA only']].map(x=>'<button class="btn sm" aria-pressed="'+(S.typeView===x[0])+'" data-act="typeView" data-a="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>';
+}
+function hrTable(rows){
+  const cls={added:'add',removed:'rem',changed:'chg'},ck={added:'ok',removed:'bad',changed:'warn'};
+  return '<div class="tbl"><table><thead><tr><th>Change</th><th>Course</th><th>Student</th><th>Appointment</th><th>HR tier</th><th class="num">FTE</th><th>Citizenship</th></tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr class="'+(cls[r.ch]||'')+'"><td>'+(r.ch?chip(r.ch[0].toUpperCase()+r.ch.slice(1),ck[r.ch]):'')+'</td><td>'+esc(cname(r.course))+'</td><td>'+esc(nm(r.app))+'</td><td>'+esc(r.role)+'</td><td>'+esc(r.tier)+'</td><td class="num">'+f(r.fte)+'</td><td>'+esc(r.cit)+'</td></tr>').join(''):'<tr><td colspan="7" class="muted">No accepted assignments yet.</td></tr>')+'</tbody></table></div>';
+}
+function vHR(){
+  const last=hrLatest(),pre=hrDiff(hrRows(),last.rows),n=(k)=>pre.filter(r=>r.ch===k).length,chg=pre.some(r=>r.ch),g=gate();
+  const sel=S.hr.drafts.find(d=>d.n===S.hrSel)||last,pv=hrPrev(sel.n),rows=hrDiff(sel.rows,pv&&pv.rows);
+  return '<div class="stack"><div class="note"><b>Nothing is sent to HR from this demo.</b> A draft saves a numbered snapshot of the accepted assignments. It shows what changed since the last draft and prepares the spreadsheet and the email text.</div>'+
+   '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Next draft: '+(last.n+1)+'</h3><div class="small muted">Compared with draft '+last.n+', created '+when(last.at)+'. Only accepted assignments go to HR.</div></div><button class="btn primary" data-act="createHr"'+(chg?'':' disabled')+'>Create draft '+(last.n+1)+'</button></div>'+
+   '<div class="chips" style="margin:10px 0">'+chip(n('added')+' added','ok')+chip(n('removed')+' removed',n('removed')?'bad':'')+chip(n('changed')+' changed',n('changed')?'warn':'')+(g.blocks.length?chip(g.blocks.length+' blocking issue'+(g.blocks.length>1?'s':'')+' still open in Assignments','warn'):'')+'</div>'+
+   (chg?hrTable(pre.filter(r=>r.ch)):'<div class="muted">Nothing has changed since draft '+last.n+'.</div>')+'</div>'+
+   '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">Drafts</div>'+S.hr.drafts.slice().reverse().map(d=>'<button class="course-btn" data-act="selHr" data-a="'+d.n+'" aria-pressed="'+(d.n===sel.n)+'"><b>Draft '+d.n+'</b>'+(d.n===last.n?' '+chip('Latest','acc'):'')+'<div class="small muted">'+when(d.at)+' · '+esc(d.by)+'</div><div class="small mono">'+d.rows.length+' assignments</div></button>').join('')+'</div>'+
+   '<div class="stack"><div class="card"><h3>Draft '+sel.n+'</h3><div class="small muted" style="margin-bottom:8px">'+(pv?'Green rows were added since draft '+pv.n+'. Red rows were removed. Yellow rows changed.':'First draft, so nothing to compare.')+' Tier is estimated from degree and TA history. The rule is an assumption to confirm with Doug.</div>'+hrTable(rows)+'<div class="small muted" style="margin-top:6px">Citizenship is shown because Doug needs it in the HR output. Open question: who is allowed to see it.</div></div>'+
+   '<div class="card"><h3>Spreadsheet for HR</h3><textarea id="hrCsv" class="csv" rows="'+Math.min(10,rows.length+2)+'" readonly>'+esc(hrCsv(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyHrCsv">Copy CSV</button><span class="small muted">Downloads are blocked in this viewer, so copy it into a spreadsheet.</span></div></div>'+
+   '<div class="card"><h3>Email to HR</h3><textarea id="hrMail" rows="12" readonly>'+esc(hrEmail(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyHrMail">Copy email text</button></div></div></div></div></div>';
+}
+function vSetup(){
+  const audL={both:'Graduate and undergraduate',grad:'Graduate students only',undergrad:'Undergraduates only'};
+  const hid=cid=>SEED.course_preferences.filter(p=>p.course_id===cid&&APP[p.application_id].application_status==='submitted'&&!audOk(p.application_id,cid)).length;
+  const sl=[0,0.25,0.5,0.75,1,1.5,2];
+  const rows=SEED.courses.map(c=>{
+    const id=c.course_id,cs=S.course[id];
+    return '<tr><td><b>'+esc(cname(id))+'</b><div class="small muted">'+esc(c.title)+'</div></td><td>'+esc(prof(id))+'</td><td><select data-chg="setAud" data-a="'+id+'" aria-label="Who can apply to '+esc(cname(id))+'">'+Object.keys(audL).map(k=>opt(k,audL[k],cs.aud)).join('')+'</select>'+(hid(id)?'<div class="small muted">'+hid(id)+' applicant'+(hid(id)>1?'s are':' is')+' hidden by this rule</div>':'')+'</td>'+
+      ['TA','UGCA','Proctor'].map(r=>'<td><select data-chg="setSlot" data-a="'+id+'" data-b="'+r+'" aria-label="'+r+' FTE for '+esc(cname(id))+'">'+sl.map(v=>opt(v,f(v),cs.slots[r])).join('')+'</select></td>').join('')+'<td class="num"><b>'+f(c.ta_slots_required)+'</b></td></tr>';
+  }).join('');
+  const li=a=>'<ul class="plain tight">'+a.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+  return '<div class="stack"><div class="card"><h3>Courses: who can apply and how many assistants</h3><p class="muted" style="margin-bottom:10px">This mirrors what Doug sets up in the legacy app: how many of each assistant a course needs, and which students see the course. Change a row and the pools, needs and checks update. Applicants who are not allowed are hidden from the pool, and an existing assignment for one of them blocks publishing.</p>'+
+   '<div class="tbl"><table><thead><tr><th>Course</th><th>Professor</th><th>Who can apply</th><th>TA FTE</th><th>UGCA FTE</th><th>Proctor FTE</th><th class="num">Total need</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+   '<div class="card"><h3>Application questions</h3><p class="muted" style="margin-bottom:10px">One form with a shared core. Graduate and undergraduate applicants each get their own questions. The applicant card shows the answers.</p><div class="cols3">'+
+   '<div><div class="eyebrow">Everyone</div>'+li(['Courses chosen, in order, with a note each','Availability and hours','Skills and relevant coursework','Teaching statement','Prior TA history (kept by the system)','Citizenship status (office only)'])+'</div>'+
+   '<div><div class="eyebrow">Graduate students</div>'+li(['Resume with internships and industry work','Supervisor and research area','ITA workshop or English test status','Teaching experience they want','Citizenship status (required)'])+'</div>'+
+   '<div><div class="eyebrow">Undergraduates</div>'+li(['Class year','Hours per week','Grade in the course they want to assist','Transcript, checked by the office'])+'</div></div></div>'+
+   '<div class="card"><h3>Data source</h3><p class="muted" style="margin-bottom:8px">Today the demo reads a synthetic dataset. The real tool would pull applicants and courses from the legacy app and never write back. Press the button to pretend a new applicant arrived there.</p>'+
+   '<div class="row"><button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button><span class="small muted">Last refresh: '+when(S.sync.at)+' · '+S.sync.newApps.length+' new since the start of this session</span></div></div></div>';
+}
+
 /* ---------- views: faculty windows ---------- */
 function vWindows(){
   const tr=trackRows(),cnt=k=>tr.filter(r=>k.includes(r.st)).length;
   const openable=tr.filter(r=>r.st!=='No applicants'&&r.w.state!=='open');
   const pick=openable.some(r=>r.fid===S.winPick)?S.winPick:(openable[0]||{}).fid||'';
-  const stk={Responded:'ok',Waiting:'warn',Overdue:'bad','Closed, no response':'bad','Not opened':'','No applicants':''};
+  const stk={'Replied by email':'acc',Responded:'ok',Waiting:'warn',Overdue:'bad','Closed, no response':'bad','Not opened':'','No applicants':''};
   const rows=tr.map(r=>{
     const w=r.w;let act='';
     if(r.st==='No applicants')act='<span class="small muted">Nothing to rank</span>';
     else if(w.state==='not_open')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'">Open</button>';
     else if(w.state==='closed')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'" data-b="Ranking reopened">Reopen</button>';
-    else if(r.st!=='Responded')act='<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="remind" data-a="'+r.fid+'">Remind</button><button class="btn sm" data-act="closeWin" data-a="'+r.fid+'">Close</button></div>';
+    else if(r.st!=='Responded')act='<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="remind" data-a="'+r.fid+'">Remind</button><button class="btn sm" data-act="closeWin" data-a="'+r.fid+'">Close</button>'+(r.replyAt?'':'<button class="btn sm" data-act="simReply" data-a="'+r.fid+'">Mock reply</button>')+'</div>';
     else act='<span class="small muted">Done</span>';
     const due=w.dueAt?(r.st==='Overdue'?'<b>'+day(w.dueAt)+'</b>':day(w.dueAt)):'—';
     return '<tr><td><b>'+esc(r.name)+'</b><div class="small muted">'+esc(r.cl)+'</div></td><td>'+chip(r.st,stk[r.st])+'</td><td>'+(w.openedAt?when(w.openedAt):'—')+'</td><td>'+due+'</td><td class="num">'+r.ranked+' / '+r.apps+'</td><td>'+(r.respAt?when(r.respAt):'—')+(r.hrs!=null?'<div class="small muted">after '+dur(r.hrs*36e5)+'</div>':'')+'</td><td class="num">'+w.emails.length+(r.reminders?'<div class="small muted">'+r.reminders+' reminder'+(r.reminders>1?'s':'')+'</div>':'')+'</td><td>'+act+'</td></tr>';
@@ -500,12 +667,14 @@ function vWindows(){
   const mails=[];SEED.faculty.forEach(fa=>S.win[fa.faculty_id].emails.forEach((m,i)=>mails.push({k:fa.faculty_id+'|'+i,m})));
   mails.sort((a,b)=>Date.parse(b.m.at)-Date.parse(a.m.at));
   const mv=S.mailView&&mails.find(x=>x.k===S.mailView);
+  const inbox=[];SEED.faculty.forEach(fa=>S.win[fa.faculty_id].inbox.forEach(m=>inbox.push(m)));inbox.sort((a,b)=>Date.parse(b.at)-Date.parse(a.at));
   return '<div class="stack"><div class="note"><b>Email is not connected yet.</b> Opening a window queues the email text and shows it below. Nothing leaves this demo. When the office approves a sender, the same step will send it for real.</div>'+
-   '<div class="stats">'+[['Professors',tr.length],['Not opened',cnt(['Not opened'])],['Waiting',cnt(['Waiting','Overdue'])],['Responded',cnt(['Responded'])],['Closed, no reply',cnt(['Closed, no response'])]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
+   '<div class="stats">'+[['Professors',tr.length],['Not opened',cnt(['Not opened'])],['Waiting',cnt(['Waiting','Overdue'])],['Replied by email',cnt(['Replied by email'])],['Responded',cnt(['Responded'])],['Closed, no reply',cnt(['Closed, no response'])]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
    '<div class="card"><h3>Open a ranking window</h3><div class="small muted" style="margin-bottom:8px">Pick one professor, or open everyone who is left. The professor gets a notification and a queued email. Until then their ranking page is locked.</div>'+
    (openable.length?'<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Professor<select data-chg="winPick" id="winPick">'+openable.map(r=>opt(r.fid,r.name+' ('+r.cl+')',pick)).join('')+'</select></label><label class="f">Due date<input type="date" id="winDue" data-chg="winDue" value="'+esc(S.winDue)+'"></label><button class="btn primary" data-act="openWin" data-a="'+esc(pick)+'">Open window and queue email</button>'+(openable.length>1?'<button class="btn" data-act="openAll">Open all remaining ('+openable.length+')</button>':'')+'</div>':'<div class="muted">Every professor with applicants already has a window.</div>')+'</div>'+
    '<div class="card"><h3>Who has responded</h3><div class="tbl"><table><thead><tr><th>Professor</th><th>Status</th><th>Opened</th><th>Due</th><th class="num">Ranked / applicants</th><th>Responded</th><th class="num">Emails</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
    '<div class="card"><h3>Tracking sheet</h3><div class="small muted" style="margin-bottom:6px">The same table as a spreadsheet. Copy it and paste into Excel or Sheets. It updates as professors respond.</div><textarea id="trackBox" rows="6" readonly>'+esc(trackCsv())+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyTrack">Copy as CSV</button></div></div>'+
+   '<div class="card"><h3>Inbox (mock)</h3><div class="small muted" style="margin-bottom:6px">Professors often answer by email instead of in the tool. The real version would read the shared mailbox and match each reply to a professor. Here, press "Mock reply" in the table to see it happen.</div>'+(inbox.length?'<div class="tbl"><table><thead><tr><th>Received</th><th>From</th><th>Matched to</th><th>Message</th></tr></thead><tbody>'+inbox.map(m=>'<tr><td>'+when(m.at)+'</td><td>'+esc(m.from)+'</td><td>'+chip(m.matched,'acc')+'</td><td class="small">'+esc(m.body)+'</td></tr>').join('')+'</tbody></table></div>':'<div class="muted">No replies yet.</div>')+'</div>'+
    '<div class="card"><h3>Email outbox</h3><div class="tbl"><table><thead><tr><th>Queued</th><th>To</th><th>Type</th><th>Status</th><th></th></tr></thead><tbody>'+(mails.length?mails.map(x=>'<tr><td>'+when(x.m.at)+'</td><td>'+esc(x.m.to)+'<div class="small muted">'+esc(x.m.address)+'</div></td><td>'+esc(x.m.kind)+'</td><td>'+chip(x.m.status,x.m.status==='Sent earlier'?'ok':'warn')+'</td><td><button class="btn sm" data-act="showMail" data-a="'+esc(x.k)+'">View text</button></td></tr>').join(''):'<tr><td colspan="5" class="muted">No emails yet.</td></tr>')+'</tbody></table></div>'+
    (mv?'<div style="margin-top:10px"><label class="f" for="mailBox">'+esc(mv.m.subject)+'</label><textarea id="mailBox" rows="10" readonly>'+esc(mv.m.body)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyMail">Copy</button><button class="btn" data-act="hideMail">Close</button></div></div>':'')+'</div></div>';
 }
@@ -517,25 +686,26 @@ function vAssign(){
     const id=x.course_id,n=g.iss.filter(i=>i.courses.includes(id)).length,need=x.ta_slots_required;
     return '<button class="course-btn" data-act="goCourse" data-a="'+id+'" aria-pressed="'+(id===sel)+'"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b>'+esc(cname(id))+'</b>'+(n?chip(n,'warn'):chip('ok','ok'))+'</div><div class="small muted">'+esc(prof(id))+' · '+esc(x.title)+'</div><div class="bar" style="margin:8px 0 4px"><i class="d" style="width:'+Math.min(100,courseAlloc(id)/need*100)+'%"></i><i class="c" style="width:'+Math.min(100,courseConf(id)/need*100)+'%"></i></div><div class="small mono">'+f(courseConf(id))+' accepted · '+f(courseAlloc(id))+' of '+f(need)+' FTE</div></button>';
   }).join('');
-  const home=needsHome(),graList=[...S.gra];
+  const home=needsHome().filter(typeOk),graList=[...S.gra];
   const queue=['PhD','Undergraduate','Masters'].map(t=>{
     const ns=home.filter(a=>APP[a].degree_level===t);
     return ns.length?'<div style="margin-top:8px"><div class="eyebrow">'+(t==='PhD'?'1 · PhD, place first':t==='Undergraduate'?'2 · Undergraduate':'3 · Master\'s, last')+'</div>'+ns.map(a=>'<div>'+nameBtn(a,sel)+' <span class="small muted">'+esc(APP[a].assistant_type)+'</span></div>').join('')+'</div>':'';
   }).join('');
-  return '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">Courses</div>'+list+
+  return '<div class="split"><div><div style="margin-bottom:10px">'+typeToggle()+'</div><div class="eyebrow" style="margin-bottom:8px">Courses</div>'+list+
     '<div class="card" style="margin-top:16px"><h3>Still needs a position</h3><div class="small muted">Order follows how the office places people.</div>'+(queue||'<div class="muted" style="margin-top:8px">Everyone with a preference has a position.</div>')+
-    (graList.length?'<div style="margin-top:12px"><div class="eyebrow">Excluded: on GRA list</div>'+graList.map(a=>'<div class="muted">'+esc(nm(a))+'</div>').join('')+'</div>':'')+'</div></div>'+
+    (graList.length?'<div style="margin-top:12px"><div class="eyebrow">Excluded: on GRA list</div>'+graList.map(a=>'<div class="muted">'+esc(nm(a))+' <button class="link" data-act="graBack" data-a="'+a+'">Add back to pool</button></div>').join('')+'</div>':'')+'</div></div>'+
     '<div class="stack">'+vWorkspace(sel,g)+'</div></div>';
 }
 function vWorkspace(cid,g){
   const c=COURSE[cid],rq=REQ[cid],rk=S.rank[cid],cands=candidates(cid),need=c.ta_slots_required;
   const issues=g.iss.filter(i=>i.courses.includes(cid));
-  const head='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(c.catalog_number)+' · '+esc(c.section_label)+' <span class="muted" style="font-weight:500">'+esc(c.title)+'</span></h2><div class="muted">'+esc(prof(cid))+' · needs '+f(need)+' FTE</div></div><div class="row">'+(cands.length?rkChip(rk.status):chip('No applicants'))+(live().some(r=>r.course===cid&&r.decision==='requested')?'<button class="btn sm" data-act="acceptAll" data-a="'+cid+'">Accept all requested</button>':'')+'</div></div>'+
-    '<div class="small muted" style="margin-top:8px">Requirements: '+(rq.experience_required?'prior experience required · ':'')+'skill '+esc(rq.required_skills)+' · '+esc(rq.faculty_notes)+'</div></div>';
+  const head='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(c.catalog_number)+' · '+esc(c.section_label)+' <span class="muted" style="font-weight:500">'+esc(c.title)+'</span></h2><div class="muted">'+esc(prof(cid))+' · needs '+Object.entries(S.course[cid].slots).filter(e=>e[1]>0).map(e=>f(e[1])+' '+e[0]).join(' + ')+' = '+f(need)+' FTE</div></div><div class="row">'+(cands.length?rkChip(rk.status):chip('No applicants'))+(live().some(r=>r.course===cid&&r.decision==='requested')?'<button class="btn sm" data-act="acceptAll" data-a="'+cid+'">Accept all requested</button>':'')+'</div></div>'+
+    '<div class="small muted" style="margin-top:8px">Requirements: '+(rq.experience_required?'prior experience required · ':'')+'skill '+esc(rq.required_skills)+' · '+esc(rq.faculty_notes)+'</div><div class="small muted">Who can apply: '+({both:'graduate and undergraduate students',grad:'graduate students only',undergrad:'undergraduates only'}[S.course[cid].aud])+(SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length?' · '+SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length+' hidden by this rule':'')+'</div></div>';
   const iss=issues.length?'<div class="card"><h3>Issues for this course</h3>'+issues.map(i=>'<div class="issue"><div>'+chip(i.code,i.sev==='block'?'bad':'warn')+' '+esc(i.msg)+'</div>'+(i.courses.length>1?'<div class="row" style="gap:4px">'+i.courses.filter(x=>x!==cid).map(x=>'<button class="btn sm" data-act="goCourse" data-a="'+x+'">'+esc(cname(x))+'</button>').join('')+'</div>':'')+'</div>').join('')+'</div>':'';
   if(!cands.length)return head+iss+'<div class="note">No applicants selected this course. That is zero demand from students, not unfinished faculty work.</div>';
   const info=rk.status!=='submitted'?'<div class="note warn"><b>'+esc(prof(cid))+' has not submitted a ranking</b> (status: '+rk.status.replace('_',' ')+'). Below is everyone who applied for this course, with facts only and no match score. <button class="btn sm" data-act="copyPool" data-a="'+cid+'" style="margin-left:6px">Copy list for the professor</button></div>':'';
-  const rows=cands.map(x=>{
+  const shown=cands.filter(x=>typeOk(x.app));
+  const rows=shown.map(x=>{
     const a=x.app,row=S.draft.rows.find(r=>r.course===cid&&r.app===a&&r.decision!=='declined');
     const e=rk.entries[a]||{},mine=issues.filter(i=>i.app===a);
     const else_=[];
@@ -543,33 +713,34 @@ function vWorkspace(cid,g){
     S.draft.rows.filter(r=>r.app===a&&r.course!==cid&&r.decision!=='declined').forEach(r=>else_.push(f(r.fte)+' FTE '+r.decision+' in '+cname(r.course)));
     const cur=row&&row.decision!=='declined'?row.fte:0,cap=Math.max(0,Math.min(1,Math.round((need-courseAlloc(cid)+cur)*100)/100));
     const opts=[0,.25,.5,.75,1].filter(v=>v<=cap+1e-9||v===cur);
-    return '<tr><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+(S.gra.has(a)?chip('GRA','bad'):'')+eligChipAdm(a)+'</div></td>'+
+    const itaw=ex(a).ita==='ITA workshop needed'||ex(a).ita==='English test pending';
+    return '<tr'+(S.gra.has(a)?' class="dim"':'')+'><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+(S.gra.has(a)?chip('GRA','bad'):'')+eligChipAdm(a)+(itaw?chip(ex(a).ita,'warn'):'')+(S.tx[a]&&S.tx[a].checked?chip('Transcript checked','ok'):chip('Transcript not checked'))+'</div></td>'+
       '<td class="num">#'+x.pref.preference_rank+'</td>'+
       '<td>'+(e.rank!=null?'<b class="mono">#'+e.rank+'</b> '+chip(e.rec.replace('_',' '),e.rec==='strong_yes'?'ok':'')+(e.comment?'<div class="small muted">'+esc(e.comment)+'</div>':''):(e.rec==='do_not_rank'?chip('Do not rank','bad'):'<span class="muted">Not ranked</span>'))+'</td>'+
       '<td><div class="chips">'+factsFor(a,cid)+'</div>'+(else_.length?'<div class="small muted" style="margin-top:4px">'+else_.map(esc).join('<br>')+'</div>':'')+'</td>'+
       '<td class="num">'+f(appAlloc(a))+' / '+f(APP[a].max_assignment_fte)+'</td>'+
       '<td><select data-chg="setAlloc" data-a="'+cid+'" data-b="'+a+'" data-fid="alloc:'+cid+':'+a+'" aria-label="Allocation for '+esc(nm(a))+'">'+opts.map(v=>opt(v,f(v)+' FTE',cur)).join('')+'</select>'+
         (row&&row.decision!=='declined'?'<div style="margin-top:4px"><select data-chg="setDecision" data-a="'+row.id+'" aria-label="Decision">'+opt('requested','Requested',row.decision)+opt('accepted','Accepted',row.decision)+opt('declined','Declined',row.decision)+'</select></div><div style="margin-top:4px"><select data-chg="setRole" data-a="'+row.id+'" aria-label="Appointment">'+(isGrad(a)?opt('TA','TA',row.role)+opt('AI','AI (assistant instructor)',row.role):opt('UGCA','UGCA',row.role))+'</select></div>':'')+'</td>'+
-      '<td>'+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
+      '<td>'+(S.gra.has(a)?'<div class="small" style="margin-bottom:4px">On the GRA list. <button class="btn sm" data-act="graBack" data-a="'+a+'">Add back to pool</button></div>':'')+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
   }).join('');
-  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th class="num">Pref</th><th>Professor</th><th>Facts and other requests</th><th class="num">Total FTE</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="small muted">Candidates are listed by their own preference, then name. Nothing here is scored. Accepting an assignment keeps the applicant within their 1.0 FTE maximum unless an exception is set.</div>';
+  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th class="num">Pref</th><th>Professor</th><th>Facts and other requests</th><th class="num">Total FTE</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><div class="small muted">Candidates are listed by their own preference, then name. Nothing here is scored. Accepting an assignment keeps the applicant within their 1.0 FTE maximum unless an exception is set.</div>';
 }
 
 /* ---------- views: applicants ---------- */
 function vApplicants(){
   const fl=S.f.app;
-  const apps=SEED.applications.filter(a=>(!fl.tier||a.degree_level===fl.tier)&&(!fl.type||a.assistant_type===fl.type)).sort((x,y)=>TIER_ORDER[x.degree_level]-TIER_ORDER[y.degree_level]||nm(x.application_id).localeCompare(nm(y.application_id)));
+  const apps=SEED.applications.filter(a=>(!fl.tier||a.degree_level===fl.tier)&&typeOk(a.application_id)).sort((x,y)=>TIER_ORDER[x.degree_level]-TIER_ORDER[y.degree_level]||nm(x.application_id).localeCompare(nm(y.application_id)));
   const gr=S.graResult;
   const rows=apps.map(a=>{
     const id=a.application_id,al=appAlloc(id);
     const state=a.application_status==='draft'?chip('Draft application','warn'):S.gra.has(id)?chip('GRA, excluded','bad'):al>0?chip('Assigned '+f(al)+' FTE','ok'):chip('Needs a position',a.degree_level==='PhD'?'warn':'');
-    return '<tr><td>'+nameBtn(id,'')+'</td><td>'+tierChip(id)+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="num">'+(PREFS_APP[id]||[]).length+'</td><td class="num">'+f(al)+' / '+f(a.max_assignment_fte)+'</td><td>'+state+'</td><td><button class="btn sm" data-act="toggleGra" data-a="'+id+'">'+(S.gra.has(id)?'Remove GRA flag':'Flag as GRA')+'</button></td></tr>';
+    return '<tr><td>'+nameBtn(id,'')+(S.sync.newApps.includes(id)?' '+chip('New from legacy app','warn'):'')+'</td><td>'+tierChip(id)+'</td><td>'+chip(tierOf(id).code,'acc')+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="num">'+(PREFS_APP[id]||[]).length+'</td><td class="num">'+f(al)+' / '+f(a.max_assignment_fte)+'</td><td>'+state+'</td><td><button class="btn sm" data-act="'+(S.gra.has(id)?'graBack':'toggleGra')+'" data-a="'+id+'">'+(S.gra.has(id)?'Add back to pool':'Flag as GRA')+'</button></td></tr>';
   }).join('');
-  return '<div class="stack"><div class="card"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste it here, one name per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand.</p>'+
+  return '<div class="stack"><div class="card"><div class="row" style="justify-content:space-between"><div><h3>Applicant data</h3><div class="small muted">Pulled from the legacy app (demo feed). Last refresh '+when(S.sync.at)+'. Nothing is written back.</div></div><button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button></div></div><div class="card"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste it here, one name per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand.</p>'+
     '<div class="grid2"><div><label class="f" for="graText">Grant-admin list (synthetic aliases)</label><textarea id="graText" rows="5" data-inp="graText">'+esc(S.graText)+'</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="applyGra">Run GRA check</button></div></div>'+
-    '<div>'+(gr?'<div class="eyebrow">Result</div><div style="margin-top:6px">'+chip(gr.matched.length+' matched in this term\'s pool','ok')+' '+chip(gr.unmatched.length+' not in the pool',gr.unmatched.length?'warn':'')+'</div>'+(gr.matched.length?'<div style="margin-top:8px"><b>Flagged:</b> '+gr.matched.map(a=>esc(nm(a))).join(', ')+'</div>':'')+(gr.unmatched.length?'<div style="margin-top:4px"><b>No match:</b> '+gr.unmatched.map(esc).join(', ')+'</div>':'')+'<div class="small muted" style="margin-top:8px">The real version would match on a stable student key held outside this tool, not on names.</div>':'')+'</div></div></div>'+
-    '<div><div class="filters"><h3 style="margin-right:auto">Applicant pool</h3><label class="f">Level<select data-chg="appFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label><label class="f">Type<select data-chg="appFilter" data-a="type">'+opt('','All',fl.type)+opt('TA','TA',fl.type)+opt('UGCA','UGCA',fl.type)+'</select></label></div>'+
-    '<div class="tbl"><table><thead><tr><th>Candidate</th><th>Level</th><th>Type</th><th>Program</th><th>Application</th><th>Eligibility (admin only)</th><th class="num">Courses chosen</th><th class="num">Assigned / max</th><th>Placement</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div></div>';
+    '<div>'+(gr?'<div class="eyebrow">Result</div><div style="margin-top:6px">'+chip(gr.matched.length+' matched in this term\'s pool','ok')+' '+chip(gr.unmatched.length+' not in the pool',gr.unmatched.length?'warn':'')+'</div>'+(gr.matched.length?'<div style="margin-top:8px"><b>Flagged:</b> '+gr.matched.map(a=>esc(nm(a))).join(', ')+'</div>':'')+(gr.unmatched.length?'<div style="margin-top:4px"><b>No match:</b> '+gr.unmatched.map(esc).join(', ')+'</div>':'')+''+(gr.kept&&gr.kept.length?'<div style="margin-top:4px"><b>Kept in the pool (you added them back):</b> '+gr.kept.map(a=>esc(nm(a))).join(', ')+'</div>':'')+'<div class="small muted" style="margin-top:8px">The real version would match on a stable student key held outside this tool, not on names.</div>':'')+'</div></div></div>'+
+    '<div><div class="filters"><h3 style="margin-right:auto">Applicant pool</h3><label class="f">Level<select data-chg="appFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label>'+typeToggle()+'</div>'+
+    '<div class="tbl"><table><thead><tr><th>Candidate</th><th>Level</th><th>HR tier</th><th>Type</th><th>Program</th><th>Application</th><th>Eligibility (admin only)</th><th class="num">Courses chosen</th><th class="num">Assigned / max</th><th>Placement</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div></div>';
 }
 
 /* ---------- views: publish ---------- */
@@ -599,18 +770,18 @@ function vVersion(p){
   return '<div class="card"><div class="row" style="justify-content:space-between"><h3>Version '+p.version+' snapshot</h3><div class="row">'+chip('Locked','acc')+(S.confirmClone===p.version?'<button class="btn sm danger" data-act="cloneDo" data-a="'+p.version+'">Replace working draft with this version</button><button class="btn sm" data-act="cloneCancel">Cancel</button>':'<button class="btn sm" data-act="cloneAsk" data-a="'+p.version+'">Start a fresh draft from this version</button>')+'</div></div>'+
     '<div class="tbl" style="margin-top:8px"><table><thead><tr><th>Course</th><th>Professor</th><th>Assignee</th><th>Role</th><th class="num">FTE</th><th>Override note</th></tr></thead><tbody>'+p.rows.map(r=>'<tr><td>'+esc(cname(r.course))+'</td><td>'+esc(prof(r.course))+'</td><td>'+esc(nm(r.app))+'</td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td class="small">'+esc(r.note||'')+'</td></tr>').join('')+'</tbody></table></div>'+
     '<div class="small muted" style="margin-top:8px"><b>Open positions at publication:</b> '+(gaps.length?gaps.map(c=>esc(cname(c.course_id))+(p.gaps[c.course_id]?' ('+esc(p.gaps[c.course_id])+')':'')).join('; '):'None')+'</div>'+diff+
-    '<div style="margin-top:12px"><h3>HR export (CSV)</h3><p class="small muted" style="margin-bottom:6px">Citizenship, gender, and pay tier come from the HR system and are not stored here.</p><textarea id="csvBox" class="csv" rows="'+Math.min(10,p.rows.length+2)+'" readonly>'+esc(csv)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyCsv" data-a="'+p.version+'">Copy CSV</button><span class="small muted">Downloads are blocked in this viewer, so copy it into a spreadsheet.</span></div></div></div>';
+    '<div style="margin-top:12px"><h3>HR export (CSV)</h3><p class="small muted" style="margin-bottom:6px">HR tier is estimated from degree and TA history (assumed rule). The HR drafts tab has the full HR spreadsheet.</p><textarea id="csvBox" class="csv" rows="'+Math.min(10,p.rows.length+2)+'" readonly>'+esc(csv)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyCsv" data-a="'+p.version+'">Copy CSV</button><span class="small muted">Downloads are blocked in this viewer, so copy it into a spreadsheet.</span></div></div></div>';
 }
 
 /* ---------- views: students ---------- */
 function vStudents(){
   const p=latestPub();
   if(!p)return '<div class="note">Nothing is published yet.</div>';
-  const R=p.rows.map(r=>({r,s:respOf(p,r)}));
+  const R=p.rows.filter(r=>typeOk(r.app)).map(r=>({r,s:respOf(p,r)}));
   const cnt=k=>R.filter(x=>x.s.status===k).length;
   const rows=R.map(({r,s})=>{
     const k=key(r);
-    return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td><select data-chg="setResp" data-a="'+k+'" aria-label="Reply from '+esc(nm(r.app))+'">'+opt('not_notified','Not notified yet',s.status)+opt('awaiting','Waiting for reply',s.status)+opt('confirmed','Confirmed',s.status)+opt('declined','Declined',s.status)+'</select><div class="small muted">'+(s.at?day(s.at):'')+'</div></td><td><button class="btn sm" data-act="showEmail" data-a="'+k+'">Email text</button></td></tr>';
+    return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td><select data-chg="setResp" data-a="'+k+'" aria-label="Reply from '+esc(nm(r.app))+'">'+opt('not_notified','Not notified yet',s.status)+opt('awaiting','Waiting for reply',s.status)+opt('confirmed','Confirmed',s.status)+opt('declined','Declined',s.status)+'</select><div class="small muted">'+(s.at?day(s.at):'')+'</div>'+(S.ext[k]?'<div>'+chip('Extended to '+day(S.ext[k].until),'acc')+'</div>':'')+'</td><td><div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="showEmail" data-a="'+k+'">Email text</button>'+((s.status==='awaiting'||s.status==='not_notified')?'<button class="btn sm" data-act="extend" data-a="'+k+'">Extend</button>':'')+'</div></td></tr>';
   }).join('');
   const declined=R.filter(x=>x.s.status==='declined').map(({r})=>{
     const bs=backupsFor(r.course,r.app,r.fte);
@@ -618,7 +789,10 @@ function vStudents(){
   }).join('');
   const em=S.emailFor&&R.find(x=>key(x.r)===S.emailFor);
   return '<div class="stack"><div class="stats">'+[['Confirmed',cnt('confirmed')],['Waiting',cnt('awaiting')],['Declined',cnt('declined')],['Not notified',cnt('not_notified')]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
-  '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Notify students for version '+p.version+'</h3><div class="small muted">Last notified: '+when(p.notifiedAt)+(p.replyBy?' · reply by '+day(p.replyBy):'')+'. This demo does not send email. It records the date and drafts the text.</div></div><div class="row"><label class="f" style="flex-direction:row;align-items:center;gap:6px">Reply by <input type="date" id="replyBy" value="'+esc(S.replyBy)+'" data-inp="replyBy"></label><button class="btn primary" data-act="notify">Mark students notified</button></div></div></div>'+
+  '<div class="card"><h3>Student replies for version '+p.version+'</h3>'+
+   '<div class="row" style="gap:10px;align-items:center;margin:6px 0">'+chip(p.respOpen?'Response window open'+(p.replyBy?' until '+day(p.replyBy):''):'Response window closed',p.respOpen?'ok':'bad')+'<span class="small muted">Last notified: '+when(p.notifiedAt)+'</span></div>'+
+   (p.respOpen?'':'<div class="note warn" style="margin-bottom:8px">Open the response window before you notify students. If it stays closed, students cannot accept and the inbox fills with "I can\'t accept" messages.</div>')+
+   '<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Reply by<input type="date" id="replyBy" value="'+esc(S.replyBy)+'" data-inp="replyBy"></label>'+(p.respOpen?'<button class="btn" data-act="closeResp">Close response window</button>':'<button class="btn primary" data-act="openResp">Open response window</button>')+'<button class="btn primary" data-act="notify"'+(p.respOpen?'':' disabled')+'>Mark students notified</button></div><div class="small muted" style="margin-top:6px">This demo does not send email. It records the date and drafts the text. Use Extend on a row to give one student more time.</div></div>'+
   '<div class="tbl"><table><thead><tr><th>Student</th><th>Course</th><th>Role</th><th class="num">FTE</th><th>Reply</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
   (em?'<div class="card"><h3>Email text for '+esc(nm(em.r.app))+'</h3><textarea id="emailBox" rows="10" readonly>'+esc(emailFor(p,em.r))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyEmail">Copy</button><button class="btn" data-act="hideEmail">Close</button></div></div>':'')+declined+'</div>';
 }
@@ -705,9 +879,10 @@ function drawerHtml(){
   let h='<div class="scrim" data-act="closeDrawer"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Applicant detail"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2>'+esc(nm(a))+'</h2><button class="btn sm" id="drawerClose" data-act="closeDrawer">Close</button></div><div class="chips">'+tierChip(a)+chip(ap.assistant_type)+(adm?eligChipAdm(a):eligChipFac(a))+(ap.application_status==='draft'?chip('Draft application','warn'):'')+'</div><dl>'+
    dd('Program',esc(ap.program))+dd('Expected graduation',esc(ap.expected_graduation_term))+dd('Availability',esc(ap.availability_status))+dd('Returning TA',ap.returning_ta?'Yes':'No')+dd('Prior TA terms',ap.prior_ta_terms)+dd('Skills',sk)+dd('Relevant coursework',cw)+dd('Prior teaching',th);
   if(pr)h+=dd('Their choice for this course','#'+pr.preference_rank)+dd('Preparedness',esc(pr.preparedness))+dd('Note for this course',esc(pr.applicant_note));
-  h+='</dl><h3>Experience</h3><div class="pre">'+(esc(ap.experience_summary)||'<span class="muted">Not provided</span>')+'</div><h3>Teaching statement</h3><div class="stmt">'+(esc(ap.teaching_statement)||'<span class="muted">Not provided</span>')+'</div>';
+  const x=ex(a),gb=cid&&(CW[a]||[]).find(c=>c.catalog_number===COURSE[cid].catalog_number);
+  h+='</dl><h3>'+(isGrad(a)?'Graduate application':'Undergraduate application')+'</h3><dl>'+(isGrad(a)?dd('Supervisor',esc(x.sup))+dd('Research area',esc(x.area))+dd('Resume: internships and industry work',esc(x.intern))+dd('English / ITA status',esc(x.ita))+dd('Teaching experience',esc(x.tex)):dd('Class year',esc(x.yr))+dd('Hours per week',x.hrs)+dd('Grade in this course',gb?esc(gb.grade_band):''))+'</dl><h3>Experience</h3><div class="pre">'+(esc(ap.experience_summary)||'<span class="muted">Not provided</span>')+'</div><h3>Teaching statement</h3><div class="stmt">'+(esc(ap.teaching_statement)||'<span class="muted">Not provided</span>')+'</div>';
   if(adm){
-    h+='<h3>Admin only</h3><dl>'+dd('Employment eligibility',esc(ap.employment_eligibility_status.replace('_',' ')))+dd('Spoken-English assessment',esc(ap.spoken_english_assessment))+dd('Max assignment',f(ap.max_assignment_fte)+' FTE')+dd('GRA list',S.gra.has(a)?'On the list':'Not on the list')+'</dl><h3>Faculty requests</h3>';
+    h+='<h3>Admin only</h3><dl>'+dd('Employment eligibility',esc(ap.employment_eligibility_status.replace('_',' ')))+dd('Spoken-English assessment',esc(ap.spoken_english_assessment))+dd('Max assignment',f(ap.max_assignment_fte)+' FTE')+dd('GRA list',S.gra.has(a)?'On the list':'Not on the list')+dd('Citizenship (office only)',esc(ex(a).cit)+' <span class="small muted">Open question: who may see this.</span>')+dd('HR tier','<select data-chg="tierOv" data-a="'+a+'" aria-label="HR tier">'+opt('','Automatic: '+tierAuto(a),S.tierOv[a]||'')+TIER_CODES.map(c=>opt(c,c,S.tierOv[a]||'')).join('')+'</select>')+dd('Transcript',(S.tx[a]&&S.tx[a].checked?'Checked '+when(S.tx[a].at):'Not checked yet')+' <button class="btn sm" data-act="txToggle" data-a="'+a+'">'+(S.tx[a]&&S.tx[a].checked?'Clear':'Mark checked')+'</button>')+'</dl><h3>Faculty requests</h3>';
     const rs=SEED.courses.map(c=>({c:c.course_id,e:S.rank[c.course_id].entries[a]})).filter(x=>x.e&&(x.e.rank!=null||x.e.rec));
     h+=rs.length?rs.map(x=>'<div class="issue"><div><b>'+esc(cname(x.c))+'</b> · '+esc(prof(x.c))+'<div class="small muted">'+(x.e.rank!=null?'Rank #'+x.e.rank+' · ':'')+esc((x.e.rec||'').replace('_',' '))+(x.e.comment?' · '+esc(x.e.comment):'')+'</div></div></div>').join(''):'<div class="muted">No professor has ranked this applicant.</div>';
   }
@@ -718,7 +893,7 @@ function drawerHtml(){
 function render(){
   const y=S.toTop?0:window.scrollY;S.toTop=false;
   let main;
-  if(S.user.type==='admin')main={dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,students:vStudents,concerns:vConcerns,audit:vAudit}[S.tab]();
+  if(S.user.type==='admin')main={dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,hr:vHR,students:vStudents,concerns:vConcerns,setup:vSetup,audit:vAudit}[S.tab]();
   else main=S.tab==='published'?vFacPublished():vFacCourses();
   $('#app').innerHTML=header()+nav()+'<main>'+main+'</main><footer class="foot">Every applicant here is fictional and labeled as synthetic. The page resets when you refresh, and picking a profile is not sign-in. Course titles and faculty names come from public Fall 2026 UT Austin Computer Science listings.</footer>';
   const d=$('#drawer');d.innerHTML=drawerHtml();
@@ -835,6 +1010,50 @@ const ACT={
   hideMail(){S.mailView=null;render()},
   copyMail(){copyText(($('#mailBox')||{}).value||'',$('#mailBox'));return false},
   copyTrack(){copyText(trackCsv(),$('#trackBox'));return false},
+  simReply(a){
+    const w=S.win[a];if(!w||w.state!=='open'||w.replyAt)return;
+    const at=nowIso(),last=w.emails[w.emails.length-1];
+    w.inbox.push({at,from:facEmailAddr(a),subject:'Re: '+(last?last.subject:'Ranking window'),body:'Thanks. I will get my ranking in by the due date. Can I list a backup too?',matched:FAC[a].display_name});
+    w.replyAt=at;log('professor email reply recorded','window',a,FAC[a].display_name+' (mock mailbox)');
+    notify('admin',FAC[a].display_name+' replied by email.',{tab:'windows'});toast('Mock reply recorded');render();
+  },
+  /* v3 */
+  typeView(a){S.typeView=a;render()},
+  graBack(a){S.gra.delete(a);S.graBack.add(a);log('GRA flag removed','applicant',a,nm(a)+' added back to the pool');toast(short(a)+' is back in the pool');render()},
+  sync(){
+    const item=LEGACY_FEED[S.sync.cursor];S.sync.at=nowIso();
+    if(!item){toast('Legacy app: nothing new since the last refresh');render();return}
+    ingest(item.payload);S.sync.cursor++;
+    const ids=item.payload.applications.map(x=>x.application_id);S.sync.newApps.push(...ids);
+    log('legacy data refreshed','sync',ids.join(','),item.label+' arrived (demo feed)');
+    notify('admin','New applicant from the legacy app: '+item.label+'.',{tab:'applicants'});
+    toast(item.label+' arrived from the legacy app (demo)');render();
+  },
+  setAud(a,b,v){S.course[a].aud=v;log('course audience changed','course',a,cname(a)+': '+v);render()},
+  setSlot(a,b,v){
+    const sl=S.course[a].slots,old=sl[b];sl[b]=parseFloat(v);
+    const tot=sum(Object.values(sl));
+    if(tot<0.25){sl[b]=old;toast('A course needs at least 0.25 FTE');render();return}
+    COURSE[a].ta_slots_required=tot;log('course slots changed','course',a,cname(a)+': '+b+' '+f(old)+' to '+f(sl[b])+', total '+f(tot));render();
+  },
+  txToggle(a){const x=S.tx[a]=S.tx[a]||{};x.checked=!x.checked;x.at=x.checked?nowIso():'';log('transcript check','applicant',a,nm(a)+(x.checked?' transcript checked':' transcript check cleared'));render()},
+  tierOv(a,b,v){if(v)S.tierOv[a]=v;else delete S.tierOv[a];log('HR tier set','applicant',a,nm(a)+': '+tierOf(a).code);render()},
+  createHr(){
+    const cur=hrRows(),last=hrLatest();
+    if(!hrDiff(cur,last.rows).some(r=>r.ch)){toast('Nothing changed since draft '+last.n);return}
+    const n=last.n+1;S.hr.drafts.push({n,at:nowIso(),by:ADMIN,rows:cur});S.hrSel=n;
+    log('HR draft created','hr',String(n),'Draft '+n+' with '+cur.length+' assignments');toast('Draft '+n+' created. Copy the spreadsheet and email text for HR.');render();
+  },
+  selHr(a){S.hrSel=parseInt(a,10);render()},
+  copyHrCsv(){copyText(($('#hrCsv')||{}).value||'',$('#hrCsv'));return false},
+  copyHrMail(){copyText(($('#hrMail')||{}).value||'',$('#hrMail'));return false},
+  openResp(){
+    const p=latestPub(),d=($('#replyBy')||{}).value||S.replyBy;S.replyBy=d;
+    if(!d||Date.parse(d+'T23:59:00')<Date.now()){toast('Pick a reply-by date in the future');return}
+    p.respOpen=true;p.replyBy=d;log('student response window opened','publication',p.id,'Version '+p.version+' open until '+day(d));render();
+  },
+  closeResp(){const p=latestPub();p.respOpen=false;log('student response window closed','publication',p.id,'Version '+p.version);render()},
+  extend(a){S.ext[a]={until:isoOf(new Date(Date.now()+7*864e5)).slice(0,10)};log('student extension','publication',a,a.split('|').map((x,i)=>i?short(x):cname(x)).join(' · ')+' extended to '+day(S.ext[a].until));toast('Extended by 7 days');render()},
   /* admin assignments */
   setAlloc(a,b,v){
     const val=parseFloat(v);let row=S.draft.rows.find(r=>r.course===a&&r.app===b&&r.decision!=='declined');
@@ -855,7 +1074,7 @@ const ACT={
   /* applicants */
   applyGra(){const t=$('#graText');applyGra(t?t.value:S.graText);toast('GRA check applied');render()},
   graText(a,b,v){S.graText=v;return false},
-  toggleGra(a){if(S.gra.has(a))S.gra.delete(a);else S.gra.add(a);log('GRA flag changed','applicant',a,nm(a)+(S.gra.has(a)?' flagged':' unflagged')+' as GRA');render()},
+  toggleGra(a){if(S.gra.has(a)){ACT.graBack(a);return}S.gra.add(a);S.graBack.delete(a);log('GRA flag changed','applicant',a,nm(a)+' flagged as GRA');render()},
   /* publish */
   setOverride(a,b,v){S.overrides[a]=v;updateGate();return false},
   fillNotes(){gate().warns.filter(w=>w.gate&&!(S.overrides[w.key]||'').trim()).forEach(w=>{S.overrides[w.key]='Acknowledged. Will be filled after faculty review.'});render()},
@@ -869,7 +1088,7 @@ const ACT={
       return{id:'pub_asn_'+String(++n).padStart(3,'0'),course:r.course,app:r.app,fte:r.fte,role:r.role,note:notes.join(' ')};
     });
     const gaps={};SEED.courses.forEach(c=>{if(sum(rows.filter(r=>r.course===c.course_id).map(r=>r.fte))<c.ta_slots_required)gaps[c.course_id]=S.overrides['unfilled:'+c.course_id]||''});
-    const pub={id:'pub_f26_v'+v,version:v,at:nowIso(),by:ADMIN,rows,gaps,notifiedAt:prev?prev.notifiedAt:null,replyBy:null,responses:{}};
+    const pub={id:'pub_f26_v'+v,version:v,at:nowIso(),by:ADMIN,rows,gaps,notifiedAt:prev?prev.notifiedAt:null,replyBy:null,responses:{},respOpen:false};
     if(prev)rows.forEach(r=>{const o=prev.responses[key(r)];if(o)pub.responses[key(r)]={...o}});
     S.pubs.push(pub);
     g.accepted.forEach(r=>{r.published=true});
@@ -889,7 +1108,8 @@ const ACT={
   /* students */
   replyBy(a,b,v){S.replyBy=v;return false},
   notify(){
-    const p=latestPub(),d=($('#replyBy')||{}).value||S.replyBy;S.replyBy=d;
+    const p=latestPub();if(!p.respOpen){toast('Open the student response window first');return}
+    const d=($('#replyBy')||{}).value||S.replyBy;S.replyBy=d;
     p.notifiedAt=nowIso();p.replyBy=d;
     p.rows.forEach(r=>{const k=key(r);if(!p.responses[k]||p.responses[k].status==='not_notified')p.responses[k]={status:'awaiting',at:p.notifiedAt}});
     log('students notified','publication',p.id,'Version '+p.version+' notified, reply by '+day(d));toast('Recorded. Copy each email from the table.');render();
@@ -947,7 +1167,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S&&(S.drawer||S.bell)){S.drawer=null;S.bell=false;render()}});
 
-window.__ta={state:()=>S,trackRows,trackCsv,ACT,computeIssues,gate,csvFor,backupsFor,validateRanking,needsHome,render};
+window.__ta={state:()=>S,trackRows,trackCsv,hrRows,hrDiff,hrCsv,hrEmail,tierOf,audOk,ACT,computeIssues,gate,csvFor,backupsFor,validateRanking,needsHome,render};
 initState();render();
 })();
 </script>
