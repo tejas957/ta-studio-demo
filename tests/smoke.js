@@ -66,8 +66,8 @@ ok(pubs[0].rows.length===2&&pubs[0].rows[0].course==='crs_f26_001','v1 untouched
 ok(pubs[1].rows.length===3,'v2 has 3 assignments ('+pubs[1].rows.map(r=>r.course.slice(-1)+r.app.slice(-2)).join(',')+')');
 ok(pubs[1].responses['crs_f26_001|app_f26_0001']&&pubs[1].responses['crs_f26_001|app_f26_0001'].status==='confirmed','Atlas confirmation carried to v2');
 ok(!T.gate().ok,'gate closed again (no changes)');
-const csv=T.csvFor(pubs[1]);ok(csv.split('\n').length===4&&csv.startsWith('term,publication_version'),'CSV 3 rows + header');
-ok(!/citizen|gender|PID|EID|ssn/i.test(csv),'CSV has no sensitive columns');
+ok(typeof T.csvFor==='undefined','publish CSV removed; HR drafts is the single HR export');
+ok(!/gender|PID|EID|ssn/i.test(T.hrCsv(15)),'HR csv has no gender, PID, EID or SSN');
 A.tab('publish');A.selPub(1);ok(txt().includes('Version 1 snapshot'),'v1 viewable');A.selPub(2);ok(txt().includes('Changes from version 1'),'diff shown');
 // notify
 A.tab('students');
@@ -134,12 +134,12 @@ ok(/not open yet|not opened/i.test(txt()),'Biswas sees window not open');
 A.setRank('crs_f26_003','app_f26_0001','1');ok(!S().rank.crs_f26_003.entries.app_f26_0001||S().rank.crs_f26_003.entries.app_f26_0001.rank==null,'ranking locked until window opens');
 // open one
 A.role(null,null,'admin');A.tab('windows');
-const bf=row('Biswas').fid,before=S().win[bf].emails.length;
+const bf=row('Biswas').fid,before=S().outbox.filter(m=>m.fid===bf).length;
 A.openWin(bf);
-ok(S().win[bf].state==='open'&&S().win[bf].emails.length===before+1,'open window queues one email');
-ok(/not sent/i.test(S().win[bf].emails.slice(-1)[0].status),'email status says not sent');
+ok(S().win[bf].state==='open'&&S().outbox.filter(m=>m.fid===bf).length===before+1,'open window queues one email');
+ok(/not sent/i.test(S().outbox.filter(m=>m.fid===bf).slice(-1)[0].status),'email status says not sent');
 ok(S().notifs.some(n=>n.to==='fac:'+bf),'faculty notified');
-A.showMail(bf+'|'+(S().win[bf].emails.length-1));ok(/Ranking window open/.test(w.document.querySelector('#mailBox').value),'mail text viewable');A.hideMail();
+A.tab('mail');A.showMail(S().outbox.filter(m=>m.fid===bf).slice(-1)[0].id);ok(/Ranking window open/.test(w.document.querySelector('#mailBox').value),'mail text viewable in Mail tab');A.hideMail();
 // faculty sees bell + can edit
 A.role(null,null,'fac:'+bf);ok(/Notifications/.test(txt())&&w.document.querySelector('.badge'),'faculty bell has unread');
 A.bell();ok(/window is open/i.test(txt()),'bell shows window message');A.notifAll();A.bell();
@@ -155,7 +155,7 @@ else console.log('note: Biswas submit blocked by validation',S().facErrors.crs_f
 // remind / close / reopen on another prof
 A.role(null,null,'admin');
 const wf=tr.find(r=>r.st==='Waiting'||r.st==='Overdue');
-if(wf){const n0=S().win[wf.fid].emails.length;A.remind(wf.fid);ok(S().win[wf.fid].emails.length===n0+1&&T.trackRows().find(r=>r.fid===wf.fid).reminders===1,'reminder queued and counted');
+if(wf){const n0=S().outbox.filter(m=>m.fid===wf.fid).length;A.remind(wf.fid);ok(S().outbox.filter(m=>m.fid===wf.fid).length===n0+1&&T.trackRows().find(r=>r.fid===wf.fid).reminders===1,'reminder queued and counted');
 A.closeWin(wf.fid);ok(T.trackRows().find(r=>r.fid===wf.fid).st==='Closed, no response','closed shows no response');
 A.role(null,null,'fac:'+wf.fid);}
 A.role(null,null,'admin');A.tab('windows');ok(w.document.querySelector('main').innerHTML.length>500,'windows tab renders after changes');
@@ -229,11 +229,47 @@ A.role(null,null,'admin');
 let wt3=T.trackRows().find(r=>r.st==='Waiting'||r.st==='Overdue');
 if(wt3){A.simReply(wt3.fid);ok(T.trackRows().find(r=>r.fid===wt3.fid).st==='Replied by email','mock reply marks replied by email');
  A.simReply(wt3.fid);ok(S().win[wt3.fid].inbox.length===1,'mock reply is recorded once');
- A.tab('windows');ok(/Inbox \(mock\)/.test(txt())&&/Mailbox|mailbox/.test(txt()),'inbox card renders');
+ A.tab('mail');ok(/Inbox \(mock\)/.test(txt())&&/mailbox/i.test(txt()),'inbox card renders in Mail tab');
  ok(/email_reply_at/.test(T.trackCsv()),'tracker csv has reply column');}
 else ok(false,'expected a waiting professor');
 // publish csv tier
-ok(/hr_tier/.test(T.csvFor(S().pubs[0])),'publish csv has hr_tier');
+ok(/hr_tier/.test(T.hrCsv(15)),'HR csv has hr_tier');
+
+// ---- cleanup pass ----
+A.reset();A.role(null,null,'admin');
+// one outbox
+const kinds=()=>[...new Set(S().outbox.map(m=>m.audience))].sort().join(',');
+ok(kinds()==='HR,Professor,Student','outbox holds professor, student and HR mail from the start');
+const ob0=S().outbox.length;
+A.openWin(T.trackRows().find(r=>r.st==='Not opened').fid);ok(S().outbox.length===ob0+1,'window email goes to the one outbox');
+A.setAlloc('crs_f26_002','app_f26_0001','0');A.setAlloc('crs_f26_002','app_f26_0005','1');A.acceptAll('crs_f26_002');A.createHr();
+ok(S().outbox.some(m=>m.audience==='HR'&&/draft 16/.test(m.subject)&&/^Queued/.test(m.status)),'HR draft email queued in the outbox');
+A.tab('mail');ok(/Outbox/.test(txt())&&/To professors/.test(txt()),'Mail tab renders the outbox');
+A.mailFilter('HR');ok(/HR draft/.test(w.document.querySelector('main').textContent)&&!/Window open/.test(w.document.querySelector('main').textContent),'mail filter narrows the outbox');
+A.mailFilter('');
+// student notices land in outbox
+A.setAlloc('crs_f26_002','app_f26_0005','0');A.setAlloc('crs_f26_002','app_f26_0006','1');A.acceptAll('crs_f26_002');
+A.setAlloc('crs_f26_004','app_f26_0011','1');A.acceptAll('crs_f26_004');
+// single HR output
+A.tab('publish');ok(!/HR export \(CSV\)/.test(txt())&&/Open HR drafts/.test(txt()),'publish tab points to HR drafts instead of a second CSV');
+ok(/Same as HR draft 15/.test(txt()),'published v1 is cross-linked to the matching HR draft');
+A.tab('hr');ok(/Same as published v1/.test(txt()),'HR draft 15 is cross-linked to published v1');
+ok(/Faculty versions/.test((A.tab('publish'),txt()))&&/HR drafts/.test((A.tab('hr'),txt())),'the two version lists are labeled differently');
+// shared window vocabulary
+A.tab('windows');ok(/Close window/.test(txt())&&/Extend/.test(txt()),'faculty windows use Open / Close / Extend wording');
+const ew=T.trackRows().find(r=>r.st==='Waiting'||r.st==='Overdue'),due0=S().win[ew.fid].dueAt,ob1=S().outbox.length;
+A.extendWin(ew.fid);ok(S().win[ew.fid].dueAt>due0||due0.length===10&&S().win[ew.fid].dueAt!==due0,'extending a professor window moves the due date');
+ok(S().outbox.length===ob1+1&&/Deadline extended/.test(S().outbox.slice(-1)[0].subject),'extension queues a deadline-extended email');
+// one GRA control
+A.tab('assign');const ex1=[...w.document.querySelectorAll('.eyebrow')].find(e=>/Excluded/.test(e.textContent));ok(ex1&&!/Add back to pool/.test(ex1.parentElement.textContent)&&ex1.parentElement.querySelector('button[data-act=graBack]')===null,'GRA list in the queue no longer has its own add-back button');
+A.goCourse('crs_f26_002');ok(/Add back to pool/.test(w.document.querySelector('main').textContent),'GRA add-back stays in the course row');
+A.tab('applicants');ok(/Add back to pool/.test(w.document.querySelector('main').textContent),'GRA add-back stays on Applicants');
+// one issue renderer, no repeated list in Publish
+A.reset();A.role(null,null,'admin');A.tab('publish');
+ok(/blocking issue/.test(txt())&&!/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'Publish summarizes blockers instead of repeating each message');
+A.tab('dashboard');ok(/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'Dashboard keeps the full blocker messages');
+A.goCourse('crs_f26_002');ok(/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'course workspace keeps its own issues');
+A.tab('dashboard');ok(/Reopen ranking/.test(txt()),'dashboard button says Reopen ranking');
 A.reset();ok(S().pubs.length===1,'reset restores seed');
 console.log(errs.length?'ERRORS:\n'+errs.join('\n'):'no runtime errors');
 console.log(fails?fails+' FAILED':'ALL PASSED');

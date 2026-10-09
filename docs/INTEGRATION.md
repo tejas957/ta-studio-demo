@@ -44,6 +44,14 @@ All values in the demo are invented. Where each would really come from is a gues
 | Transcript checked | Office checkbox | Created here by the office |
 | HR tier | HR spreadsheet | Computed here (rule below) |
 
+## One place for each job (v3.1 cleanup)
+
+- **Email:** one outbox (`queueOut`) for professors, students and HR.
+- **HR output:** the HR drafts tab only. The old per-version CSV on Publish is gone. Publish versions and HR drafts cross-link when they match.
+- **Windows:** faculty and student windows use the same words: open, extend, close.
+- **GRA:** the Applicants tab manages the flag. The course row has the same button for in-context add-back. The queue list only links out.
+- **Issues:** one renderer for the Dashboard and course views. Publish shows a summary and links.
+
 ## Rules the demo assumes (confirm with Doug)
 
 - **HR tier:** PhD; master's with a prior TA term = Masters 1 (returning); other master's = Masters 2; undergraduate = UGCA. The office can override per student.
@@ -54,7 +62,7 @@ All values in the demo are invented. Where each would really come from is a gues
 
 ## Mocked in v3 (nothing real happens)
 
-- Email to professors, students and HR. Text is drafted and queued only.
+- Email to professors, students and HR. Everything is drafted into one outbox (the Mail tab) and marked queued, not sent. A real sender would work from that same outbox.
 - Reading professor replies from a mailbox ("Mock reply" button).
 - The legacy app refresh.
 - Sign-in. The role switcher is not security.

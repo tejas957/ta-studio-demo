@@ -180,6 +180,7 @@ const dur=ms=>{const h=ms/36e5;if(h<1)return '<1h';const r=Math.round(h);return 
 const day=iso=>iso?new Date(iso.length===10?iso+'T12:00:00':iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
 const when=iso=>iso?new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';
 
+const extendDate=base=>isoOf(new Date(Math.max(Date.now(),base?Date.parse(base.length===10?base+'T12:00:00':base):0)+7*864e5)).slice(0,10);
 const TERM=SEED.terms[0];
 const COURSE=byId(SEED.courses,'course_id'), FAC=byId(SEED.faculty,'faculty_id'), APP=byId(SEED.applications,'application_id'), APL=byId(SEED.applicants,'applicant_id'), REQ=byId(SEED.course_requirements,'course_id');
 const SKILLS=group(SEED.applicant_skills,'application_id'), CW=group(SEED.applicant_coursework,'application_id'), TH=group(SEED.teaching_history,'application_id');
@@ -311,14 +312,15 @@ function initState(){
     A(c.created_at,FAC[c.faculty_id].display_name,'faculty concern raised','concern',c.concern_id,cname(c.course_id)+': '+c.concern_type);
     if(c.resolved_at)A(c.resolved_at,ADMIN,'resolution recorded','concern',c.concern_id,c.status.replace(/_/g,' '));
   });
-  s.nid=0;s.notifs=[];s.win={};s.bell=false;s.mailView=null;s.winPick='';
+  s.nid=0;s.notifs=[];s.win={};s.bell=false;s.mailView=null;s.mailF='';s.outbox=[];s.mid=0;s.winPick='';
   s.winDue=isoOf(new Date(Date.now()+7*864e5)).slice(0,10);
   SEED.courses.forEach(c=>{
     const fid=c.faculty_id,rk=s.rank[c.course_id];
-    if(rk.status==='not_started'){s.win[fid]={state:'not_open',openedAt:'',dueAt:'',closedAt:'',emails:[],inbox:[],replyAt:''};return}
+    if(rk.status==='not_started'){s.win[fid]={state:'not_open',openedAt:'',dueAt:'',closedAt:'',inbox:[],replyAt:''};return}
     // Synthetic history, not in the dataset: started courses had their window opened Sep 8. The in-progress one is due in 3 days so it reads as live.
     const due=rk.status==='in_progress'?isoOf(new Date(Date.now()+3*864e5)).slice(0,10):'2026-09-18',at='2026-09-08T09:00:00-05:00',m=windowMail(fid,due,'');
-    s.win[fid]={state:'open',openedAt:at,dueAt:due,closedAt:'',inbox:[],replyAt:'',emails:[{at,kind:'Window open',to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body,status:'Sent earlier'}]};
+    s.win[fid]={state:'open',openedAt:at,dueAt:due,closedAt:'',inbox:[],replyAt:''};
+    s.outbox.push({id:'m'+(s.mid++),at,kind:'Window open',audience:'Professor',fid,to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body,status:'Sent earlier'});
     A(at,ADMIN,'ranking window opened','window',fid,FAC[fid].display_name+' until '+day(due));
     if(rk.status==='submitted')s.notifs.push({id:'n'+(s.nid++),to:'admin',at:rk.submittedAt,text:FAC[fid].display_name+' submitted the '+cname(c.course_id)+' ranking.',go:{tab:'windows'},read:false});
   });
@@ -327,6 +329,9 @@ function initState(){
   S=s;
   s.hr.drafts[0].rows.forEach(r=>{r.tier=tierOf(r.app).code;r.cit=ex(r.app).cit||''});
   s.hrSel=15;
+  const sentEarlier=(at,kind,aud,to,address,body)=>s.outbox.push({id:'m'+(s.mid++),at,kind,audience:aud,fid:'',to,address,subject:body.split('\n')[0].replace(/^Subject: /,''),body,status:'Sent earlier'});
+  s.pubs[0].rows.forEach(r=>sentEarlier(s.pubs[0].notifiedAt,'Assignment notice','Student',nm(r.app),'student email from the legacy app',emailFor(s.pubs[0],r)));
+  sentEarlier(s.hr.drafts[0].at,'HR draft','HR','HR office','HR contact to be confirmed',hrEmail(15));
   applyGra(S.graText,true);
   return s;
 }
@@ -343,14 +348,17 @@ const canEdit=cid=>winOpen(COURSE[cid].faculty_id)&&S.rank[cid].status!=='submit
 const facEmailAddr=fid=>(SEED.users.find(u=>u.faculty_id===fid)||{}).email||'';
 function windowMail(fid,due,kind){
   const cs=SEED.courses.filter(c=>c.faculty_id===fid),lab=cs.map(c=>c.catalog_number+' ('+c.section_label+')').join(' and ');
-  const n=sum(cs.map(c=>candidates(c.course_id).length)),rem=kind==='Reminder';
-  const subject=(rem?'Reminder: ':kind==='Ranking reopened'?'Ranking reopened: ':'Ranking window open: ')+lab+', due '+day(due);
-  const body='Subject: '+subject+'\n\nHello '+FAC[fid].display_name+',\n\n'+(rem?'Your TA ranking for '+lab+' is still waiting.':'The TA ranking window for '+lab+' is open.')+' It closes '+day(due)+'. '+n+(n===1?' student chose':' students chose')+' your course. Please rank the ones you want, mark backups, and submit your staffing request.\n\nOpen TA Studio: [link added when the tool is connected]\n\nThank you,\nCS Graduate Office';
+  const n=sum(cs.map(c=>candidates(c.course_id).length)),rem=kind==='Reminder',ext=kind==='Extended';
+  const subject=(rem?'Reminder: ':ext?'Deadline extended: ':kind==='Ranking reopened'?'Ranking reopened: ':'Ranking window open: ')+lab+', due '+day(due);
+  const body='Subject: '+subject+'\n\nHello '+FAC[fid].display_name+',\n\n'+(rem?'Your TA ranking for '+lab+' is still waiting.':ext?'The deadline for your TA ranking for '+lab+' has been extended.':'The TA ranking window for '+lab+' is open.')+(ext?' The new deadline is ':' It closes ')+day(due)+'. '+n+(n===1?' student chose':' students chose')+' your course. Please rank the ones you want, mark backups, and submit your staffing request.\n\nOpen TA Studio: [link added when the tool is connected]\n\nThank you,\nCS Graduate Office';
   return{subject,body};
 }
+/* One outbox for every email the tool would send (professors, students, HR). Nothing is sent in the demo. */
+function queueOut(o){const m={id:'m'+(S.mid++),at:nowIso(),status:'Queued, not sent (demo)',fid:'',...o};S.outbox.push(m);return m}
+const outFor=fid=>S.outbox.filter(e=>e.fid===fid);
 function queueMail(fid,kind,due){
-  const w=S.win[fid],m=windowMail(fid,due,kind);
-  w.emails.push({at:nowIso(),kind:kind||'Window open',to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body,status:'Queued, not sent (demo)'});
+  const m=windowMail(fid,due,kind);
+  queueOut({kind:kind||'Window open',audience:'Professor',fid,to:FAC[fid].display_name,address:facEmailAddr(fid),subject:m.subject,body:m.body});
 }
 function openWindow(fid,due,kind){
   const w=S.win[fid];
@@ -375,13 +383,13 @@ function trackRows(){
     else if(w.state==='closed')st='Closed, no response';
     else if(w.replyAt)st='Replied by email';
     else st=dueMs&&dueMs<now?'Overdue':'Waiting';
-    return{fid,name:fa.display_name,cl:cs.map(cname).join(', '),w,ranked:sum(cs.map(c=>rankedCount(c))),apps:sum(cs.map(c=>candidates(c).length)),st,respAt,saved,replyAt:w.replyAt,hrs:respAt&&w.openedAt?(Date.parse(respAt)-Date.parse(w.openedAt))/36e5:null,reminders:w.emails.filter(e=>e.kind==='Reminder').length};
+    return{fid,name:fa.display_name,cl:cs.map(cname).join(', '),w,ranked:sum(cs.map(c=>rankedCount(c))),apps:sum(cs.map(c=>candidates(c).length)),st,respAt,saved,replyAt:w.replyAt,hrs:respAt&&w.openedAt?(Date.parse(respAt)-Date.parse(w.openedAt))/36e5:null,reminders:outFor(fid).filter(e=>e.kind==='Reminder').length,nMail:outFor(fid).length};
   });
 }
 function trackCsv(){
   const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   const head=['professor','courses','window','opened_at','due','emails_queued','reminders','last_saved_at','responded_at','hours_to_respond','email_reply_at','status'];
-  return [head.join(',')].concat(trackRows().map(r=>[r.name,r.cl,r.w.state,r.w.openedAt,r.w.dueAt,r.w.emails.length,r.reminders,r.saved,r.respAt,r.hrs==null?'':Math.round(r.hrs*10)/10,r.replyAt,r.st].map(q).join(','))).join('\n');
+  return [head.join(',')].concat(trackRows().map(r=>[r.name,r.cl,r.w.state,r.w.openedAt,r.w.dueAt,r.nMail,r.reminders,r.saved,r.respAt,r.hrs==null?'':Math.round(r.hrs*10)/10,r.replyAt,r.st].map(q).join(','))).join('\n');
 }
 
 /* ---------- HR drafts ---------- */
@@ -501,11 +509,6 @@ function compact(cid){
   Object.entries(rk.entries).filter(e=>e[1].rank!=null).sort((x,y)=>x[1].rank-y[1].rank||nm(x[0]).localeCompare(nm(y[0]))).forEach(([a,e],i)=>{e.rank=i+1});
 }
 function touch(cid){const rk=S.rank[cid];rk.savedAt=nowIso();if(rk.status==='not_started')rk.status='in_progress'}
-function csvFor(pub){
-  const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  const head=['term','publication_version','course','section','course_title','instructor','assignee_alias','appointment_type','hr_tier','fte','student_response'];
-  return [head.join(',')].concat(pub.rows.map(r=>[TERM.name,pub.version,COURSE[r.course].catalog_number,COURSE[r.course].section_label,COURSE[r.course].title,prof(r.course),nm(r.app),r.role,tierOf(r.app).code,f(r.fte),respOf(pub,r).status].map(q).join(','))).join('\n');
-}
 function emailFor(pub,r){
   const c=COURSE[r.course];
   return 'Subject: Your '+TERM.name+' assistantship for '+c.catalog_number+' ('+c.section_label+')\n\nHello '+nm(r.app)+',\n\nYou have been assigned as a '+r.role+' for '+c.catalog_number+' '+c.title+', section '+c.section_label+', with '+prof(r.course)+', at '+f(r.fte)+' FTE.\n\nPlease reply by '+day(pub.replyBy||S.replyBy)+' to accept or decline. If you accept, HR will contact you about employment paperwork and training.\n\nThank you,\nCS Graduate Office';
@@ -550,7 +553,7 @@ function tabsFor(){
   if(S.user.type==='admin'){
     const lp=latestPub(),declined=lp?lp.rows.filter(r=>respOf(lp,r).status==='declined').length:0;
     const wt=trackRows().filter(r=>r.st==='Waiting'||r.st==='Overdue'||r.st==='Replied by email').length;
-    return[['dashboard','Dashboard',''],['windows','Faculty windows',wt?'<span class="badge warn">'+wt+'</span>':''],['assign','Assignments',g.blocks.length?'<span class="badge bad">'+g.blocks.length+'</span>':''],['applicants','Applicants',S.sync.newApps.length?'<span class="badge warn">'+S.sync.newApps.length+' new</span>':''],['publish','Publish',''],['hr','HR drafts',hrChanged()?'<span class="badge warn">changes</span>':''],['students','Students',declined?'<span class="badge warn">'+declined+'</span>':''],['concerns','Concerns',open?'<span class="badge warn">'+open+'</span>':''],['setup','Setup',''],['audit','Audit log','']];
+    return[['dashboard','Dashboard',''],['windows','Faculty windows',wt?'<span class="badge warn">'+wt+'</span>':''],['assign','Assignments',g.blocks.length?'<span class="badge bad">'+g.blocks.length+'</span>':''],['applicants','Applicants',S.sync.newApps.length?'<span class="badge warn">'+S.sync.newApps.length+' new</span>':''],['publish','Publish',''],['hr','HR drafts',hrChanged()?'<span class="badge warn">changes</span>':''],['students','Students',declined?'<span class="badge warn">'+declined+'</span>':''],['concerns','Concerns',open?'<span class="badge warn">'+open+'</span>':''],['mail','Mail',''],['setup','Setup',''],['audit','Audit log','']];
   }
   return[['courses','My course',''],['published','Published plan','']];
 }
@@ -572,12 +575,12 @@ function vDashboard(){
   let tr=cs.filter(c=>(!fl.prof||c.faculty_id===fl.prof)&&(!fl.status||S.rank[c.course_id].status===fl.status)&&(!fl.staffed||(fl.staffed==='staffed'?courseConf(c.course_id)>=c.ta_slots_required:courseConf(c.course_id)<c.ta_slots_required)));
   const rowsHtml=tr.map(c=>{
     const id=c.course_id,n=g.iss.filter(i=>i.courses.includes(id)).length,rk=S.rank[id];
-    return '<tr><td><b>'+esc(cname(id))+'</b><div class="small muted">'+esc(c.title)+'</div></td><td>'+esc(prof(id))+'</td><td>'+(candidates(id).length?rkChip(rk.status):chip('No applicants'))+'</td><td class="num">'+candidates(id).length+'</td><td class="num">'+rankedCount(id)+'</td><td class="num">'+f(c.ta_slots_required)+'</td><td class="num">'+f(courseAlloc(id))+'</td><td class="num">'+f(courseConf(id))+'</td><td>'+(n?chip(n+' open','warn'):chip('Clear','ok'))+'</td><td class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn sm" data-act="goCourse" data-a="'+id+'">Open</button>'+(rk.status==='submitted'?'<button class="btn sm" data-act="reopen" data-a="'+id+'">Reopen</button>':'')+'</td></tr>';
+    return '<tr><td><b>'+esc(cname(id))+'</b><div class="small muted">'+esc(c.title)+'</div></td><td>'+esc(prof(id))+'</td><td>'+(candidates(id).length?rkChip(rk.status):chip('No applicants'))+'</td><td class="num">'+candidates(id).length+'</td><td class="num">'+rankedCount(id)+'</td><td class="num">'+f(c.ta_slots_required)+'</td><td class="num">'+f(courseAlloc(id))+'</td><td class="num">'+f(courseConf(id))+'</td><td>'+(n?chip(n+' open','warn'):chip('Clear','ok'))+'</td><td class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn sm" data-act="goCourse" data-a="'+id+'">Open</button>'+(rk.status==='submitted'?'<button class="btn sm" data-act="reopen" data-a="'+id+'">Reopen ranking</button>':'')+'</td></tr>';
   }).join('')||'<tr><td colspan="10" class="muted">No courses match these filters.</td></tr>';
   return '<div class="stack">'+
   '<div class="stats">'+[['Courses',cs.length],['Demand (FTE)',f(demand)],['Draft allocation',f(draft)],['Confirmed',f(conf)],['Unfilled',f(Math.max(0,demand-conf))],['Published v'+(lp?lp.version:'—'),f(pubTot)]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
   '<details class="card guide" open><summary>Try this: a short walkthrough</summary><ol>'+
-   '<li><button class="link" data-act="go" data-a="admin" data-b="windows">Faculty windows</button>: open J Biswas\'s ranking window and read the email it would send. Switch to J Biswas to see the notification, submit a ranking, then return to watch the tracker update.</li>'+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="windows">Faculty windows</button>: open J Biswas\'s ranking window, then read the queued email in the Mail tab. Switch to J Biswas to see the notification, submit a ranking, then return to watch the tracker update.</li>'+
    '<li>Atlas is double-booked at 2.0 FTE and blocks publishing. <button class="link" data-act="goCourse" data-a="crs_f26_002">Open 303E · 002</button>, move that spot to Delta or Ember, and accept it.</li>'+
    '<li><button class="link" data-act="go" data-a="admin" data-b="applicants">Applicants</button>: edit the grant-admin list and run the GRA check again.</li>'+
    '<li><button class="link" data-act="goCourse" data-a="crs_f26_003">304I</button> has no faculty ranking. Use the pool facts and copy a list for the professor.</li>'+
@@ -590,7 +593,7 @@ function vDashboard(){
    '<li><button class="link" data-act="go" data-a="fac:fac_v_ravishankar" data-b="courses">Switch to V Ravishankar</button>: finish the 311 ranking and submit it.</li></ol></details>'+
   '<div class="grid2">'+
    '<div class="card"><h3>Needs attention</h3>'+
-    (g.blocks.length?g.blocks.map(i=>'<div class="issue"><div>'+chip(i.code,'bad')+'<div>'+esc(i.msg)+'</div></div><div class="row" style="gap:4px">'+i.courses.map(c=>'<button class="btn sm" data-act="goCourse" data-a="'+c+'">'+esc(cname(c))+'</button>').join('')+'</div></div>').join(''):'<div class="issue"><div>'+chip('No blocking issues','ok')+'</div></div>')+
+    (g.blocks.length?g.blocks.map(i=>issueRow(i)).join(''):'<div class="issue"><div>'+chip('No blocking issues','ok')+'</div></div>')+
     (g.missing.length?'<div class="issue"><div>'+chip(g.missing.length+' notes needed','warn')+'<div>Warnings need an admin note before publishing.</div></div><button class="btn sm" data-act="go" data-a="admin" data-b="publish">Publish</button></div>':'')+
     (home.length?'<div class="issue"><div>'+chip('PhDs to place first','warn')+'<div>'+home.map(a=>esc(short(a))).join(', ')+' still need a position.</div></div></div>':'')+
    '</div>'+
@@ -609,6 +612,11 @@ function vDashboard(){
 }
 
 /* ---------- views: v3 additions ---------- */
+const graBtn=a=>'<button class="btn sm" data-act="'+(S.gra.has(a)?'graBack':'toggleGra')+'" data-a="'+a+'">'+(S.gra.has(a)?'Add back to pool':'Flag as GRA')+'</button>';
+function issueRow(i,except){
+  const bs=i.courses.filter(c=>c!==except);
+  return '<div class="issue"><div>'+chip(i.code,i.sev==='block'?'bad':'warn')+' '+esc(i.msg)+'</div>'+(bs.length?'<div class="row" style="gap:4px">'+bs.map(c=>'<button class="btn sm" data-act="goCourse" data-a="'+c+'">'+esc(cname(c))+'</button>').join('')+'</div>':'')+'</div>';
+}
 function typeToggle(){
   return '<div class="seg" role="group" aria-label="Show applicant type"><span class="small muted" style="margin-right:4px">Show</span>'+[['both','TA and UGCA'],['TA','TA only'],['UGCA','UGCA only']].map(x=>'<button class="btn sm" aria-pressed="'+(S.typeView===x[0])+'" data-act="typeView" data-a="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>';
 }
@@ -617,13 +625,14 @@ function hrTable(rows){
   return '<div class="tbl"><table><thead><tr><th>Change</th><th>Course</th><th>Student</th><th>Appointment</th><th>HR tier</th><th class="num">FTE</th><th>Citizenship</th></tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr class="'+(cls[r.ch]||'')+'"><td>'+(r.ch?chip(r.ch[0].toUpperCase()+r.ch.slice(1),ck[r.ch]):'')+'</td><td>'+esc(cname(r.course))+'</td><td>'+esc(nm(r.app))+'</td><td>'+esc(r.role)+'</td><td>'+esc(r.tier)+'</td><td class="num">'+f(r.fte)+'</td><td>'+esc(r.cit)+'</td></tr>').join(''):'<tr><td colspan="7" class="muted">No accepted assignments yet.</td></tr>')+'</tbody></table></div>';
 }
 function vHR(){
+  const pm=d=>S.pubs.find(p=>snapSig(p.rows)===snapSig(d.rows));
   const last=hrLatest(),pre=hrDiff(hrRows(),last.rows),n=(k)=>pre.filter(r=>r.ch===k).length,chg=pre.some(r=>r.ch),g=gate();
   const sel=S.hr.drafts.find(d=>d.n===S.hrSel)||last,pv=hrPrev(sel.n),rows=hrDiff(sel.rows,pv&&pv.rows);
   return '<div class="stack"><div class="note"><b>Nothing is sent to HR from this demo.</b> A draft saves a numbered snapshot of the accepted assignments. It shows what changed since the last draft and prepares the spreadsheet and the email text.</div>'+
    '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Next draft: '+(last.n+1)+'</h3><div class="small muted">Compared with draft '+last.n+', created '+when(last.at)+'. Only accepted assignments go to HR.</div></div><button class="btn primary" data-act="createHr"'+(chg?'':' disabled')+'>Create draft '+(last.n+1)+'</button></div>'+
    '<div class="chips" style="margin:10px 0">'+chip(n('added')+' added','ok')+chip(n('removed')+' removed',n('removed')?'bad':'')+chip(n('changed')+' changed',n('changed')?'warn':'')+(g.blocks.length?chip(g.blocks.length+' blocking issue'+(g.blocks.length>1?'s':'')+' still open in Assignments','warn'):'')+'</div>'+
    (chg?hrTable(pre.filter(r=>r.ch)):'<div class="muted">Nothing has changed since draft '+last.n+'.</div>')+'</div>'+
-   '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">Drafts</div>'+S.hr.drafts.slice().reverse().map(d=>'<button class="course-btn" data-act="selHr" data-a="'+d.n+'" aria-pressed="'+(d.n===sel.n)+'"><b>Draft '+d.n+'</b>'+(d.n===last.n?' '+chip('Latest','acc'):'')+'<div class="small muted">'+when(d.at)+' · '+esc(d.by)+'</div><div class="small mono">'+d.rows.length+' assignments</div></button>').join('')+'</div>'+
+   '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">HR drafts</div>'+S.hr.drafts.slice().reverse().map(d=>'<button class="course-btn" data-act="selHr" data-a="'+d.n+'" aria-pressed="'+(d.n===sel.n)+'"><b>Draft '+d.n+'</b>'+(d.n===last.n?' '+chip('Latest','acc'):'')+(pm(d)?' '+chip('Same as published v'+pm(d).version):'')+'<div class="small muted">'+when(d.at)+' · '+esc(d.by)+'</div><div class="small mono">'+d.rows.length+' assignments</div></button>').join('')+'</div>'+
    '<div class="stack"><div class="card"><h3>Draft '+sel.n+'</h3><div class="small muted" style="margin-bottom:8px">'+(pv?'Green rows were added since draft '+pv.n+'. Red rows were removed. Yellow rows changed.':'First draft, so nothing to compare.')+' Tier is estimated from degree and TA history. The rule is an assumption to confirm with Doug.</div>'+hrTable(rows)+'<div class="small muted" style="margin-top:6px">Citizenship is shown because Doug needs it in the HR output. Open question: who is allowed to see it.</div></div>'+
    '<div class="card"><h3>Spreadsheet for HR</h3><textarea id="hrCsv" class="csv" rows="'+Math.min(10,rows.length+2)+'" readonly>'+esc(hrCsv(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyHrCsv">Copy CSV</button><span class="small muted">Downloads are blocked in this viewer, so copy it into a spreadsheet.</span></div></div>'+
    '<div class="card"><h3>Email to HR</h3><textarea id="hrMail" rows="12" readonly>'+esc(hrEmail(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyHrMail">Copy email text</button></div></div></div></div></div>';
@@ -657,26 +666,33 @@ function vWindows(){
   const rows=tr.map(r=>{
     const w=r.w;let act='';
     if(r.st==='No applicants')act='<span class="small muted">Nothing to rank</span>';
-    else if(w.state==='not_open')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'">Open</button>';
-    else if(w.state==='closed')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'" data-b="Ranking reopened">Reopen</button>';
-    else if(r.st!=='Responded')act='<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="remind" data-a="'+r.fid+'">Remind</button><button class="btn sm" data-act="closeWin" data-a="'+r.fid+'">Close</button>'+(r.replyAt?'':'<button class="btn sm" data-act="simReply" data-a="'+r.fid+'">Mock reply</button>')+'</div>';
+    else if(w.state==='not_open')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'">Open window</button>';
+    else if(w.state==='closed')act='<button class="btn sm" data-act="openWin" data-a="'+r.fid+'" data-b="Ranking reopened">Reopen window</button>';
+    else if(r.st!=='Responded')act='<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="remind" data-a="'+r.fid+'">Remind</button><button class="btn sm" data-act="extendWin" data-a="'+r.fid+'">Extend</button><button class="btn sm" data-act="closeWin" data-a="'+r.fid+'">Close window</button>'+(r.replyAt?'':'<button class="btn sm" data-act="simReply" data-a="'+r.fid+'">Mock reply</button>')+'</div>';
     else act='<span class="small muted">Done</span>';
     const due=w.dueAt?(r.st==='Overdue'?'<b>'+day(w.dueAt)+'</b>':day(w.dueAt)):'—';
-    return '<tr><td><b>'+esc(r.name)+'</b><div class="small muted">'+esc(r.cl)+'</div></td><td>'+chip(r.st,stk[r.st])+'</td><td>'+(w.openedAt?when(w.openedAt):'—')+'</td><td>'+due+'</td><td class="num">'+r.ranked+' / '+r.apps+'</td><td>'+(r.respAt?when(r.respAt):'—')+(r.hrs!=null?'<div class="small muted">after '+dur(r.hrs*36e5)+'</div>':'')+'</td><td class="num">'+w.emails.length+(r.reminders?'<div class="small muted">'+r.reminders+' reminder'+(r.reminders>1?'s':'')+'</div>':'')+'</td><td>'+act+'</td></tr>';
+    return '<tr><td><b>'+esc(r.name)+'</b><div class="small muted">'+esc(r.cl)+'</div></td><td>'+chip(r.st,stk[r.st])+'</td><td>'+(w.openedAt?when(w.openedAt):'—')+'</td><td>'+due+'</td><td class="num">'+r.ranked+' / '+r.apps+'</td><td>'+(r.respAt?when(r.respAt):'—')+(r.hrs!=null?'<div class="small muted">after '+dur(r.hrs*36e5)+'</div>':'')+'</td><td class="num">'+r.nMail+(r.reminders?'<div class="small muted">'+r.reminders+' reminder'+(r.reminders>1?'s':'')+'</div>':'')+'</td><td>'+act+'</td></tr>';
   }).join('');
-  const mails=[];SEED.faculty.forEach(fa=>S.win[fa.faculty_id].emails.forEach((m,i)=>mails.push({k:fa.faculty_id+'|'+i,m})));
-  mails.sort((a,b)=>Date.parse(b.m.at)-Date.parse(a.m.at));
-  const mv=S.mailView&&mails.find(x=>x.k===S.mailView);
-  const inbox=[];SEED.faculty.forEach(fa=>S.win[fa.faculty_id].inbox.forEach(m=>inbox.push(m)));inbox.sort((a,b)=>Date.parse(b.at)-Date.parse(a.at));
-  return '<div class="stack"><div class="note"><b>Email is not connected yet.</b> Opening a window queues the email text and shows it below. Nothing leaves this demo. When the office approves a sender, the same step will send it for real.</div>'+
+  return '<div class="stack"><div class="note"><b>Email is not connected yet.</b> Opening a window queues the email text in the Mail tab. Nothing leaves this demo. When the office approves a sender, the same step will send it for real.</div>'+
    '<div class="stats">'+[['Professors',tr.length],['Not opened',cnt(['Not opened'])],['Waiting',cnt(['Waiting','Overdue'])],['Replied by email',cnt(['Replied by email'])],['Responded',cnt(['Responded'])],['Closed, no reply',cnt(['Closed, no response'])]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
    '<div class="card"><h3>Open a ranking window</h3><div class="small muted" style="margin-bottom:8px">Pick one professor, or open everyone who is left. The professor gets a notification and a queued email. Until then their ranking page is locked.</div>'+
    (openable.length?'<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Professor<select data-chg="winPick" id="winPick">'+openable.map(r=>opt(r.fid,r.name+' ('+r.cl+')',pick)).join('')+'</select></label><label class="f">Due date<input type="date" id="winDue" data-chg="winDue" value="'+esc(S.winDue)+'"></label><button class="btn primary" data-act="openWin" data-a="'+esc(pick)+'">Open window and queue email</button>'+(openable.length>1?'<button class="btn" data-act="openAll">Open all remaining ('+openable.length+')</button>':'')+'</div>':'<div class="muted">Every professor with applicants already has a window.</div>')+'</div>'+
    '<div class="card"><h3>Who has responded</h3><div class="tbl"><table><thead><tr><th>Professor</th><th>Status</th><th>Opened</th><th>Due</th><th class="num">Ranked / applicants</th><th>Responded</th><th class="num">Emails</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
    '<div class="card"><h3>Tracking sheet</h3><div class="small muted" style="margin-bottom:6px">The same table as a spreadsheet. Copy it and paste into Excel or Sheets. It updates as professors respond.</div><textarea id="trackBox" rows="6" readonly>'+esc(trackCsv())+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyTrack">Copy as CSV</button></div></div>'+
-   '<div class="card"><h3>Inbox (mock)</h3><div class="small muted" style="margin-bottom:6px">Professors often answer by email instead of in the tool. The real version would read the shared mailbox and match each reply to a professor. Here, press "Mock reply" in the table to see it happen.</div>'+(inbox.length?'<div class="tbl"><table><thead><tr><th>Received</th><th>From</th><th>Matched to</th><th>Message</th></tr></thead><tbody>'+inbox.map(m=>'<tr><td>'+when(m.at)+'</td><td>'+esc(m.from)+'</td><td>'+chip(m.matched,'acc')+'</td><td class="small">'+esc(m.body)+'</td></tr>').join('')+'</tbody></table></div>':'<div class="muted">No replies yet.</div>')+'</div>'+
-   '<div class="card"><h3>Email outbox</h3><div class="tbl"><table><thead><tr><th>Queued</th><th>To</th><th>Type</th><th>Status</th><th></th></tr></thead><tbody>'+(mails.length?mails.map(x=>'<tr><td>'+when(x.m.at)+'</td><td>'+esc(x.m.to)+'<div class="small muted">'+esc(x.m.address)+'</div></td><td>'+esc(x.m.kind)+'</td><td>'+chip(x.m.status,x.m.status==='Sent earlier'?'ok':'warn')+'</td><td><button class="btn sm" data-act="showMail" data-a="'+esc(x.k)+'">View text</button></td></tr>').join(''):'<tr><td colspan="5" class="muted">No emails yet.</td></tr>')+'</tbody></table></div>'+
-   (mv?'<div style="margin-top:10px"><label class="f" for="mailBox">'+esc(mv.m.subject)+'</label><textarea id="mailBox" rows="10" readonly>'+esc(mv.m.body)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyMail">Copy</button><button class="btn" data-act="hideMail">Close</button></div></div>':'')+'</div></div>';
+   '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Mail</h3><div class="small muted">'+S.outbox.filter(m=>m.audience==='Professor').length+' emails for professors, plus the mock inbox, are in the Mail tab with everything else the tool would send.</div></div><button class="btn" data-act="tab" data-a="mail">Open Mail</button></div></div></div>';
+}
+
+/* ---------- views: mail (inbox mock + one outbox) ---------- */
+function vMail(){
+  const f=S.mailF||'',out=S.outbox.filter(m=>!f||m.audience===f).slice().sort((a,b)=>Date.parse(b.at)-Date.parse(a.at));
+  const inbox=[];SEED.faculty.forEach(fa=>S.win[fa.faculty_id].inbox.forEach(m=>inbox.push(m)));inbox.sort((a,b)=>Date.parse(b.at)-Date.parse(a.at));
+  const mv=S.mailView&&S.outbox.find(m=>m.id===S.mailView),n=a=>S.outbox.filter(m=>m.audience===a).length;
+  return '<div class="stack"><div class="note"><b>Email is not connected yet.</b> Every message the tool would send lands here: window opens, reminders, assignment notices and HR drafts. Nothing leaves this demo.</div>'+
+   '<div class="stats">'+[['Queued, not sent',S.outbox.filter(m=>/^Queued/.test(m.status)).length],['To professors',n('Professor')],['To students',n('Student')],['To HR',n('HR')]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
+   '<div class="card"><div class="row" style="justify-content:space-between"><h3>Outbox</h3><div class="seg" role="group" aria-label="Filter outbox">'+[['','All'],['Professor','Professors'],['Student','Students'],['HR','HR']].map(x=>'<button class="btn sm" aria-pressed="'+(f===x[0])+'" data-act="mailFilter" data-a="'+x[0]+'">'+x[1]+'</button>').join('')+'</div></div>'+
+   '<div class="tbl" style="margin-top:8px"><table><thead><tr><th>Queued</th><th>To</th><th>Type</th><th>Status</th><th></th></tr></thead><tbody>'+(out.length?out.map(m=>'<tr><td>'+when(m.at)+'</td><td>'+esc(m.to)+'<div class="small muted">'+esc(m.address)+'</div></td><td>'+esc(m.kind)+'</td><td>'+chip(m.status,m.status==='Sent earlier'?'ok':'warn')+'</td><td><button class="btn sm" data-act="showMail" data-a="'+esc(m.id)+'">View text</button></td></tr>').join(''):'<tr><td colspan="5" class="muted">No emails here yet.</td></tr>')+'</tbody></table></div>'+
+   (mv?'<div style="margin-top:10px"><label class="f" for="mailBox">'+esc(mv.subject)+'</label><textarea id="mailBox" rows="10" readonly>'+esc(mv.body)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyMail">Copy</button><button class="btn" data-act="hideMail">Close</button></div></div>':'')+'</div>'+
+   '<div class="card"><h3>Inbox (mock)</h3><div class="small muted" style="margin-bottom:6px">Professors often answer by email instead of in the tool. The real version would read the shared mailbox and match each reply to a professor. To see it, press "Mock reply" on the Faculty windows tab.</div>'+(inbox.length?'<div class="tbl"><table><thead><tr><th>Received</th><th>From</th><th>Matched to</th><th>Message</th></tr></thead><tbody>'+inbox.map(m=>'<tr><td>'+when(m.at)+'</td><td>'+esc(m.from)+'</td><td>'+chip(m.matched,'acc')+'</td><td class="small">'+esc(m.body)+'</td></tr>').join('')+'</tbody></table></div>':'<div class="muted">No replies yet.</div>')+'</div></div>';
 }
 
 /* ---------- views: assignments ---------- */
@@ -693,7 +709,7 @@ function vAssign(){
   }).join('');
   return '<div class="split"><div><div style="margin-bottom:10px">'+typeToggle()+'</div><div class="eyebrow" style="margin-bottom:8px">Courses</div>'+list+
     '<div class="card" style="margin-top:16px"><h3>Still needs a position</h3><div class="small muted">Order follows how the office places people.</div>'+(queue||'<div class="muted" style="margin-top:8px">Everyone with a preference has a position.</div>')+
-    (graList.length?'<div style="margin-top:12px"><div class="eyebrow">Excluded: on GRA list</div>'+graList.map(a=>'<div class="muted">'+esc(nm(a))+' <button class="link" data-act="graBack" data-a="'+a+'">Add back to pool</button></div>').join('')+'</div>':'')+'</div></div>'+
+    (graList.length?'<div style="margin-top:12px"><div class="eyebrow">Excluded: on GRA list</div>'+graList.map(a=>'<div>'+nameBtn(a,sel)+'</div>').join('')+'<div class="small muted" style="margin-top:4px">Add back from the course row, or on <button class="link" data-act="tab" data-a="applicants">Applicants</button>.</div></div>':'')+'</div></div>'+
     '<div class="stack">'+vWorkspace(sel,g)+'</div></div>';
 }
 function vWorkspace(cid,g){
@@ -701,7 +717,7 @@ function vWorkspace(cid,g){
   const issues=g.iss.filter(i=>i.courses.includes(cid));
   const head='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(c.catalog_number)+' · '+esc(c.section_label)+' <span class="muted" style="font-weight:500">'+esc(c.title)+'</span></h2><div class="muted">'+esc(prof(cid))+' · needs '+Object.entries(S.course[cid].slots).filter(e=>e[1]>0).map(e=>f(e[1])+' '+e[0]).join(' + ')+' = '+f(need)+' FTE</div></div><div class="row">'+(cands.length?rkChip(rk.status):chip('No applicants'))+(live().some(r=>r.course===cid&&r.decision==='requested')?'<button class="btn sm" data-act="acceptAll" data-a="'+cid+'">Accept all requested</button>':'')+'</div></div>'+
     '<div class="small muted" style="margin-top:8px">Requirements: '+(rq.experience_required?'prior experience required · ':'')+'skill '+esc(rq.required_skills)+' · '+esc(rq.faculty_notes)+'</div><div class="small muted">Who can apply: '+({both:'graduate and undergraduate students',grad:'graduate students only',undergrad:'undergraduates only'}[S.course[cid].aud])+(SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length?' · '+SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length+' hidden by this rule':'')+'</div></div>';
-  const iss=issues.length?'<div class="card"><h3>Issues for this course</h3>'+issues.map(i=>'<div class="issue"><div>'+chip(i.code,i.sev==='block'?'bad':'warn')+' '+esc(i.msg)+'</div>'+(i.courses.length>1?'<div class="row" style="gap:4px">'+i.courses.filter(x=>x!==cid).map(x=>'<button class="btn sm" data-act="goCourse" data-a="'+x+'">'+esc(cname(x))+'</button>').join('')+'</div>':'')+'</div>').join('')+'</div>':'';
+  const iss=issues.length?'<div class="card"><h3>Issues for this course</h3>'+issues.map(i=>issueRow(i,cid)).join('')+'</div>':'';
   if(!cands.length)return head+iss+'<div class="note">No applicants selected this course. That is zero demand from students, not unfinished faculty work.</div>';
   const info=rk.status!=='submitted'?'<div class="note warn"><b>'+esc(prof(cid))+' has not submitted a ranking</b> (status: '+rk.status.replace('_',' ')+'). Below is everyone who applied for this course, with facts only and no match score. <button class="btn sm" data-act="copyPool" data-a="'+cid+'" style="margin-left:6px">Copy list for the professor</button></div>':'';
   const shown=cands.filter(x=>typeOk(x.app));
@@ -721,7 +737,7 @@ function vWorkspace(cid,g){
       '<td class="num">'+f(appAlloc(a))+' / '+f(APP[a].max_assignment_fte)+'</td>'+
       '<td><select data-chg="setAlloc" data-a="'+cid+'" data-b="'+a+'" data-fid="alloc:'+cid+':'+a+'" aria-label="Allocation for '+esc(nm(a))+'">'+opts.map(v=>opt(v,f(v)+' FTE',cur)).join('')+'</select>'+
         (row&&row.decision!=='declined'?'<div style="margin-top:4px"><select data-chg="setDecision" data-a="'+row.id+'" aria-label="Decision">'+opt('requested','Requested',row.decision)+opt('accepted','Accepted',row.decision)+opt('declined','Declined',row.decision)+'</select></div><div style="margin-top:4px"><select data-chg="setRole" data-a="'+row.id+'" aria-label="Appointment">'+(isGrad(a)?opt('TA','TA',row.role)+opt('AI','AI (assistant instructor)',row.role):opt('UGCA','UGCA',row.role))+'</select></div>':'')+'</td>'+
-      '<td>'+(S.gra.has(a)?'<div class="small" style="margin-bottom:4px">On the GRA list. <button class="btn sm" data-act="graBack" data-a="'+a+'">Add back to pool</button></div>':'')+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
+      '<td>'+(S.gra.has(a)?'<div class="small" style="margin-bottom:4px">On the GRA list. '+graBtn(a)+'</div>':'')+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
   }).join('');
   return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th class="num">Pref</th><th>Professor</th><th>Facts and other requests</th><th class="num">Total FTE</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><div class="small muted">Candidates are listed by their own preference, then name. Nothing here is scored. Accepting an assignment keeps the applicant within their 1.0 FTE maximum unless an exception is set.</div>';
 }
@@ -734,7 +750,7 @@ function vApplicants(){
   const rows=apps.map(a=>{
     const id=a.application_id,al=appAlloc(id);
     const state=a.application_status==='draft'?chip('Draft application','warn'):S.gra.has(id)?chip('GRA, excluded','bad'):al>0?chip('Assigned '+f(al)+' FTE','ok'):chip('Needs a position',a.degree_level==='PhD'?'warn':'');
-    return '<tr><td>'+nameBtn(id,'')+(S.sync.newApps.includes(id)?' '+chip('New from legacy app','warn'):'')+'</td><td>'+tierChip(id)+'</td><td>'+chip(tierOf(id).code,'acc')+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="num">'+(PREFS_APP[id]||[]).length+'</td><td class="num">'+f(al)+' / '+f(a.max_assignment_fte)+'</td><td>'+state+'</td><td><button class="btn sm" data-act="'+(S.gra.has(id)?'graBack':'toggleGra')+'" data-a="'+id+'">'+(S.gra.has(id)?'Add back to pool':'Flag as GRA')+'</button></td></tr>';
+    return '<tr><td>'+nameBtn(id,'')+(S.sync.newApps.includes(id)?' '+chip('New from legacy app','warn'):'')+'</td><td>'+tierChip(id)+'</td><td>'+chip(tierOf(id).code,'acc')+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="num">'+(PREFS_APP[id]||[]).length+'</td><td class="num">'+f(al)+' / '+f(a.max_assignment_fte)+'</td><td>'+state+'</td><td>'+graBtn(id)+'</td></tr>';
   }).join('');
   return '<div class="stack"><div class="card"><div class="row" style="justify-content:space-between"><div><h3>Applicant data</h3><div class="small muted">Pulled from the legacy app (demo feed). Last refresh '+when(S.sync.at)+'. Nothing is written back.</div></div><button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button></div></div><div class="card"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste it here, one name per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand.</p>'+
     '<div class="grid2"><div><label class="f" for="graText">Grant-admin list (synthetic aliases)</label><textarea id="graText" rows="5" data-inp="graText">'+esc(S.graText)+'</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="applyGra">Run GRA check</button></div></div>'+
@@ -751,10 +767,10 @@ function vPublish(){
   const sel=S.selPub&&S.pubs.find(p=>p.version===S.selPub)||lp;
   return '<div class="stack"><div class="card"><div class="row" style="justify-content:space-between"><h3>Ready to publish version '+next+'?</h3><div class="row"><button class="btn" data-act="fillNotes">Demo shortcut: fill empty notes</button><button class="btn primary" id="pubBtn" data-act="publish"'+(g.ok?'':' disabled')+'>Publish to faculty (v'+next+')</button></div></div>'+
     '<div id="pubWhy" class="small muted" style="margin:6px 0 10px">'+esc(why)+'</div>'+
-    (g.blocks.length?'<div class="note bad" style="margin-bottom:10px"><b>Blocking</b>'+g.blocks.map(i=>'<div class="issue" style="border-color:transparent"><div>'+esc(i.msg)+'</div><div class="row" style="gap:4px">'+i.courses.map(c=>'<button class="btn sm" data-act="goCourse" data-a="'+c+'">'+esc(cname(c))+'</button>').join('')+'</div></div>').join('')+'</div>':'<div class="note" style="margin-bottom:10px">No blocking issues.</div>')+
+    (g.blocks.length?'<div class="note bad" style="margin-bottom:10px"><b>'+g.blocks.length+' blocking issue'+(g.blocks.length>1?'s':'')+'</b> stop publishing. The details are on the Dashboard and in each course.<div class="row" style="gap:4px;margin-top:6px">'+[...new Set(g.blocks.flatMap(i=>i.courses))].map(c=>'<button class="btn sm" data-act="goCourse" data-a="'+c+'">'+esc(cname(c))+'</button>').join('')+'<button class="btn sm" data-act="tab" data-a="dashboard">Dashboard</button></div></div>':'<div class="note" style="margin-bottom:10px">No blocking issues.</div>')+
     (warnRows?'<h3 style="margin-bottom:4px">Warnings that need a note</h3>'+warnRows:'<div class="muted">No warnings need a note.</div>')+
     '<div class="small muted" style="margin-top:10px">Only accepted assignments are published ('+g.accepted.length+' now, '+f(sum(g.accepted.map(r=>r.fte)))+' FTE). Published versions can never be edited.</div></div>'+
-    '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">Versions</div>'+S.pubs.slice().sort((a,b)=>b.version-a.version).map(p=>'<button class="course-btn" data-act="selPub" data-a="'+p.version+'" aria-pressed="'+(sel&&p.version===sel.version)+'"><b>Version '+p.version+'</b> '+(lp&&p.version===lp.version?chip('Latest','acc'):'')+'<div class="small muted">'+when(p.at)+' · '+esc(p.by)+'</div><div class="small mono">'+p.rows.length+' assignments · '+f(sum(p.rows.map(r=>r.fte)))+' FTE</div></button>').join('')+'</div>'+
+    '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">Faculty versions</div>'+S.pubs.slice().sort((a,b)=>b.version-a.version).map(p=>'<button class="course-btn" data-act="selPub" data-a="'+p.version+'" aria-pressed="'+(sel&&p.version===sel.version)+'"><b>Version '+p.version+'</b> '+(lp&&p.version===lp.version?chip('Latest','acc'):'')+'<div class="small muted">'+when(p.at)+' · '+esc(p.by)+'</div><div class="small mono">'+p.rows.length+' assignments · '+f(sum(p.rows.map(r=>r.fte)))+' FTE</div></button>').join('')+'</div>'+
     (sel?vVersion(sel):'')+'</div></div>';
 }
 function vVersion(p){
@@ -766,11 +782,11 @@ function vVersion(p){
     diff='<div style="margin-top:12px"><h3>Changes from version '+prev.version+'</h3>'+(add.length||rem.length||chg.length?'<ul class="plain">'+add.map(r=>'<li>'+chip('Added','ok')+' '+esc(nm(r.app))+' · '+esc(cname(r.course))+'</li>').join('')+rem.map(r=>'<li>'+chip('Removed','bad')+' '+esc(nm(r.app))+' · '+esc(cname(r.course))+'</li>').join('')+chg.map(r=>'<li>'+chip('Changed')+' '+esc(nm(r.app))+' · '+esc(cname(r.course))+'</li>').join('')+'</ul>':'<div class="muted">No changes.</div>')+'</div>';
   }
   const gaps=SEED.courses.filter(c=>sum(p.rows.filter(r=>r.course===c.course_id).map(r=>r.fte))<c.ta_slots_required);
-  const csv=csvFor(p);
+  const hm=S.hr.drafts.filter(d=>snapSig(d.rows)===snapSig(p.rows)).map(d=>d.n);
   return '<div class="card"><div class="row" style="justify-content:space-between"><h3>Version '+p.version+' snapshot</h3><div class="row">'+chip('Locked','acc')+(S.confirmClone===p.version?'<button class="btn sm danger" data-act="cloneDo" data-a="'+p.version+'">Replace working draft with this version</button><button class="btn sm" data-act="cloneCancel">Cancel</button>':'<button class="btn sm" data-act="cloneAsk" data-a="'+p.version+'">Start a fresh draft from this version</button>')+'</div></div>'+
     '<div class="tbl" style="margin-top:8px"><table><thead><tr><th>Course</th><th>Professor</th><th>Assignee</th><th>Role</th><th class="num">FTE</th><th>Override note</th></tr></thead><tbody>'+p.rows.map(r=>'<tr><td>'+esc(cname(r.course))+'</td><td>'+esc(prof(r.course))+'</td><td>'+esc(nm(r.app))+'</td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td class="small">'+esc(r.note||'')+'</td></tr>').join('')+'</tbody></table></div>'+
     '<div class="small muted" style="margin-top:8px"><b>Open positions at publication:</b> '+(gaps.length?gaps.map(c=>esc(cname(c.course_id))+(p.gaps[c.course_id]?' ('+esc(p.gaps[c.course_id])+')':'')).join('; '):'None')+'</div>'+diff+
-    '<div style="margin-top:12px"><h3>HR export (CSV)</h3><p class="small muted" style="margin-bottom:6px">HR tier is estimated from degree and TA history (assumed rule). The HR drafts tab has the full HR spreadsheet.</p><textarea id="csvBox" class="csv" rows="'+Math.min(10,p.rows.length+2)+'" readonly>'+esc(csv)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyCsv" data-a="'+p.version+'">Copy CSV</button><span class="small muted">Downloads are blocked in this viewer, so copy it into a spreadsheet.</span></div></div></div>';
+    '<div class="small muted" style="margin-top:12px"><b>HR:</b> '+(hm.length?hm.map(n=>chip('Same as HR draft '+n,'acc')).join(' ')+' ':'No HR draft matches this version yet. ')+'<button class="link" data-act="tab" data-a="hr">Open HR drafts</button> for the spreadsheet and email.</div></div>';
 }
 
 /* ---------- views: students ---------- */
@@ -781,7 +797,7 @@ function vStudents(){
   const cnt=k=>R.filter(x=>x.s.status===k).length;
   const rows=R.map(({r,s})=>{
     const k=key(r);
-    return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td><select data-chg="setResp" data-a="'+k+'" aria-label="Reply from '+esc(nm(r.app))+'">'+opt('not_notified','Not notified yet',s.status)+opt('awaiting','Waiting for reply',s.status)+opt('confirmed','Confirmed',s.status)+opt('declined','Declined',s.status)+'</select><div class="small muted">'+(s.at?day(s.at):'')+'</div>'+(S.ext[k]?'<div>'+chip('Extended to '+day(S.ext[k].until),'acc')+'</div>':'')+'</td><td><div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="showEmail" data-a="'+k+'">Email text</button>'+((s.status==='awaiting'||s.status==='not_notified')?'<button class="btn sm" data-act="extend" data-a="'+k+'">Extend</button>':'')+'</div></td></tr>';
+    return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td>'+esc(r.role)+'</td><td class="num">'+f(r.fte)+'</td><td><select data-chg="setResp" data-a="'+k+'" aria-label="Reply from '+esc(nm(r.app))+'">'+opt('not_notified','Not notified yet',s.status)+opt('awaiting','Waiting for reply',s.status)+opt('confirmed','Confirmed',s.status)+opt('declined','Declined',s.status)+'</select><div class="small muted">'+(s.at?day(s.at):'')+'</div>'+(S.ext[k]?'<div>'+chip('Extended to '+day(S.ext[k].until),'acc')+'</div>':'')+'</td><td><div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="showEmail" data-a="'+k+'">Preview email</button>'+((s.status==='awaiting'||s.status==='not_notified')?'<button class="btn sm" data-act="extend" data-a="'+k+'">Extend</button>':'')+'</div></td></tr>';
   }).join('');
   const declined=R.filter(x=>x.s.status==='declined').map(({r})=>{
     const bs=backupsFor(r.course,r.app,r.fte);
@@ -794,7 +810,7 @@ function vStudents(){
    (p.respOpen?'':'<div class="note warn" style="margin-bottom:8px">Open the response window before you notify students. If it stays closed, students cannot accept and the inbox fills with "I can\'t accept" messages.</div>')+
    '<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Reply by<input type="date" id="replyBy" value="'+esc(S.replyBy)+'" data-inp="replyBy"></label>'+(p.respOpen?'<button class="btn" data-act="closeResp">Close response window</button>':'<button class="btn primary" data-act="openResp">Open response window</button>')+'<button class="btn primary" data-act="notify"'+(p.respOpen?'':' disabled')+'>Mark students notified</button></div><div class="small muted" style="margin-top:6px">This demo does not send email. It records the date and drafts the text. Use Extend on a row to give one student more time.</div></div>'+
   '<div class="tbl"><table><thead><tr><th>Student</th><th>Course</th><th>Role</th><th class="num">FTE</th><th>Reply</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-  (em?'<div class="card"><h3>Email text for '+esc(nm(em.r.app))+'</h3><textarea id="emailBox" rows="10" readonly>'+esc(emailFor(p,em.r))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyEmail">Copy</button><button class="btn" data-act="hideEmail">Close</button></div></div>':'')+declined+'</div>';
+  (em?'<div class="card"><h3>Preview: email for '+esc(nm(em.r.app))+'</h3><textarea id="emailBox" rows="10" readonly>'+esc(emailFor(p,em.r))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyEmail">Copy</button><button class="btn" data-act="hideEmail">Close</button></div></div>':'')+declined+'</div>';
 }
 
 /* ---------- views: concerns + audit ---------- */
@@ -893,7 +909,7 @@ function drawerHtml(){
 function render(){
   const y=S.toTop?0:window.scrollY;S.toTop=false;
   let main;
-  if(S.user.type==='admin')main={dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,hr:vHR,students:vStudents,concerns:vConcerns,setup:vSetup,audit:vAudit}[S.tab]();
+  if(S.user.type==='admin')main={dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,hr:vHR,students:vStudents,concerns:vConcerns,mail:vMail,setup:vSetup,audit:vAudit}[S.tab]();
   else main=S.tab==='published'?vFacPublished():vFacCourses();
   $('#app').innerHTML=header()+nav()+'<main>'+main+'</main><footer class="foot">Every applicant here is fictional and labeled as synthetic. The page resets when you refresh, and picking a profile is not sign-in. Course titles and faculty names come from public Fall 2026 UT Austin Computer Science listings.</footer>';
   const d=$('#drawer');d.innerHTML=drawerHtml();
@@ -1007,12 +1023,13 @@ const ACT={
   },
   closeWin(a){const w=S.win[a];if(!w||w.state!=='open')return;w.state='closed';w.closedAt=nowIso();log('ranking window closed','window',a,FAC[a].display_name);toast('Window closed');render()},
   showMail(a){S.mailView=a;render()},
+  mailFilter(a){S.mailF=a;S.mailView=null;render()},
   hideMail(){S.mailView=null;render()},
   copyMail(){copyText(($('#mailBox')||{}).value||'',$('#mailBox'));return false},
   copyTrack(){copyText(trackCsv(),$('#trackBox'));return false},
   simReply(a){
     const w=S.win[a];if(!w||w.state!=='open'||w.replyAt)return;
-    const at=nowIso(),last=w.emails[w.emails.length-1];
+    const at=nowIso(),outs=outFor(a),last=outs[outs.length-1];
     w.inbox.push({at,from:facEmailAddr(a),subject:'Re: '+(last?last.subject:'Ranking window'),body:'Thanks. I will get my ranking in by the due date. Can I list a backup too?',matched:FAC[a].display_name});
     w.replyAt=at;log('professor email reply recorded','window',a,FAC[a].display_name+' (mock mailbox)');
     notify('admin',FAC[a].display_name+' replied by email.',{tab:'windows'});toast('Mock reply recorded');render();
@@ -1041,8 +1058,8 @@ const ACT={
   createHr(){
     const cur=hrRows(),last=hrLatest();
     if(!hrDiff(cur,last.rows).some(r=>r.ch)){toast('Nothing changed since draft '+last.n);return}
-    const n=last.n+1;S.hr.drafts.push({n,at:nowIso(),by:ADMIN,rows:cur});S.hrSel=n;
-    log('HR draft created','hr',String(n),'Draft '+n+' with '+cur.length+' assignments');toast('Draft '+n+' created. Copy the spreadsheet and email text for HR.');render();
+    const n=last.n+1;S.hr.drafts.push({n,at:nowIso(),by:ADMIN,rows:cur});S.hrSel=n;{const body=hrEmail(n);queueOut({kind:'HR draft',audience:'HR',to:'HR office',address:'HR contact to be confirmed',subject:body.split('\n')[0].replace(/^Subject: /,''),body})}
+    log('HR draft created','hr',String(n),'Draft '+n+' with '+cur.length+' assignments');toast('Draft '+n+' created. The email is in the Mail tab, not sent.');render();
   },
   selHr(a){S.hrSel=parseInt(a,10);render()},
   copyHrCsv(){copyText(($('#hrCsv')||{}).value||'',$('#hrCsv'));return false},
@@ -1053,7 +1070,13 @@ const ACT={
     p.respOpen=true;p.replyBy=d;log('student response window opened','publication',p.id,'Version '+p.version+' open until '+day(d));render();
   },
   closeResp(){const p=latestPub();p.respOpen=false;log('student response window closed','publication',p.id,'Version '+p.version);render()},
-  extend(a){S.ext[a]={until:isoOf(new Date(Date.now()+7*864e5)).slice(0,10)};log('student extension','publication',a,a.split('|').map((x,i)=>i?short(x):cname(x)).join(' · ')+' extended to '+day(S.ext[a].until));toast('Extended by 7 days');render()},
+  extend(a){S.ext[a]={until:extendDate(S.ext[a]?S.ext[a].until:latestPub().replyBy)};log('student extension','publication',a,a.split('|').map((x,i)=>i?short(x):cname(x)).join(' · ')+' extended to '+day(S.ext[a].until));toast('Extended to '+day(S.ext[a].until));render()},
+  extendWin(a){
+    const w=S.win[a];if(!w||w.state!=='open')return;
+    w.dueAt=extendDate(w.dueAt);queueMail(a,'Extended',w.dueAt);
+    notify('fac:'+a,'Your ranking deadline moved to '+day(w.dueAt)+'.',{facTab:'courses'});
+    log('ranking window extended','window',a,FAC[a].display_name+' until '+day(w.dueAt));toast('Extended to '+day(w.dueAt)+'. Email queued, not sent.');render();
+  },
   /* admin assignments */
   setAlloc(a,b,v){
     const val=parseFloat(v);let row=S.draft.rows.find(r=>r.course===a&&r.app===b&&r.decision!=='declined');
@@ -1104,15 +1127,17 @@ const ACT={
     S.draft={id:'draft_from_v'+p.version+'_'+(S.newRow++),name:'Revision of version '+p.version,rows:p.rows.map(r=>({id:'draft_new_'+(S.newRow++),course:r.course,app:r.app,fte:r.fte,role:r.role,decision:'accepted',published:true,note:''}))};
     S.confirmClone=null;log('revision draft created','draft',S.draft.id,'Working draft rebuilt from version '+p.version);toast('Working draft rebuilt from version '+p.version);render();
   },
-  copyCsv(a){const p=S.pubs.find(x=>x.version===parseInt(a,10));copyText(csvFor(p),$('#csvBox'));return false},
   /* students */
   replyBy(a,b,v){S.replyBy=v;return false},
   notify(){
     const p=latestPub();if(!p.respOpen){toast('Open the student response window first');return}
     const d=($('#replyBy')||{}).value||S.replyBy;S.replyBy=d;
     p.notifiedAt=nowIso();p.replyBy=d;
-    p.rows.forEach(r=>{const k=key(r);if(!p.responses[k]||p.responses[k].status==='not_notified')p.responses[k]={status:'awaiting',at:p.notifiedAt}});
-    log('students notified','publication',p.id,'Version '+p.version+' notified, reply by '+day(d));toast('Recorded. Copy each email from the table.');render();
+    p.rows.forEach(r=>{const k=key(r);if(!p.responses[k]||p.responses[k].status==='not_notified'){
+      p.responses[k]={status:'awaiting',at:p.notifiedAt};
+      const body=emailFor(p,r);queueOut({kind:'Assignment notice',audience:'Student',to:nm(r.app),address:'student email from the legacy app',subject:body.split('\n')[0].replace(/^Subject: /,''),body});
+    }});
+    log('students notified','publication',p.id,'Version '+p.version+' notified, reply by '+day(d));toast('Recorded. The emails are in the Mail tab, not sent.');render();
   },
   setResp(a,b,v){const p=latestPub();p.responses[a]={status:v,at:nowIso()};log('student reply logged','publication',p.id,a.split('|').map((x,i)=>i?short(x):cname(x)).join(' · ')+': '+v);render()},
   showEmail(a){S.emailFor=a;render()},
@@ -1167,7 +1192,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S&&(S.drawer||S.bell)){S.drawer=null;S.bell=false;render()}});
 
-window.__ta={state:()=>S,trackRows,trackCsv,hrRows,hrDiff,hrCsv,hrEmail,tierOf,audOk,ACT,computeIssues,gate,csvFor,backupsFor,validateRanking,needsHome,render};
+window.__ta={state:()=>S,trackRows,trackCsv,hrRows,hrDiff,hrCsv,hrEmail,tierOf,audOk,ACT,computeIssues,gate,backupsFor,validateRanking,needsHome,render};
 initState();render();
 })();
 </script>

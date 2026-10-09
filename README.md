@@ -7,8 +7,9 @@ A clickable, single-file demo of the TA scheduling workflow for the CS office. O
 ## What it shows (v3)
 - Admin: dashboard, faculty ranking windows, assignments workspace, applicants and GRA cross-check, versioned publishing with gating, student notification tracking, concerns, audit log
 - Faculty: ranking their own course only, backups, submit, published plan, concerns
-- Faculty windows: open a window for one professor or all, queued email text, notifications, a response tracker with a copyable CSV, and a mock professor email reply
-- HR drafts: numbered drafts with added/removed/changed rows, an estimated HR tier, spreadsheet text and email text
+- Faculty windows: open, extend or close a window for one professor or all, a response tracker with a copyable CSV, notifications, and a mock professor email reply
+- Mail: one outbox for every email the tool would send (professors, students, HR) plus a mock inbox
+- HR drafts (the single HR export): numbered drafts with added/removed/changed rows, an estimated HR tier, spreadsheet text and email text
 - Setup: per-course audience (graduate, undergraduate, both) and slots by role, plus the different application questions for graduate and undergraduate applicants
 - Applicants: TA / UGCA / Both toggle, grad and UGCA intake details, transcript check, GRA "add back to pool", and a mock Refresh from the legacy app
 - Students: the response window must be open before students are notified, with per-student extensions
