@@ -6,6 +6,12 @@ This is the groundwork for connecting the demo to the existing TA app. It is **n
 
 The new tool reads from the legacy app and never writes back (agreed with Eric on Oct 6). Everything Doug needs downstream (HR spreadsheet, student emails, professor emails) has to be produced here.
 
+## Scope: who owns what
+
+- **Legacy TA app:** applicants apply on its forms (graduate and undergraduate). It also owns the course list and slots, TA history, and student accept / decline. This tool reads from it and does not write back.
+- **This tool:** professor rankings, office decisions, windows and reminders, GRA / transcript / tier notes, publishing, HR drafts and the mail outbox.
+- Anything we want to know about an applicant must be asked on the legacy form and reach us through the sync. See the "What the legacy application form needs to ask" table in Setup, and `docs/FEATURE_MAP.md`.
+
 ## The seam in the code
 
 All applicant and course data enters through one place, so the synthetic data can be swapped for scraped data without touching the views.
@@ -71,12 +77,13 @@ All values in the demo are invented. Where each would really come from is a gues
 
 1. Who may see citizenship and EID? The PRD excludes both, Doug needs them in the HR output.
 2. Does Eric scrape on demand, on a schedule, or from an export file? What does the legacy app expose?
-3. How are students matched across systems (GRA list is by EID today)? Where is that key stored?
-4. Where does this run (hosting, login, data retention)? Who approves storing citizenship?
-5. Which email account sends mail, and who approves it?
-6. Real HR spreadsheet columns and tier rules (need a sample from Doug).
-7. Do TAs and UGCAs share one course queue or have separate slot counts? (Demo: separate slots, one workspace.)
-8. Is "accepted only" the right content for an HR draft?
+3. Can the sync read student accept / decline from the legacy app, and who sends assignment notices to students (legacy app or this tool)?
+4. How are students matched across systems (GRA list is by EID today)? Where is that key stored?
+5. Where does this run (hosting, login, data retention)? Who approves storing citizenship?
+6. Which email account sends mail, and who approves it?
+7. Real HR spreadsheet columns and tier rules (need a sample from Doug).
+8. Do TAs and UGCAs share one course queue or have separate slot counts? (Demo: separate slots, one workspace.)
+9. Is "accepted only" the right content for an HR draft?
 
 ## Needed from Doug and Eric
 

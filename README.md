@@ -11,7 +11,7 @@ A clickable, single-file demo of the TA scheduling workflow for the CS office. O
 - Mail: one outbox for every email the tool would send (professors, students, HR) plus a mock inbox
 - HR drafts (the single HR export): numbered drafts with added/removed/changed rows, an estimated HR tier, spreadsheet text and email text
 - Setup: per-course audience (graduate, undergraduate, both) and slots by role, plus the different application questions for graduate and undergraduate applicants
-- Applicants: TA / UGCA / Both toggle, grad and UGCA intake details, transcript check, GRA "add back to pool", and a mock Refresh from the legacy app
+- Applicants (read from the legacy TA app, where they apply): TA / UGCA / Both toggle, grad and UGCA intake details, transcript check, GRA "add back to pool", and a mock Refresh from the legacy app
 - Students: the response window must be open before students are notified, with per-student extensions
 
 ## Not connected

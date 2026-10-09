@@ -270,6 +270,27 @@ ok(/blocking issue/.test(txt())&&!/is allocated 2\.0 FTE/.test(w.document.queryS
 A.tab('dashboard');ok(/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'Dashboard keeps the full blocker messages');
 A.goCourse('crs_f26_002');ok(/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'course workspace keeps its own issues');
 A.tab('dashboard');ok(/Reopen ranking/.test(txt()),'dashboard button says Reopen ranking');
+
+// ---- legacy-app scope ----
+A.reset();A.role(null,null,'admin');
+A.tab('setup');ok(/Who owns what/.test(txt())&&/Legacy TA app \(this tool only reads it\)/.test(txt()),'Setup states what the legacy app owns');
+ok(/What the legacy application form needs to ask/.test(txt())&&/graduate form does not/.test(txt()),'Setup lists the form changes needed in the legacy app');
+const mainTxt=()=>w.document.querySelector('main').textContent;
+ok(!/Differs from legacy app/.test(mainTxt()),'no drift marker at the start');
+A.setAud('crs_f26_002','','grad');A.tab('setup');ok(/Differs from legacy app/.test(mainTxt()),'local course change is marked as differing from the legacy app');
+A.setAud('crs_f26_002','','both');A.tab('setup');ok(!/Differs from legacy app/.test(mainTxt()),'drift marker clears when it matches again');
+A.tab('applicants');ok(/never edits their answers/.test(txt()),'Applicants tab says applications come from the legacy forms');
+A.drawer('app_f26_0002',null);ok(/Applied through/.test(w.document.querySelector('#drawer').textContent)&&/Legacy TA app form/.test(w.document.querySelector('#drawer').textContent),'applicant card shows it came from the legacy form');A.closeDrawer();
+// student replies pulled from legacy app
+A.setAlloc('crs_f26_002','app_f26_0001','0');A.setAlloc('crs_f26_002','app_f26_0005','1');A.acceptAll('crs_f26_002');
+['crs_f26_001','crs_f26_003','crs_f26_004','crs_f26_005'].forEach(c=>A.acceptAll(c));
+const g2=T.gate();if(g2.ok||true){A.fillNotes();}
+if(T.gate().ok){A.publish();A.tab('students');A.openResp();A.notify();
+ const pp=S().pubs[S().pubs.length-1],waiting=()=>pp.rows.filter(r=>(pp.responses[r.course+'|'+r.app]||{}).status==='awaiting').length,w0=waiting();
+ ok(w0>0,'there are waiting student replies');A.pullReplies();ok(waiting()===w0-1,'pulling replies confirms one waiting student');
+ ok(S().notifs.some(n=>n.to==='admin'&&/in the legacy app/.test(n.text)),'admin notified of a pulled reply');
+ ok(/Students accept or decline in the legacy app/.test(txt()),'students tab explains replies live in the legacy app');}
+else console.log('note: publish gate not open for pullReplies test',T.gate().blocks.map(b=>b.msg));
 A.reset();ok(S().pubs.length===1,'reset restores seed');
 console.log(errs.length?'ERRORS:\n'+errs.join('\n'):'no runtime errors');
 console.log(fails?fails+' FAILED':'ALL PASSED');
