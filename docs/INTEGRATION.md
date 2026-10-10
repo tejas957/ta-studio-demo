@@ -4,11 +4,11 @@ This is the groundwork for connecting the demo to the existing TA app. It is **n
 
 ## Principle: pull only
 
-The new tool reads from the legacy app and never writes back (agreed with Eric on Oct 6). Everything Doug needs downstream (HR spreadsheet, student emails, professor emails) has to be produced here.
+The new tool reads applications, course setup and history from the legacy app and never edits them (agreed with Eric on Oct 6). From Oct 9 the legacy app is only the collector and support; rankings, decisions, student replies and all email are in this tool. See docs/INTEGRATION_CHECKLIST.md. Everything Doug needs downstream (HR spreadsheet, student emails, professor emails) has to be produced here.
 
 ## Scope: who owns what
 
-- **Legacy TA app:** applicants apply on its forms (graduate and undergraduate). It also owns the course list and slots, TA history, and student accept / decline. This tool reads from it and does not write back.
+- **Legacy TA app:** applicants apply on its forms (graduate and undergraduate). It also owns the course list and slots, TA history. Student accept / decline moved to this tool on Oct 9. This tool reads from it and does not write back.
 - **This tool:** professor rankings, office decisions, windows and reminders, GRA / transcript / tier notes, publishing, HR drafts and the mail outbox.
 - Anything we want to know about an applicant must be asked on the legacy form and reach us through the sync. See the "What the legacy application form needs to ask" table in Setup, and `docs/FEATURE_MAP.md`.
 
@@ -77,7 +77,7 @@ All values in the demo are invented. Where each would really come from is a gues
 
 1. Who may see citizenship and EID? The PRD excludes both, Doug needs them in the HR output.
 2. Does Eric scrape on demand, on a schedule, or from an export file? What does the legacy app expose?
-3. Can the sync read student accept / decline from the legacy app, and who sends assignment notices to students (legacy app or this tool)?
+3. Decided Oct 9: this tool sends student notices and (most likely) collects accept / decline. Still to confirm: how students reach the reply page and sign in.
 4. How are students matched across systems (GRA list is by EID today)? Where is that key stored?
 5. Where does this run (hosting, login, data retention)? Who approves storing citizenship?
 6. Which email account sends mail, and who approves it?

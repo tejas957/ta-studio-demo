@@ -330,7 +330,7 @@ function initState(){
   s.hr.drafts[0].rows.forEach(r=>{r.tier=tierOf(r.app).code;r.cit=ex(r.app).cit||''});
   s.hrSel=15;
   const sentEarlier=(at,kind,aud,to,address,body)=>s.outbox.push({id:'m'+(s.mid++),at,kind,audience:aud,fid:'',to,address,subject:body.split('\n')[0].replace(/^Subject: /,''),body,status:'Sent earlier'});
-  s.pubs[0].rows.forEach(r=>sentEarlier(s.pubs[0].notifiedAt,'Assignment notice','Student',nm(r.app),'student email from the legacy app',emailFor(s.pubs[0],r)));
+  s.pubs[0].rows.forEach(r=>sentEarlier(s.pubs[0].notifiedAt,'Assignment notice','Student',nm(r.app),'student email (from the applicant record)',emailFor(s.pubs[0],r)));
   sentEarlier(s.hr.drafts[0].at,'HR draft','HR','HR office','HR contact to be confirmed',hrEmail(15));
   applyGra(S.graText,true);
   return s;
@@ -650,9 +650,9 @@ function vSetup(){
   const li=a=>'<ul class="plain tight">'+a.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
   return '<div class="stack"><div class="card"><h3>Courses: who can apply and how many assistants</h3><p class="muted" style="margin-bottom:10px">These values mirror the edit-class screen in the legacy app, which also decides which courses applicants see on the application form. Changing a row here updates the pools, needs and checks in this tool, so you can plan. It does not change the form. The real change has to be made in the legacy app, so changed rows are marked. A hidden applicant stays hidden here, and an existing assignment for one blocks publishing.</p>'+
    '<div class="tbl"><table><thead><tr><th>Course</th><th>Professor</th><th>Who can apply</th><th>TA FTE</th><th>UGCA FTE</th><th>Proctor FTE</th><th class="num">Total need</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
-   '<div class="card"><h3>Who owns what</h3><p class="muted" style="margin-bottom:10px">Applicants apply on the forms in the legacy TA app. This tool reads those applications and never edits or writes back. Professors rank, and the office decides, here.</p><div class="grid2">'+
-   '<div><div class="eyebrow">Legacy TA app (this tool only reads it)</div>'+li(['Application forms for graduate TAs and undergraduate assistants, and every applicant answer','Course list, slots and who can apply (edit-class screen)','Prior TA history across terms','Student accept and decline (the radio buttons)','The old assignment draft screen'])+'</div>'+
-   '<div><div class="eyebrow">This tool</div>'+li(['Professor rankings, backups and comments','Office decisions and the working assignment draft','Faculty windows, reminders and response tracking','Office notes on applicants: GRA flag, transcript check, HR tier','Publishing versions to faculty, and concerns','HR drafts, spreadsheet and email','Mail outbox, notifications and the audit log'])+'</div></div></div>'+
+   '<div class="card"><h3>Who owns what</h3><p class="muted" style="margin-bottom:10px">Applicants apply on the forms in the legacy TA app. This tool reads those applications and never edits them. Professors rank, the office decides, students reply and every email goes out from here.</p><div class="grid2">'+
+   '<div><div class="eyebrow">Legacy TA app (this tool only reads it)</div>'+li(['Application forms for graduate TAs and undergraduate assistants, and every applicant answer','Course list, slots and who can apply (edit-class screen)','Prior TA history across terms','Collecting applications and support. Later it is only the collector'])+'</div>'+
+   '<div><div class="eyebrow">This tool</div>'+li(['Professor rankings, backups and comments','Office decisions and the working assignment draft','Faculty windows, reminders and response tracking','Office notes on applicants: GRA flag, transcript check, HR tier','Publishing versions to faculty, and concerns','Student notices, accept and decline, and extensions','HR drafts, spreadsheet and email','All email: professors, students and HR. Mail outbox, notifications and the audit log'])+'</div></div></div>'+
    '<div class="card"><h3>What the legacy application form needs to ask</h3><p class="muted" style="margin-bottom:10px">Applicants answer on the legacy forms, so anything we want in this tool has to be asked there and reach us through the sync. The legacy app already has separate graduate and undergraduate applications, so these are edits to two existing forms, not a new form.</p>'+
    '<div class="tbl"><table><thead><tr><th>Question</th><th>Who</th><th>In the legacy form today?</th><th>What it needs</th></tr></thead><tbody>'+[
      ['Resume with internships and industry work','Graduate','No. The undergraduate form has a resume, the graduate form does not (Doug, Oct 6)','Add to graduate form','warn'],
@@ -663,7 +663,7 @@ function vSetup(){
      ['Class year, hours per week, grade in the course','Undergraduate','To confirm','Confirm or add','warn'],
      ['Courses chosen with notes, availability, skills, coursework, teaching statement','Everyone','Collected today','Nothing to change','ok']
    ].map(r=>'<tr><td><b>'+esc(r[0])+'</b></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+chip(r[3],r[4])+'</td></tr>').join('')+'</tbody></table></div></div>'+
-   '<div class="card"><h3>Data source</h3><p class="muted" style="margin-bottom:8px">Today the demo reads a synthetic dataset. The real tool would pull new applications, course setup, prior TA history and student replies from the legacy app, read-only, and never write back. Press the button to pretend new applicants applied there.</p>'+
+   '<div class="card"><h3>Data source</h3><p class="muted" style="margin-bottom:8px">Today the demo reads a synthetic dataset. The real tool would pull new applications, course setup and prior TA history from the legacy app, read-only. Rankings, decisions, student replies and all email live in this tool. Press the button to pretend new applicants applied there.</p>'+
    '<div class="row"><button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button><span class="small muted">Last refresh: '+when(S.sync.at)+' · '+S.sync.newApps.length+' new since the start of this session</span></div></div></div>';
 }
 
@@ -817,8 +817,8 @@ function vStudents(){
   return '<div class="stack"><div class="stats">'+[['Confirmed',cnt('confirmed')],['Waiting',cnt('awaiting')],['Declined',cnt('declined')],['Not notified',cnt('not_notified')]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
   '<div class="card"><h3>Student replies for version '+p.version+'</h3>'+
    '<div class="row" style="gap:10px;align-items:center;margin:6px 0">'+chip(p.respOpen?'Response window open'+(p.replyBy?' until '+day(p.replyBy):''):'Response window closed',p.respOpen?'ok':'bad')+'<span class="small muted">Last notified: '+when(p.notifiedAt)+'</span></div>'+
-   (p.respOpen?'':'<div class="note warn" style="margin-bottom:8px">Open the response window before you notify students. If it stays closed, students cannot accept and the inbox fills with "I can\'t accept" messages. Students accept in the legacy app, so open their window there, then confirm it here.</div>')+
-   '<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Reply by<input type="date" id="replyBy" value="'+esc(S.replyBy)+'" data-inp="replyBy"></label>'+(p.respOpen?'<button class="btn" data-act="closeResp">Close response window</button>':'<button class="btn primary" data-act="openResp">Open response window</button>')+'<button class="btn primary" data-act="notify"'+(p.respOpen?'':' disabled')+'>Mark students notified</button><button class="btn" data-act="pullReplies">Pull replies from legacy app (demo)</button></div><div class="small muted" style="margin-top:6px">Students accept or decline in the legacy app. The real tool would read their replies there. If a student answers by email instead, log it in the table. This demo does not send email. Use Extend on a row to give one student more time.</div></div>'+
+   (p.respOpen?'':'<div class="note warn" style="margin-bottom:8px">Open the response window before you notify students. If it stays closed, students cannot accept and the inbox fills with "I can\'t accept" messages. Students answer from a link in the email this tool sends, so the window has to be open first.</div>')+
+   '<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Reply by<input type="date" id="replyBy" value="'+esc(S.replyBy)+'" data-inp="replyBy"></label>'+(p.respOpen?'<button class="btn" data-act="closeResp">Close response window</button>':'<button class="btn primary" data-act="openResp">Open response window</button>')+'<button class="btn primary" data-act="notify"'+(p.respOpen?'':' disabled')+'>Mark students notified</button><button class="btn" data-act="simStudent">Simulate a student reply (demo)</button></div><div class="small muted" style="margin-top:6px">Students will accept or decline from a link in the email this tool sends, and the answer lands here. The demo has no student page yet, so simulate a reply or set one in the table. A student who answers by plain email can be logged in the table. This demo does not send email. Use Extend on a row to give one student more time.</div></div>'+
   '<div class="tbl"><table><thead><tr><th>Student</th><th>Course</th><th>Role</th><th class="num">FTE</th><th>Reply</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
   (em?'<div class="card"><h3>Preview: email for '+esc(nm(em.r.app))+'</h3><textarea id="emailBox" rows="10" readonly>'+esc(emailFor(p,em.r))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyEmail">Copy</button><button class="btn" data-act="hideEmail">Close</button></div></div>':'')+declined+'</div>';
 }
@@ -1079,13 +1079,13 @@ const ACT={
     if(!d||Date.parse(d+'T23:59:00')<Date.now()){toast('Pick a reply-by date in the future');return}
     p.respOpen=true;p.replyBy=d;log('student response window opened','publication',p.id,'Version '+p.version+' open until '+day(d));render();
   },
-  pullReplies(){
+  simStudent(){
     const p=latestPub(),pend=p.rows.filter(r=>respOf(p,r).status==='awaiting');
-    if(!pend.length){toast('No waiting replies to pull');return}
+    if(!pend.length){toast('No waiting replies to simulate');return}
     const r=pend[0];p.responses[key(r)]={status:'confirmed',at:nowIso()};
-    log('student reply pulled','publication',p.id,nm(r.app)+' confirmed '+cname(r.course)+' in the legacy app (demo)');
-    notify('admin',nm(r.app)+' confirmed '+cname(r.course)+' in the legacy app.',{tab:'students'});
-    toast(nm(r.app)+' confirmed (pulled from legacy app, demo)');render();
+    log('student reply received','publication',p.id,nm(r.app)+' confirmed '+cname(r.course)+' from the student link (demo)');
+    notify('admin',nm(r.app)+' confirmed '+cname(r.course)+' from the student link.',{tab:'students'});
+    toast(nm(r.app)+' confirmed (simulated, demo)');render();
   },
   closeResp(){const p=latestPub();p.respOpen=false;log('student response window closed','publication',p.id,'Version '+p.version);render()},
   extend(a){S.ext[a]={until:extendDate(S.ext[a]?S.ext[a].until:latestPub().replyBy)};log('student extension','publication',a,a.split('|').map((x,i)=>i?short(x):cname(x)).join(' · ')+' extended to '+day(S.ext[a].until));toast('Extended to '+day(S.ext[a].until));render()},
@@ -1153,7 +1153,7 @@ const ACT={
     p.notifiedAt=nowIso();p.replyBy=d;
     p.rows.forEach(r=>{const k=key(r);if(!p.responses[k]||p.responses[k].status==='not_notified'){
       p.responses[k]={status:'awaiting',at:p.notifiedAt};
-      const body=emailFor(p,r);queueOut({kind:'Assignment notice',audience:'Student',to:nm(r.app),address:'student email from the legacy app',subject:body.split('\n')[0].replace(/^Subject: /,''),body});
+      const body=emailFor(p,r);queueOut({kind:'Assignment notice',audience:'Student',to:nm(r.app),address:'student email (from the applicant record)',subject:body.split('\n')[0].replace(/^Subject: /,''),body});
     }});
     log('students notified','publication',p.id,'Version '+p.version+' notified, reply by '+day(d));toast('Recorded. The emails are in the Mail tab, not sent.');render();
   },

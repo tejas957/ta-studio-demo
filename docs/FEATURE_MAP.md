@@ -1,6 +1,6 @@
-# Feature map (v3.2)
+# Feature map (v3.3)
 
-Process order, with the transition points between processes marked. "Lives in" says which system owns the data: **Legacy** = the existing TA app (applicants apply there; this tool only reads), **Tool** = this tool, **Both** = pulled from legacy, annotated here.
+Process order, with the transition points between processes marked. "Lives in" says which system owns the data: **Legacy** = the existing TA app (applicants apply there; this tool only reads), **Tool** = this tool, **Both** = pulled from legacy, annotated here. From v3.3 the legacy app is only the collector (applications, course setup, history). Rankings, decisions, student replies and all email live in this tool.
 
 | # | Feature | Lives in | Overlap / redundancy | Outside integration (where) | Demo status |
 |---|---|---|---|---|---|
@@ -21,7 +21,7 @@ Process order, with the transition points between processes marked. "Lives in" s
 | | **Transition: Intake → Faculty ranking.** Applicants who chose a course (and are allowed by its audience) become that professor's pool. A late applicant can reopen the need for a window. | Legacy → Tool | Audience rule and pool facts used in both stages | Legacy sync | |
 | | **3. FACULTY RANKING WINDOWS** | | | | |
 | 13 | Open window for one professor or all | Tool | Dashboard "Reopen ranking" vs windows "Reopen window" are separate actions, named differently | Email sender account | Window works, email mock |
-| 14 | Reminders, extend, close, reopen | Tool | Same open / extend / close wording as student windows (#30) | Email sender account | Works, email mock |
+| 14 | Reminders, extend, close, reopen | Tool | Same open / extend / close wording as student windows (#29) | Email sender account | Works, email mock |
 | 15 | Response tracker and CSV | Tool | Dashboard shows a ranking summary and a windows chip | None | Works |
 | 16 | Mock email reply | Tool | Two ways a professor can respond (tool or email) | Shared mailbox read | Mock |
 | 17 | Faculty view (own course only, rank, backups, comments, checks, submit; locked until window opens) | Tool | Admin "Copy list for the professor" is a workaround for professors who skip the tool | UT sign-in, faculty to course mapping from legacy | Works, fake sign-in |
@@ -37,17 +37,17 @@ Process order, with the transition points between processes marked. "Lives in" s
 | 23 | Publish gate with override notes | Tool | Same data as #21 | None | Works |
 | 24 | Versioned publication and diff ("Faculty versions") | Tool | Second numbering next to HR drafts. Cross-linked when they match | None | Works |
 | 25 | Faculty "Published plan" view and notice | Tool | None | UT sign-in | Works |
-| | **Transition: Publish ↔ HR.** The same accepted rows feed a publish version and an HR draft, with separate counters. They cross-link when identical. | Tool | #24 vs #27 | None | |
+| | **Transition: Publish ↔ HR.** The same accepted rows feed a publish version and an HR draft, with separate counters. They cross-link when identical. | Tool | #24 vs #26 | None | |
 | | **6. HR DRAFTS (the single HR export)** | | | | |
 | 26 | Numbered HR draft with added / removed / changed rows | Tool | Replaces the old per-version CSV | HR receives the result (email or spreadsheet) | Works |
 | 27 | HR spreadsheet text, with tier and citizenship | Tool | One place for HR output | Real HR column list; who may see citizenship | Mock (copy only) |
-| 28 | HR email text | Tool (outbox) | Goes to the one outbox (#33) | Email to HR | Mock |
-| | **Transition: Publish → Students.** Students accept in the legacy app, so its window must be open before notifying. This tool mirrors that with a switch. Each new version starts closed. | Legacy + Tool | Same window idea as #14 | The window itself is a legacy setting | |
+| 28 | HR email text | Tool (outbox) | Goes to the one outbox (#36) | Email to HR | Mock |
+| | **Transition: Publish → Students.** The student response window must be open before notifying. Each new version starts closed. | Tool | Same window idea as #14 | None | |
 | | **7. STUDENTS** | | | | |
-| 29 | Student response window switch ("confirm it is open in the legacy app") | Legacy owns it, mirrored here | Same open / extend / close wording as #14 | Legacy app setting | Works as a checklist |
-| 30 | Notify students (email text, to outbox) | Open: legacy or this tool sends | Email goes to the one outbox | Email sender, student emails from legacy | Mock |
-| 31 | Reply tracking (confirmed, declined, waiting) | Legacy (students accept there) → Tool | Manual log remains for email replies | Read replies from legacy app | Mock ("Pull replies") plus manual |
-| 32 | Per-student extension | Tool, mirrors legacy | Similar to #14 extend | Legacy (reopen for one student) | Works, date only |
+| 29 | Student response window (open, reply-by date, close) | Tool | Same open / extend / close wording as #14 | None | Works, no student page yet |
+| 30 | Notify students (email text, to outbox) | Tool | Email goes to the one outbox | Email sender; student emails come with the applicant record | Mock |
+| 31 | Reply tracking (confirmed, declined, waiting) | Tool | Manual log remains for replies sent by plain email | Student reply link or page (to build) | Mock ("Simulate a student reply") plus manual |
+| 32 | Per-student extension | Tool | Similar to #14 extend | None | Works, date only |
 | 33 | Declined student → professor's backups → replacement | Tool | Uses the backup list from #17 | None | Works |
 | | **Transition: Decline → Placement loop.** A replacement goes back to the workspace, changes the next HR draft (removed row) and needs a new published version. | Tool | #19, #24, #26 | None | |
 | | **8. AFTER PUBLISH** | | | | |
@@ -59,9 +59,16 @@ Process order, with the transition points between processes marked. "Lives in" s
 | 38 | Role switcher and privacy boundary | Tool | None | UT sign-in | Fake |
 | 39 | Walkthrough and reset | Demo | Demo only | None | Demo only |
 
-## Open questions this raised
+## Decisions so far (Oct 9)
 
-1. Who sends assignment notices to students: the legacy app (as today) or this tool?
-2. Can the sync read student accept / decline from the legacy app?
-3. Who owns course slots and audience going forward? If the legacy app stays the owner, edits here are only planning.
-4. Which graduate-form changes can be made in the legacy app, and by whom?
+1. Student notices are sent from this tool.
+2. Student accept / decline most likely happens through this tool (to confirm with the legacy app owner).
+3. Course audience and slots stay owned by the legacy app for the first version. This tool reads them. Edits here are planning only.
+4. After integration the legacy app only collects information and supports. All emails (professors, students, HR) and all ranks and decisions are in this tool.
+
+## Still open
+
+- Can this tool ever write course audience / slots back to the legacy app (needed if it becomes the owner)?
+- Which graduate-form changes can be made in the legacy app, and by whom?
+- Where does a student reply page live, and how do students sign in?
+
