@@ -1,0 +1,709 @@
+[
+{
+"id": 208452,
+"number": "104C",
+"title": "COMPETITIVE PROGRAMMING",
+"prof": "VOUGA, P",
+"needed": 1.0
+},
+{
+"id": 208453,
+"number": "109:",
+"title": "THINK LAB",
+"prof": "NORMAN, A",
+"needed": 1.0
+},
+{
+"id": 208454,
+"number": "109:",
+"title": "THINK LAB",
+"prof": "NORMAN, A",
+"needed": 1.0
+},
+{
+"id": 208456,
+"number": "303E",
+"title": "ELEMENTS OF COMPUTERS AND PROGRAMMING",
+"prof": "YOUNG, W",
+"needed": 1.0
+},
+{
+"id": 208457,
+"number": "303E",
+"title": "ELEMENTS OF COMPUTERS AND PROGRAMMING",
+"prof": "YOUNG, W",
+"needed": 1.0
+},
+{
+"id": 208458,
+"number": "303E",
+"title": "ELEMENTS OF COMPUTERS AND PROGRAMMING",
+"prof": "YOUNG, W",
+"needed": 1.0
+},
+{
+"id": 208459,
+"number": "303E",
+"title": "ELEMS OF COMPUTERS AND PROGRAMMING",
+"prof": "DEY, C",
+"needed": 1.0
+},
+{
+"id": 208460,
+"number": "303E",
+"title": "ELEMS OF COMPUTERS AND PROGRAMMING",
+"prof": "Sadeghi, E",
+"needed": 1.0
+},
+{
+"id": 208461,
+"number": "304I",
+"title": "ESSENTIALS OF AI LIFE/SOCTY-WB",
+"prof": "BISWAS, J",
+"needed": 1.0
+},
+{
+"id": 208462,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "RAVISHANKAR, V",
+"needed": 1.0
+},
+{
+"id": 208463,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "RAVISHANKAR, V",
+"needed": 1.0
+},
+{
+"id": 208464,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "PARIKH, D",
+"needed": 1.0
+},
+{
+"id": 208465,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "PARIKH, D",
+"needed": 1.0
+},
+{
+"id": 208466,
+"number": "311H",
+"title": "DISCRETE MATH COMP SCI: HONORS - CSB",
+"prof": "PARIKH, D",
+"needed": 1.0
+},
+{
+"id": 208467,
+"number": "311H",
+"title": "DISCRETE MATH COMP SCI: HONORS - TURING",
+"prof": "PARIKH, D",
+"needed": 1.0
+},
+{
+"id": 208468,
+"number": "312",
+"title": "INTRODUCTION TO PROGRAMMING",
+"prof": "BEASLEY, A",
+"needed": 1.0
+},
+{
+"id": 208469,
+"number": "312",
+"title": "INTRODUCTION TO PROGRAMMING",
+"prof": "BEASLEY, A",
+"needed": 1.0
+},
+{
+"id": 208470,
+"number": "312",
+"title": "INTRODUCTION TO PROGRAMMING",
+"prof": "BEASLEY, A",
+"needed": 1.0
+},
+{
+"id": 208471,
+"number": "313E",
+"title": "ELEMENTS OF SOFTWARE DESIGN",
+"prof": "FONG, M",
+"needed": 1.0
+},
+{
+"id": 208472,
+"number": "313E",
+"title": "ELEMENTS OF SOFTWARE DESIGN",
+"prof": "FONG, M",
+"needed": 1.0
+},
+{
+"id": 208473,
+"number": "313E",
+"title": "ELEMENTS OF SOFTWARE DESIGN",
+"prof": "RAVISHANKAR, V",
+"needed": 1.0
+},
+{
+"id": 208474,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "KAUR, A",
+"needed": 1.0
+},
+{
+"id": 208475,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "SCOTT, M",
+"needed": 1.0
+},
+{
+"id": 208476,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "SCOTT, M",
+"needed": 1.0
+},
+{
+"id": 208477,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "SCOTT, M",
+"needed": 1.0
+},
+{
+"id": 208478,
+"number": "314H",
+"title": "DATA STRUCTURES: HONORS",
+"prof": "KAUR, A",
+"needed": 1.0
+},
+{
+"id": 208479,
+"number": "314H",
+"title": "DATA STRUCTURES: HONORS",
+"prof": "LIN, C",
+"needed": 1.0
+},
+{
+"id": 208480,
+"number": "323E",
+"title": "SCIENTIFIC COMPUTING",
+"prof": "MITRA, S",
+"needed": 1.0
+},
+{
+"id": 208481,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "JOSHI, P",
+"needed": 1.0
+},
+{
+"id": 208482,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "JOSHI, P",
+"needed": 1.0
+},
+{
+"id": 208483,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "PALACIOS, M",
+"needed": 1.0
+},
+{
+"id": 208484,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "PALACIOS, M",
+"needed": 1.0
+},
+{
+"id": 208485,
+"number": "329E",
+"title": "ELEMENTS OF DATA ANALYTICS",
+"prof": "TEYMOURIAN, K",
+"needed": 1.0
+},
+{
+"id": 208486,
+"number": "329E",
+"title": "ELEMENTS OF DATA ANALYTICS",
+"prof": "GAUCI, J",
+"needed": 1.0
+},
+{
+"id": 208487,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "MITRA, S",
+"needed": 1.0
+},
+{
+"id": 208488,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "MITRA, S",
+"needed": 1.0
+},
+{
+"id": 208489,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "COHEN, S",
+"needed": 1.0
+},
+{
+"id": 208490,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "COHEN, S",
+"needed": 1.0
+},
+{
+"id": 208491,
+"number": "329E",
+"title": "ELEMENTS OF MOBILE COMPUTING",
+"prof": "BULKO, B",
+"needed": 1.0
+},
+{
+"id": 208492,
+"number": "329E",
+"title": "ELEMENTS OF MOBILE COMPUTING",
+"prof": "BULKO, B",
+"needed": 1.0
+},
+{
+"id": 208493,
+"number": "330E",
+"title": "ELEMENTS OF SOFTWARE ENGINEERING I",
+"prof": "FRAIJ, F",
+"needed": 1.0
+},
+{
+"id": 208494,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "FRAIJ, F",
+"needed": 1.0
+},
+{
+"id": 208495,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "FRAIJ, F",
+"needed": 1.0
+},
+{
+"id": 208496,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "PLAXTON, G",
+"needed": 1.0
+},
+{
+"id": 208497,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "TIAN, K",
+"needed": 1.0
+},
+{
+"id": 208498,
+"number": "342S",
+"title": "INTRO TO SPEECH & AUDIO PROCESS",
+"prof": "HARWATH, D",
+"needed": 1.0
+},
+{
+"id": 208499,
+"number": "343",
+"title": "ARTIFICIAL INTELLIGENCE",
+"prof": "KUHLMANN, G",
+"needed": 1.0
+},
+{
+"id": 208500,
+"number": "343",
+"title": "ARTIFICIAL INTELLIGENCE",
+"prof": "TECUCI, D",
+"needed": 1.0
+},
+{
+"id": 208501,
+"number": "343H",
+"title": "ARTIFICIAL INTELLIGENCE",
+"prof": "ISLER, V",
+"needed": 1.0
+},
+{
+"id": 208502,
+"number": "345H",
+"title": "PROGRAMMING LANG",
+"prof": "GHEITH, A",
+"needed": 1.0
+},
+{
+"id": 208503,
+"number": "347",
+"title": "DATA MANAGEMENT",
+"prof": "MIRANKER, D",
+"needed": 1.0
+},
+{
+"id": 208504,
+"number": "349",
+"title": "CONTEMPORARY ISSUES IN COMPUTER SCIENCE",
+"prof": "QUIMBY, H",
+"needed": 1.0
+},
+{
+"id": 208505,
+"number": "349",
+"title": "CONTEMPORARY ISSUES IN COMPUTER SCIENCE",
+"prof": "QUIMBY, H",
+"needed": 1.0
+},
+{
+"id": 208506,
+"number": "349",
+"title": "CONTEMPORARY ISSUES IN COMPUTER SCIENCE",
+"prof": "QUIMBY, H",
+"needed": 1.0
+},
+{
+"id": 208507,
+"number": "350M",
+"title": "ENERGY EFFICIENT COMPUTING",
+"prof": "ELNOZAHY, M",
+"needed": 1.0
+},
+{
+"id": 208508,
+"number": "354P",
+"title": "GAME PROGRAMMING PARADIGMS",
+"prof": "ABRAHAM, S",
+"needed": 1.0
+},
+{
+"id": 208509,
+"number": "354R",
+"title": "GAME TECHNOLOGY",
+"prof": "ABRAHAM, S",
+"needed": 1.0
+},
+{
+"id": 208510,
+"number": "354S",
+"title": "GAME DEV CAPSTNE: 2-D GAMES",
+"prof": "TOPRAC, P",
+"needed": 1.0
+},
+{
+"id": 208511,
+"number": "354T",
+"title": "GAME DEV CAPSTNE: 3-D GAMES",
+"prof": "ABRAHAM, S",
+"needed": 1.0
+},
+{
+"id": 208512,
+"number": "356",
+"title": "COMPUTER NETWORKS",
+"prof": "ARUN, V",
+"needed": 1.0
+},
+{
+"id": 208513,
+"number": "356R",
+"title": "INTRO TO WIRELESS NETWORKS",
+"prof": "QIU, L",
+"needed": 1.0
+},
+{
+"id": 208514,
+"number": "358H",
+"title": "INTRO TO QUANTUM INFO SCIENCE: HONORS",
+"prof": "KRETSCHMER, W",
+"needed": 1.0
+},
+{
+"id": 208515,
+"number": "360V",
+"title": "VIRTUALIZATION",
+"prof": "CHIDAMBARAM, V",
+"needed": 1.0
+},
+{
+"id": 208516,
+"number": "361S",
+"title": "NETWORK SECURITY/PRIVACY",
+"prof": "NARAYAN, S",
+"needed": 1.0
+},
+{
+"id": 208517,
+"number": "363M",
+"title": "PRINCIPLES OF MACHINE LEARNING I",
+"prof": "RODRIGUEZ, J",
+"needed": 1.0
+},
+{
+"id": 208518,
+"number": "363M",
+"title": "PRINCIPLES OF MACHINE LEARNING I",
+"prof": "LITVAK, D",
+"needed": 1.0
+},
+{
+"id": 208519,
+"number": "363M",
+"title": "PRINCIPLES OF MACHINE LEARNING I-WB",
+"prof": "MOONDRA, A",
+"needed": 1.0
+},
+{
+"id": 208520,
+"number": "371L",
+"title": "iOS MOBILE",
+"prof": "BULKO, W",
+"needed": 1.0
+},
+{
+"id": 208521,
+"number": "371N",
+"title": "NATURAL LANGUAGE PROCESSING",
+"prof": "TARLACI, F",
+"needed": 1.0
+},
+{
+"id": 208522,
+"number": "371P",
+"title": "OBJECT-ORIENTED PROGRAMMING",
+"prof": "DOWNING, G",
+"needed": 1.0
+},
+{
+"id": 208523,
+"number": "373",
+"title": "SOFTWARE ENGINEERING",
+"prof": "DOWNING, G",
+"needed": 1.0
+},
+{
+"id": 208524,
+"number": "373",
+"title": "SOFTWARE ENGINEERING",
+"prof": "DOWNING, G",
+"needed": 1.0
+},
+{
+"id": 208525,
+"number": "373",
+"title": "SOFTWARE ENGINEERING",
+"prof": "PALACIOS, M",
+"needed": 1.0
+},
+{
+"id": 208526,
+"number": "375",
+"title": "COMPILERS",
+"prof": "NOVAK, G",
+"needed": 1.0
+},
+{
+"id": 208527,
+"number": "376",
+"title": "COMPUTER VISION",
+"prof": "PAVLAKOS, G",
+"needed": 1.0
+},
+{
+"id": 208686,
+"number": "378",
+"title": "Ethical Hacking",
+"prof": "LEE, S",
+"needed": 1.0
+},
+{
+"id": 208528,
+"number": "378",
+"title": "APP PROTOTYPING STUDIO",
+"prof": "BULKO, B",
+"needed": 1.0
+},
+{
+"id": 208529,
+"number": "378",
+"title": "CLOUD COMPUTING",
+"prof": "TEYMOURIAN, K",
+"needed": 1.0
+},
+{
+"id": 208530,
+"number": "378",
+"title": "CLOUD COMPUTING",
+"prof": "TEYMOURIAN, K",
+"needed": 1.0
+},
+{
+"id": 208531,
+"number": "378",
+"title": "CLOUD NATIVE COMPUTING-WB",
+"prof": "KULKARNI, D",
+"needed": 1.0
+},
+{
+"id": 208532,
+"number": "378",
+"title": "CLOUD NATIVE COMPUTING-WB",
+"prof": "KULKARNI, D",
+"needed": 1.0
+},
+{
+"id": 208533,
+"number": "378",
+"title": "ETHICAL HACKING",
+"prof": "EISENBARTH, M",
+"needed": 1.0
+},
+{
+"id": 208534,
+"number": "378",
+"title": "FNDTN OF DATA WAREHOUSING",
+"prof": "COHEN, S",
+"needed": 1.0
+},
+{
+"id": 208535,
+"number": "378",
+"title": "GENERATIVE VISUAL COMPUTING",
+"prof": "HUANG, Q",
+"needed": 1.0
+},
+{
+"id": 208536,
+"number": "378",
+"title": "MODERN WEB APPS-WB",
+"prof": "KULKARNI, D",
+"needed": 1.0
+},
+{
+"id": 208537,
+"number": "378",
+"title": "QUANTUM INFO THEORY",
+"prof": "HUNTER-JONE",
+"needed": 1.0
+},
+{
+"id": 208538,
+"number": "378",
+"title": "SYMBOLIC PROGRAMMING",
+"prof": "NOVAK, G",
+"needed": 1.0
+},
+{
+"id": 208539,
+"number": "378",
+"title": "SYSTEMS FOR MACHINE LEARNING",
+"prof": "AKELLA, A",
+"needed": 1.0
+},
+{
+"id": 208573,
+"number": "378",
+"title": "AGENTIC SOFTWARE ENGINEERING",
+"prof": "WITCHEL, E",
+"needed": 1.0
+},
+{
+"id": 208540,
+"number": "378H",
+"title": "Structure/Implementation of Modern Programming Languages: Honors",
+"prof": "CHATTERJEE, S",
+"needed": 1.0
+},
+{
+"id": 208558,
+"number": "398T",
+"title": ": Supv Teaching in Computer Sci",
+"prof": "NORMAN, A",
+"needed": 1.0
+},
+{
+"id": 208559,
+"number": "429",
+"title": "COMP ORGANIZATN AND ARCH",
+"prof": "JOSHI, P",
+"needed": 1.0
+},
+{
+"id": 208560,
+"number": "429",
+"title": "COMP ORGANIZATN AND ARCH",
+"prof": "CHATTERJEE, S",
+"needed": 1.0
+},
+{
+"id": 208561,
+"number": "429",
+"title": "COMP ORGANIZATN AND ARCH",
+"prof": "FONG, M",
+"needed": 1.0
+},
+{
+"id": 208562,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "NORMAN, A",
+"needed": 1.0
+},
+{
+"id": 208563,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "NORMAN, A",
+"needed": 1.0
+},
+{
+"id": 208564,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "ELNOZAHY,, M",
+"needed": 1.0
+},
+{
+"id": 208565,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "ELNOZAHY,, M",
+"needed": 1.0
+},
+{
+"id": 208566,
+"number": "439H",
+"title": "PRINS OF COMPUTER SYS: HONORS - CSB",
+"prof": "GHEITH, A",
+"needed": 1.0
+},
+{
+"id": 208567,
+"number": "439H",
+"title": "PRINS OF COMPUTER SYS: HONORS - TURING",
+"prof": "GHEITH, A",
+"needed": 1.0
+},
+{
+"id": 208569,
+"number": "RBT",
+"title": "350 GATEWAY TO ROBOTICS *** ROBOTICS MINOR CRSE ***",
+"prof": "MARTIN-MARTIN, R",
+"needed": 1.0
+}
+]

@@ -20,6 +20,18 @@ A clickable, single-file demo of the TA scheduling workflow for the CS office. O
 - Everything lives in memory and resets on reload.
 - CSV output is copy-only.
 
+## Live mode (read-only sync from the legacy app)
+The app can load a sync file made by the scraper. In live mode it shows the legacy applicants, classes, assignments and colors instead of the synthetic set. Nothing is written back and no email is sent.
+```
+npm run mock        # fake legacy site on http://127.0.0.1:8787/taproc/index.php (fake data only)
+npm run sync:mock   # scrapes the fake site into samples/mock-payload.json (committed, fake)
+npm run sync        # REAL app: needs LEGACY_COOKIE (see docs/LEGACY_APP_MAP.md); writes sync/payload.json (git-ignored)
+npm run test:live   # mock site -> scraper -> app, end to end
+```
+Open the app, go to Setup, and choose the file under "Load a sync file". Loading a newer file later keeps the office's work.
+
+Legacy colors in the app: yellow = commitment student (must place, raises a "Must place" warning), blue = has a GRA (excluded like the grant-admin list), red = declined or graduated (excluded).
+
 ## Develop
 ```
 npm install

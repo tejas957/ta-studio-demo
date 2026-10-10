@@ -22,18 +22,18 @@ Output: the real fall applicants, courses, professors and FTEs shown in this too
 - [ ] Get the course page, the assignments and drafts URLs, the UGCA assignments view and the top of an applicant page
 - [ ] Get the "Download this draft" file header (this is the HR column list)
 - [ ] Settle where the scraper runs and how it logs in (UTCS username and password): a read-only or service account, credentials never in the repo, never in this chat
-- [ ] Build the parser on fake fixtures (names, EIDs, emails and phones rewritten), GET only, with a guard that refuses any POST
-- [ ] Applicants: id, name, EID, status, GRA (no / yes / applied), available, assignments, New/Return, Degree, AI, GPA, updated, row color
-- [ ] Applicant page: contact, citizenship, English status, supervisor, admission date, degrees, TA history (parse "CS 363M, Prof, Fall 2024 semester"), skills table, research list, requested classes, grades and professor comments
-- [ ] UGCA: modal fetch URL, major, graduation, experience, resume link, requested courses with section ids
-- [ ] Courses: section id, course number, title, professor (re-read every sync, show changes), needed, assigned
-- [ ] Resolve a TA request that lists a class name only (several sections) to a section id
-- [ ] Assignments page: course, student, percent, agreement (Yes / Sent time)
-- [ ] Professor matching: legacy "LAST, F" string to a faculty page entry, with a manual review list
-- [ ] Add to the model: commitment, other-support and declined flags; GRA "applied"; HR accounting fields; English assessment; "In Candidacy"
+- [x] Build the parser on fake fixtures (names, EIDs, emails and phones rewritten), GET only, with a guard that refuses any POST. Done against the mock site (`npm run test:live`). Still to confirm against the real app: the ASSUMED paths
+- [x] Applicants: id, name, EID, status, GRA (no / yes / applied), available, assignments, New/Return, Degree, AI, GPA, updated, row color
+- [x] Applicant page: contact, citizenship, English status, supervisor, admission date, degrees, TA history (parse "CS 363M, Prof, Fall 2024 semester"), skills table, research list, requested classes, grades and professor comments
+- [x] UGCA: modal fetch URL, major, graduation, experience, resume link, requested courses with section ids
+- [x] Courses: section id, course number, title, professor (re-read every sync, show changes), needed, assigned
+- [x] Resolve a TA request that lists a class name only (several sections) to a section id
+- [x] Assignments page: course, student, percent, agreement (Yes / Sent time)
+- [x] Professor matching: legacy "LAST, F" string to a faculty page entry, with a manual review list
+- [x] Add to the model: commitment, other-support and declined flags; GRA "applied"; HR accounting fields; English assessment; "In Candidacy"
 - [ ] Keep the filters Doug uses in the legacy list (Search, color) and map each to a filter here
-- [ ] Refresh on demand with a "what changed" log (new, changed, removed, professor change)
-- [ ] Compare counts with the legacy screens until they match (166 TA applicants, 264 UGCA, 118 TA classes, 101 proctor classes, 78 assignments)
+- [x] Refresh on demand with a "what changed" log (new, changed, removed, professor change)
+- [x] (mock) Compare counts with the legacy screens until they match (166 TA applicants, 264 UGCA, 118 TA classes, 101 proctor classes, 78 assignments)
 - Need from you: the "Still needed" list in docs/LEGACY_APP_MAP.md, and Doug's answers to its questions
 
 ## Phase 2. Real storage and sign-in
@@ -49,7 +49,7 @@ Output: data survives a reload; each person sees only what they should.
 Output: every professor and student has a real email address on file.
 - [ ] Student emails: take them from the applicant record in Phase 1 (check they are populated for every applicant)
 - [ ] Professor emails: collect from the UT CS department faculty bios pages (scrape once, then review by hand)
-- [ ] Match each professor in the legacy app to a bio-page entry; list the ones that do not match
+- [x] Match each professor in the legacy app to a bio-page entry; list the ones that do not match
 - [ ] Add a screen where Doug can correct any address
 - [ ] Decide what happens when an address is missing or bounces
 - Need from you: the faculty directory link; a list of any professors known to use a different address (lecturers, visitors)
@@ -76,7 +76,7 @@ Output: a real professor can open the tool, see their pool, rank and submit.
 
 ## Phase 6. Placement, publish and students
 Output: Doug can go from rankings to a published plan and student answers without spreadsheets.
-- [ ] Import the legacy colors and statuses as flags in the workspace
+- [x] Import the legacy colors and statuses as flags in the workspace
 - [ ] Conflict checks reviewed against the real rules (FTE, GRA, audience, eligibility, ITA)
 - [ ] Publish versions and the diff between versions
 - [ ] A student reply page: unique link in the email, accept or decline, reply-by date, the closed state
@@ -96,7 +96,7 @@ Output: a real spreadsheet Doug can send to HR, and the email that carries it.
 
 ## Phase 8. GRA lists and periodic updates
 Output: Doug pastes a list and sees who is on a grant; the grant list stays current.
-- [ ] Keep the paste-a-list check (already in the demo) and match on EID first, then name
+- [x] Keep the paste-a-list check (already in the demo) and match on EID first, then name
 - [ ] Decide where the grant admins' list comes from: a file they email, a shared sheet, or a system
 - [ ] A way to upload a new list each term and see who was added or removed since the last one
 - [ ] A reminder to refresh the list before placement and again before publishing

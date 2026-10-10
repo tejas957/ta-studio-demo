@@ -1,0 +1,1064 @@
+[
+{
+"id": 208456,
+"number": "303E",
+"title": "ELEMENTS OF COMPUTERS AND PROGRAMMING",
+"prof": "YOUNG, W",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "303E  ELEMENTS OF COMPUTERS AND PROGRAMMING"
+},
+{
+"id": 208457,
+"number": "303E",
+"title": "ELEMENTS OF COMPUTERS AND PROGRAMMING",
+"prof": "YOUNG, W",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "303E  ELEMENTS OF COMPUTERS AND PROGRAMMING"
+},
+{
+"id": 208458,
+"number": "303E",
+"title": "ELEMENTS OF COMPUTERS AND PROGRAMMING",
+"prof": "YOUNG, W",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "303E  ELEMENTS OF COMPUTERS AND PROGRAMMING"
+},
+{
+"id": 208459,
+"number": "303E",
+"title": "ELEMS OF COMPUTERS AND PROGRAMMING",
+"prof": "DEY, C",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "303E  ELEMS OF COMPUTERS AND PROGRAMMING"
+},
+{
+"id": 208460,
+"number": "303E",
+"title": "ELEMS OF COMPUTERS AND PROGRAMMING",
+"prof": "Sadeghi, E",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "303E  ELEMS OF COMPUTERS AND PROGRAMMING"
+},
+{
+"id": 208461,
+"number": "304I",
+"title": "ESSENTIALS OF AI LIFE/SOCTY-WB",
+"prof": "BISWAS, J",
+"needed": 1.0,
+"assigned": 2.0,
+"label": "304I  ESSENTIALS OF AI LIFE/SOCTY-WB"
+},
+{
+"id": 208462,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "RAVISHANKAR, V",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "311  DISCRETE MATH FOR COMPUTER SCI"
+},
+{
+"id": 208463,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "RAVISHANKAR, V",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "311  DISCRETE MATH FOR COMPUTER SCI"
+},
+{
+"id": 208464,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "PARIKH, D",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "311  DISCRETE MATH FOR COMPUTER SCI"
+},
+{
+"id": 208465,
+"number": "311",
+"title": "DISCRETE MATH FOR COMPUTER SCI",
+"prof": "PARIKH, D",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "311  DISCRETE MATH FOR COMPUTER SCI"
+},
+{
+"id": 208466,
+"number": "311H",
+"title": "DISCRETE MATH COMP SCI: HONORS - CSB",
+"prof": "PARIKH, D",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "311H  DISCRETE MATH COMP SCI: HONORS - CSB"
+},
+{
+"id": 208467,
+"number": "311H",
+"title": "DISCRETE MATH COMP SCI: HONORS - TURING",
+"prof": "PARIKH, D",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "311H  DISCRETE MATH COMP SCI: HONORS - TURING"
+},
+{
+"id": 208468,
+"number": "312",
+"title": "INTRODUCTION TO PROGRAMMING",
+"prof": "BEASLEY, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "312  INTRODUCTION TO PROGRAMMING"
+},
+{
+"id": 208469,
+"number": "312",
+"title": "INTRODUCTION TO PROGRAMMING",
+"prof": "BEASLEY, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "312  INTRODUCTION TO PROGRAMMING"
+},
+{
+"id": 208470,
+"number": "312",
+"title": "INTRODUCTION TO PROGRAMMING",
+"prof": "BEASLEY, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "312  INTRODUCTION TO PROGRAMMING"
+},
+{
+"id": 208471,
+"number": "313E",
+"title": "ELEMENTS OF SOFTWARE DESIGN",
+"prof": "FONG, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "313E   ELEMENTS OF SOFTWARE DESIGN"
+},
+{
+"id": 208472,
+"number": "313E",
+"title": "ELEMENTS OF SOFTWARE DESIGN",
+"prof": "FONG, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "313E   ELEMENTS OF SOFTWARE DESIGN"
+},
+{
+"id": 208473,
+"number": "313E",
+"title": "ELEMENTS OF SOFTWARE DESIGN",
+"prof": "RAVISHANKAR, V",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "313E  ELEMENTS OF SOFTWARE DESIGN"
+},
+{
+"id": 208474,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "KAUR, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "314  DATA STRUCTURES"
+},
+{
+"id": 208475,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "SCOTT, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "314  DATA STRUCTURES"
+},
+{
+"id": 208476,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "SCOTT, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "314  DATA STRUCTURES"
+},
+{
+"id": 208477,
+"number": "314",
+"title": "DATA STRUCTURES",
+"prof": "SCOTT, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "314  DATA STRUCTURES"
+},
+{
+"id": 208478,
+"number": "314H",
+"title": "DATA STRUCTURES: HONORS",
+"prof": "KAUR, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "314H  DATA STRUCTURES: HONORS"
+},
+{
+"id": 208479,
+"number": "314H",
+"title": "DATA STRUCTURES: HONORS",
+"prof": "LIN, C",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "314H  DATA STRUCTURES: HONORS"
+},
+{
+"id": 208480,
+"number": "323E",
+"title": "SCIENTIFIC COMPUTING",
+"prof": "MITRA, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "323E  SCIENTIFIC COMPUTING"
+},
+{
+"id": 208481,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "JOSHI, P",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "327E  ELEMENTS OF DATABASES"
+},
+{
+"id": 208482,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "JOSHI, P",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "327E  ELEMENTS OF DATABASES"
+},
+{
+"id": 208483,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "PALACIOS, M",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "327E  ELEMENTS OF DATABASES"
+},
+{
+"id": 208484,
+"number": "327E",
+"title": "ELEMENTS OF DATABASES",
+"prof": "PALACIOS, M",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "327E  ELEMENTS OF DATABASES"
+},
+{
+"id": 208485,
+"number": "329E",
+"title": "ELEMENTS OF DATA ANALYTICS",
+"prof": "TEYMOURIAN, K",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "329E  ELEMENTS OF DATA ANALYTICS"
+},
+{
+"id": 208486,
+"number": "329E",
+"title": "ELEMENTS OF DATA ANALYTICS",
+"prof": "GAUCI, J",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "329E  ELEMENTS OF DATA ANALYTICS"
+},
+{
+"id": 208487,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "MITRA, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "329E  ELEMENTS OF DATA VISUALIZATION"
+},
+{
+"id": 208488,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "MITRA, S",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "329E  ELEMENTS OF DATA VISUALIZATION"
+},
+{
+"id": 208489,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "COHEN, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "329E  ELEMENTS OF DATA VISUALIZATION"
+},
+{
+"id": 208490,
+"number": "329E",
+"title": "ELEMENTS OF DATA VISUALIZATION",
+"prof": "COHEN, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "329E  ELEMENTS OF DATA VISUALIZATION"
+},
+{
+"id": 208491,
+"number": "329E",
+"title": "ELEMENTS OF MOBILE COMPUTING",
+"prof": "BULKO, B",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "329E  ELEMENTS OF MOBILE COMPUTING"
+},
+{
+"id": 208492,
+"number": "329E",
+"title": "ELEMENTS OF MOBILE COMPUTING",
+"prof": "BULKO, B",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "329E  ELEMENTS OF MOBILE COMPUTING"
+},
+{
+"id": 208493,
+"number": "330E",
+"title": "ELEMENTS OF SOFTWARE ENGINEERING I",
+"prof": "FRAIJ, F",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "330E  ELEMENTS OF SOFTWARE ENGINEERING I"
+},
+{
+"id": 208494,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "FRAIJ, F",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "331  ALGORITHMS AND COMPLEXITY"
+},
+{
+"id": 208495,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "FRAIJ, F",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "331  ALGORITHMS AND COMPLEXITY"
+},
+{
+"id": 208496,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "PLAXTON, G",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "331  ALGORITHMS AND COMPLEXITY"
+},
+{
+"id": 208497,
+"number": "331",
+"title": "ALGORITHMS AND COMPLEXITY",
+"prof": "TIAN, K",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "331  ALGORITHMS AND COMPLEXITY"
+},
+{
+"id": 208498,
+"number": "342S",
+"title": "INTRO TO SPEECH & AUDIO PROCESS",
+"prof": "HARWATH, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "342S  INTRO TO SPEECH & AUDIO PROCESS"
+},
+{
+"id": 208499,
+"number": "343",
+"title": "ARTIFICIAL INTELLIGENCE",
+"prof": "KUHLMANN, G",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "343  ARTIFICIAL INTELLIGENCE"
+},
+{
+"id": 208500,
+"number": "343",
+"title": "ARTIFICIAL INTELLIGENCE",
+"prof": "TECUCI, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "343  ARTIFICIAL INTELLIGENCE"
+},
+{
+"id": 208501,
+"number": "343H",
+"title": "ARTIFICIAL INTELLIGENCE",
+"prof": "ISLER, V",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "343H  ARTIFICIAL INTELLIGENCE"
+},
+{
+"id": 208502,
+"number": "345H",
+"title": "PROGRAMMING LANG",
+"prof": "GHEITH, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "345H  PROGRAMMING LANG"
+},
+{
+"id": 208503,
+"number": "347",
+"title": "DATA MANAGEMENT",
+"prof": "MIRANKER, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "347  DATA MANAGEMENT"
+},
+{
+"id": 208504,
+"number": "349",
+"title": "CONTEMPORARY ISSUES IN COMPUTER SCIENCE",
+"prof": "QUIMBY, H",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "349  CONTEMPORARY ISSUES IN COMPUTER SCIENCE"
+},
+{
+"id": 208505,
+"number": "349",
+"title": "CONTEMPORARY ISSUES IN COMPUTER SCIENCE",
+"prof": "QUIMBY, H",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "349  CONTEMPORARY ISSUES IN COMPUTER SCIENCE"
+},
+{
+"id": 208506,
+"number": "349",
+"title": "CONTEMPORARY ISSUES IN COMPUTER SCIENCE",
+"prof": "QUIMBY, H",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "349  CONTEMPORARY ISSUES IN COMPUTER SCIENCE"
+},
+{
+"id": 208507,
+"number": "350M",
+"title": "ENERGY EFFICIENT COMPUTING",
+"prof": "ELNOZAHY, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "350M  ENERGY EFFICIENT COMPUTING"
+},
+{
+"id": 208508,
+"number": "354P",
+"title": "GAME PROGRAMMING PARADIGMS",
+"prof": "ABRAHAM, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "354P  GAME PROGRAMMING PARADIGMS"
+},
+{
+"id": 208509,
+"number": "354R",
+"title": "GAME TECHNOLOGY",
+"prof": "ABRAHAM, S",
+"needed": 1.0,
+"assigned": 0.5,
+"label": "354R  GAME TECHNOLOGY"
+},
+{
+"id": 208510,
+"number": "354S",
+"title": "GAME DEV CAPSTNE: 2-D GAMES",
+"prof": "TOPRAC, P",
+"needed": 1.0,
+"assigned": 0.5,
+"label": "354S  GAME DEV CAPSTNE: 2-D GAMES"
+},
+{
+"id": 208511,
+"number": "354T",
+"title": "GAME DEV CAPSTNE: 3-D GAMES",
+"prof": "ABRAHAM, S",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "354T  GAME DEV CAPSTNE: 3-D GAMES"
+},
+{
+"id": 208512,
+"number": "356",
+"title": "COMPUTER NETWORKS",
+"prof": "ARUN, V",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "356  COMPUTER NETWORKS"
+},
+{
+"id": 208513,
+"number": "356R",
+"title": "INTRO TO WIRELESS NETWORKS",
+"prof": "QIU, L",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "356R  INTRO TO WIRELESS NETWORKS"
+},
+{
+"id": 208514,
+"number": "358H",
+"title": "INTRO TO QUANTUM INFO SCIENCE: HONORS",
+"prof": "KRETSCHMER, W",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "358H  INTRO TO QUANTUM INFO SCIENCE: HONORS"
+},
+{
+"id": 208515,
+"number": "360V",
+"title": "VIRTUALIZATION",
+"prof": "CHIDAMBARAM, V",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "360V  VIRTUALIZATION"
+},
+{
+"id": 208516,
+"number": "361S",
+"title": "NETWORK SECURITY/PRIVACY",
+"prof": "NARAYAN, S",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "361S  NETWORK SECURITY/PRIVACY"
+},
+{
+"id": 208517,
+"number": "363M",
+"title": "PRINCIPLES OF MACHINE LEARNING I",
+"prof": "RODRIGUEZ, J",
+"needed": 1.0,
+"assigned": 2.0,
+"label": "363M   PRINCIPLES OF MACHINE LEARNING I"
+},
+{
+"id": 208518,
+"number": "363M",
+"title": "PRINCIPLES OF MACHINE LEARNING I",
+"prof": "LITVAK, D",
+"needed": 1.0,
+"assigned": 2.0,
+"label": "363M   PRINCIPLES OF MACHINE LEARNING I"
+},
+{
+"id": 208519,
+"number": "363M",
+"title": "PRINCIPLES OF MACHINE LEARNING I-WB",
+"prof": "MOONDRA, A",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "363M  PRINCIPLES OF MACHINE LEARNING I-WB"
+},
+{
+"id": 208520,
+"number": "371L",
+"title": "iOS MOBILE",
+"prof": "BULKO, W",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "371L  iOS MOBILE"
+},
+{
+"id": 208521,
+"number": "371N",
+"title": "NATURAL LANGUAGE PROCESSING",
+"prof": "TARLACI, F",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "371N  NATURAL LANGUAGE PROCESSING"
+},
+{
+"id": 208522,
+"number": "371P",
+"title": "OBJECT-ORIENTED PROGRAMMING",
+"prof": "DOWNING, G",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "371P  OBJECT-ORIENTED PROGRAMMING"
+},
+{
+"id": 208523,
+"number": "373",
+"title": "SOFTWARE ENGINEERING",
+"prof": "DOWNING, G",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "373  SOFTWARE ENGINEERING"
+},
+{
+"id": 208524,
+"number": "373",
+"title": "SOFTWARE ENGINEERING",
+"prof": "DOWNING, G",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "373  SOFTWARE ENGINEERING"
+},
+{
+"id": 208525,
+"number": "373",
+"title": "SOFTWARE ENGINEERING",
+"prof": "PALACIOS, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "373  SOFTWARE ENGINEERING"
+},
+{
+"id": 208526,
+"number": "375",
+"title": "COMPILERS",
+"prof": "NOVAK, G",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "375  COMPILERS"
+},
+{
+"id": 208527,
+"number": "376",
+"title": "COMPUTER VISION",
+"prof": "PAVLAKOS, G",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "376  COMPUTER VISION"
+},
+{
+"id": 208686,
+"number": "378",
+"title": "Ethical Hacking",
+"prof": "LEE, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  Ethical Hacking"
+},
+{
+"id": 208528,
+"number": "378",
+"title": "APP PROTOTYPING STUDIO",
+"prof": "BULKO, B",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "378  APP PROTOTYPING STUDIO"
+},
+{
+"id": 208529,
+"number": "378",
+"title": "CLOUD COMPUTING",
+"prof": "TEYMOURIAN, K",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  CLOUD COMPUTING"
+},
+{
+"id": 208530,
+"number": "378",
+"title": "CLOUD COMPUTING",
+"prof": "TEYMOURIAN, K",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  CLOUD COMPUTING"
+},
+{
+"id": 208531,
+"number": "378",
+"title": "CLOUD NATIVE COMPUTING-WB",
+"prof": "KULKARNI, D",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "378  CLOUD NATIVE COMPUTING-WB"
+},
+{
+"id": 208532,
+"number": "378",
+"title": "CLOUD NATIVE COMPUTING-WB",
+"prof": "KULKARNI, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  CLOUD NATIVE COMPUTING-WB"
+},
+{
+"id": 208533,
+"number": "378",
+"title": "ETHICAL HACKING",
+"prof": "EISENBARTH, M",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  ETHICAL HACKING"
+},
+{
+"id": 208534,
+"number": "378",
+"title": "FNDTN OF DATA WAREHOUSING",
+"prof": "COHEN, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  FNDTN OF DATA WAREHOUSING"
+},
+{
+"id": 208535,
+"number": "378",
+"title": "GENERATIVE VISUAL COMPUTING",
+"prof": "HUANG, Q",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  GENERATIVE VISUAL COMPUTING"
+},
+{
+"id": 208536,
+"number": "378",
+"title": "MODERN WEB APPS-WB",
+"prof": "KULKARNI, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  MODERN WEB APPS-WB"
+},
+{
+"id": 208537,
+"number": "378",
+"title": "QUANTUM INFO THEORY",
+"prof": "HUNTER-JONE",
+"needed": 1.0,
+"assigned": 0.5,
+"label": "378  QUANTUM INFO THEORY"
+},
+{
+"id": 208538,
+"number": "378",
+"title": "SYMBOLIC PROGRAMMING",
+"prof": "NOVAK, G",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  SYMBOLIC PROGRAMMING"
+},
+{
+"id": 208539,
+"number": "378",
+"title": "SYSTEMS FOR MACHINE LEARNING",
+"prof": "AKELLA, A",
+"needed": 1.0,
+"assigned": 2.0,
+"label": "378  SYSTEMS FOR MACHINE LEARNING"
+},
+{
+"id": 208573,
+"number": "378",
+"title": "AGENTIC SOFTWARE ENGINEERING",
+"prof": "WITCHEL, E",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378  AGENTIC SOFTWARE ENGINEERING"
+},
+{
+"id": 208540,
+"number": "378H",
+"title": "Structure/Implementation of Modern Programming Languages: Honors",
+"prof": "CHATTERJEE, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "378H  Structure/Implementation of Modern Programming Languages: Honors"
+},
+{
+"id": 208542,
+"number": "381V",
+"title": "VISUAL RECOGNITION",
+"prof": "GRAUMAN, K",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "381V  VISUAL RECOGNITION"
+},
+{
+"id": 208543,
+"number": "386C",
+"title": "DEPENDABLE COMPUTING SYSTEMS",
+"prof": "MOK, A",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "386C  DEPENDABLE COMPUTING SYSTEMS"
+},
+{
+"id": 208544,
+"number": "386W",
+"title": "WIRELESS NETWORKING",
+"prof": "QIU, L",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "386W  WIRELESS NETWORKING"
+},
+{
+"id": 208545,
+"number": "388",
+"title": "NATURAL LANGUAGE PROCESSING",
+"prof": "STENGEL-ESKIN, E",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "388  NATURAL LANGUAGE PROCESSING"
+},
+{
+"id": 208793,
+"number": "388:",
+"title": "NLP - WB  ***ONLINE MS COURSE***",
+"prof": "LI, J",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "388:  NLP - WB  ***ONLINE MS COURSE***"
+},
+{
+"id": 208546,
+"number": "388C",
+"title": "COMBINATORICS & GRAPH THEORY",
+"prof": "GAL, A",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "388C  COMBINATORICS & GRAPH THEORY"
+},
+{
+"id": 208547,
+"number": "388D",
+"title": "DATA-DRIVEN ALGORITHM DESIGN",
+"prof": "CHAWLA, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "388D  DATA-DRIVEN ALGORITHM DESIGN"
+},
+{
+"id": 208548,
+"number": "388H",
+"title": "CRYPTOGRAPHY",
+"prof": "WU, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "388H   CRYPTOGRAPHY"
+},
+{
+"id": 208549,
+"number": "394D",
+"title": "Deep Learning-Wb ** ONLINE MS PROGRAM CRSE **",
+"prof": "KRAEHENBUEHL, P",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "394D  Deep Learning-Wb ** ONLINE MS PROGRAM CRSE **"
+},
+{
+"id": 208550,
+"number": "394R",
+"title": "REINFRCMNT LEARN:THRY/PRAC-WB ** ONLINE MS PROGRAM CRSE **",
+"prof": "STONE, P",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "394R  REINFRCMNT LEARN:THRY/PRAC-WB ** ONLINE MS PROGRAM CRSE **"
+},
+{
+"id": 208751,
+"number": "395T",
+"title": "Adv in Deep Gen Models-WB  ** Online Ms Program Crse **",
+"prof": "LIU, Q",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T   Adv in Deep Gen Models-WB  ** Online Ms Program Crse **"
+},
+{
+"id": 208752,
+"number": "395T",
+"title": "AI Alignment Theory",
+"prof": "AARONSON, S",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  AI Alignment Theory"
+},
+{
+"id": 208551,
+"number": "395T",
+"title": "3D DEEP LEARNING",
+"prof": "HUANG, Q",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  3D DEEP LEARNING"
+},
+{
+"id": 208552,
+"number": "395T",
+"title": "ADV COMPUTER NETWORKS",
+"prof": "KIM, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  ADV COMPUTER NETWORKS"
+},
+{
+"id": 208553,
+"number": "395T",
+"title": "ADVANCED DATABASE SYSTEMS",
+"prof": "TANG, D",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  ADVANCED DATABASE SYSTEMS"
+},
+{
+"id": 208554,
+"number": "395T",
+"title": "Advances in Deep Learning-Wb ** ONLINE MS PROGRAM CRSE **",
+"prof": "KRAEHENBUEHL",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  Advances in Deep Learning-Wb ** ONLINE MS PROGRAM CRSE **"
+},
+{
+"id": 208555,
+"number": "395T",
+"title": "CO-DESIGN FOR DATACENTR/CLOUD",
+"prof": "STOJKOVIC, J",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  CO-DESIGN FOR DATACENTR/CLOUD"
+},
+{
+"id": 208556,
+"number": "395T",
+"title": "FOUND OF ML FOR SYS RESEARCHERS",
+"prof": "PINGALI, K",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  FOUND OF ML FOR SYS RESEARCHERS"
+},
+{
+"id": 208557,
+"number": "395T",
+"title": "Foundations of Modern Generative AI",
+"prof": "GOLOWICH, N",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "395T  Foundations of Modern Generative AI"
+},
+{
+"id": 208558,
+"number": "398T",
+"title": ": Supv Teaching in Computer Sci",
+"prof": "NORMAN, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "398T : Supv Teaching in Computer Sci"
+},
+{
+"id": 208559,
+"number": "429",
+"title": "COMP ORGANIZATN AND ARCH",
+"prof": "JOSHI, P",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "429  COMP ORGANIZATN AND ARCH"
+},
+{
+"id": 208560,
+"number": "429",
+"title": "COMP ORGANIZATN AND ARCH",
+"prof": "CHATTERJEE, S",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "429  COMP ORGANIZATN AND ARCH"
+},
+{
+"id": 208561,
+"number": "429",
+"title": "COMP ORGANIZATN AND ARCH",
+"prof": "FONG, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "429  COMP ORGANIZATN AND ARCH"
+},
+{
+"id": 208562,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "NORMAN, A",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "439  PRINCIPLES OF COMPUTER SYSTEMS"
+},
+{
+"id": 208563,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "NORMAN, A",
+"needed": 1.0,
+"assigned": 1.0,
+"label": "439  PRINCIPLES OF COMPUTER SYSTEMS"
+},
+{
+"id": 208564,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "ELNOZAHY,, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "439  PRINCIPLES OF COMPUTER SYSTEMS"
+},
+{
+"id": 208565,
+"number": "439",
+"title": "PRINCIPLES OF COMPUTER SYSTEMS",
+"prof": "ELNOZAHY,, M",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "439  PRINCIPLES OF COMPUTER SYSTEMS"
+},
+{
+"id": 208566,
+"number": "439H",
+"title": "PRINS OF COMPUTER SYS: HONORS - CSB",
+"prof": "GHEITH, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "439H  PRINS OF COMPUTER SYS: HONORS - CSB"
+},
+{
+"id": 208567,
+"number": "439H",
+"title": "PRINS OF COMPUTER SYS: HONORS - TURING",
+"prof": "GHEITH, A",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "439H  PRINS OF COMPUTER SYS: HONORS - TURING"
+},
+{
+"id": 208568,
+"number": "A",
+"title": "I  395T AiI in Astrophysics-Wb ** ONLINE MS PROGRAM CRSE **",
+"prof": "Offner, S",
+"needed": 1.0,
+"assigned": 0.0,
+"label": "A I  395T AiI in Astrophysics-Wb ** ONLINE MS PROGRAM CRSE **"
+},
+{
+"id": 208569,
+"number": "RBT",
+"title": "350 GATEWAY TO ROBOTICS *** ROBOTICS MINOR CRSE ***",
+"prof": "MARTIN-MARTIN, R",
+"needed": 1.0,
+"assigned": 0.5,
+"label": "RBT  350 GATEWAY TO ROBOTICS *** ROBOTICS MINOR CRSE ***"
+}
+]

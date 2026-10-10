@@ -89,3 +89,15 @@ All values in the demo are invented. Where each would really come from is a gues
 
 - Doug: a sample HR spreadsheet (names removed), the tier rules, and a login for Eric to the legacy app (about half an hour to set up).
 - Eric: how the scrape will run, and what fields it can reach.
+
+## Sync file (live mode)
+
+`scraper/sync.js` writes one JSON file in the app's own table shapes (`terms`, `faculty`, `users`, `courses`, `applicants`, `applications`, `course_preferences`, ...) plus:
+
+- `ext.apps` (citizenship, ITA, supervisor, research area), `ext.courses` (audience and slots, derived: TA-only classes are graduate, proctor-only are undergraduate, both are both), `ext.lg` (legacy flags per applicant: row color, GRA field, EID, email, phone, agreement, accounting fields),
+- `hr_baseline` (the latest draft on the assignments page, used as HR draft 15's starting point),
+- `meta` (counts, warnings, professors to check, number of page reads, number of non-GET requests which must be 0).
+
+Conventions: course id = `crs_{section id}`; TA applicant = `app_ta_{legacy id}`; UGCA = `app_ug_{legacy id}`; professor = `fac_{last}_{initial}`. A TA's requested classes are names only, so every section with that number and title is requested at the same rank. Section "label" in the app shows the legacy section id.
+
+Assumptions to confirm: Available "Yes" = available, anything else = limited; "In Candidacy" = PhD; red rows = ineligible; a student's English status "pass" = verified, anything else for non-native speakers = pending; "Agreement: Yes" is shown in the applicant drawer only for now (it does not yet create a student reply).

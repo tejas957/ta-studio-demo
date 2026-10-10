@@ -33,8 +33,8 @@ The legend says: Yellow = Commitment Student, Blue = Other Support, Red = Declin
 
 | Class on `<tr>` | Color | Seen in this export | What we observe |
 |---|---|---|---|
-| `commitment` | Yellow | 65 | All 65 have an assignment |
-| `other_support` | Blue | 49 | None has an assignment. GRA is yes (11), applied (13) or no (25), so blue is not only the GRA flag |
+| `commitment` | Yellow | 65 | **Doug (Oct 10): yellow means they HAVE to be placed.** All 65 have an assignment |
+| `other_support` | Blue | 49 | **Doug (Oct 10): blue means they have a GRA.** None has an assignment. GRA is yes (11), applied (13) or no (25), so blue is not only the GRA flag |
 | `declined` | Red | 1 | No assignment. The Available column shows "Notified: <time>" |
 | `other` | Red | 1 | No assignment |
 | (none) | White | 50 | 13 assigned, 37 not |
@@ -86,6 +86,21 @@ The page source also holds commented-out columns with data: SSN (Yes/No), Admiss
 - Add English assessment (pass / conditional pass / unknown) and "In Candidacy".
 - Read Agreement ("Yes" or "Sent:<time>") from the assignments page: this is how the legacy app records student accept.
 - Course ids are section ids. The tool's course is a section.
+
+## How the tool uses the colors (built)
+
+- Yellow: "Commitment student" chip, first in the placement queue, and a "Must place" warning (needs an override note) until they have a position.
+- Blue: treated like the GRA list. Excluded and blocked, with the same "Add back to pool" decision.
+- Red: employment eligibility "ineligible", so any assignment is blocked.
+- The GRA column (no / yes / applied) on non-blue rows shows a "GRA: yes" or "GRA: applied" chip and a warning on assigned students.
+
+## People directory (www.cs.utexas.edu/people)
+
+Cards with a link `/people/faculty-researchers/{slug}`, a title and a research area. The list has no emails, so the scraper opens the profile of each matched professor. **The profile page markup is still unseen: the scraper assumes a `mailto:` link, and falls back to any email-looking text.** Legacy professor strings ("LAST, F", sometimes truncated) are matched to the directory. Anything not matched exactly once, or without an email, goes on a review list in Setup.
+
+## Built from this map (mock first)
+
+`mock-legacy/` serves fake pages with the same markup, counts and row colors. `scraper/` reads them with GET only. `tests/live.js` runs mock site -> scraper -> app. Paths marked ASSUMED in `scraper/routes.js` and `mock-legacy/pages.js` have not been seen in the real app yet: proctor modal URL, course page, notify/Agreement page, the download header, and the profile page.
 
 ## Still needed
 
