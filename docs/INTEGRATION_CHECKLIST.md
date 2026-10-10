@@ -15,23 +15,26 @@ Output: nothing visible, but nothing else can start without it.
 - Need from you: Doug and Eric's answers; who administers the legacy app
 
 ## Phase 1. Pull from the legacy app (the biggest piece)
-Output: the real fall applicants, courses, professors and FTEs shown in this tool.
-- [ ] List every legacy screen we need: applicant list, a single applicant, edit-class screen, professor list, the old assignment draft screen
-- [ ] Applicants: names, EID, email, program, degree level, graduation term, application status (submitted or draft), submitted date
-- [ ] Applicant answers: skills, coursework and grades, prior teaching, availability, hours, returning TA flag, resume file or link
-- [ ] The course choices each applicant made, with their own ranking if the form has one
-- [ ] Fields missing from the graduate form: citizenship, supervisor, research area, ITA / English status (see the Setup tab list)
-- [ ] Prior TA history across terms (feeds the HR tier)
-- [ ] Courses: number, title, section, professor, audience (grad, undergrad, both), slots by role, FTE need
-- [ ] Professors: name, which courses, and the legacy id
-- [ ] Filters in the legacy applicant list: write down every filter and what it does, so we can match or replace them
-- [ ] Row colors in the legacy app: write down every color and what it means, then map each to a status or flag here
-- [ ] Map every legacy field to the tool's shape (the same table shapes as the dataset, plus the extra fields)
-- [ ] Build the scraper to produce that payload; feed it into the existing ingest point in the tool
-- [ ] Run it on demand with a "Refresh" button; log what changed (new, changed, withdrawn applicants)
-- [ ] Handle drafts, withdrawn applications and duplicate applicants
-- [ ] Compare scraped counts against the legacy screens (applicants per course, FTE per course) until they match
-- Need from you: screenshots of every screen above, HTML or page source of the applicant list and the edit-class screen, the color legend, one example resume link, a sample of a few real rows (names can be changed)
+Output: the real fall applicants, courses, professors and FTEs shown in this tool. See docs/LEGACY_APP_MAP.md for what the HTML showed.
+- [x] Screens and fields identified from the HTML: TA classes, proctor classes, TA applicants list, TA applicant page, UGCA list and modal, assignments, draft table
+- [x] Row colors identified: commitment (yellow), other_support (blue), declined and other (red)
+- [ ] Get `bg_colors.css` and every row class name (including Graduated)
+- [ ] Get the course page, the assignments and drafts URLs, the UGCA assignments view and the top of an applicant page
+- [ ] Get the "Download this draft" file header (this is the HR column list)
+- [ ] Settle where the scraper runs and how it logs in (UTCS username and password): a read-only or service account, credentials never in the repo, never in this chat
+- [ ] Build the parser on fake fixtures (names, EIDs, emails and phones rewritten), GET only, with a guard that refuses any POST
+- [ ] Applicants: id, name, EID, status, GRA (no / yes / applied), available, assignments, New/Return, Degree, AI, GPA, updated, row color
+- [ ] Applicant page: contact, citizenship, English status, supervisor, admission date, degrees, TA history (parse "CS 363M, Prof, Fall 2024 semester"), skills table, research list, requested classes, grades and professor comments
+- [ ] UGCA: modal fetch URL, major, graduation, experience, resume link, requested courses with section ids
+- [ ] Courses: section id, course number, title, professor (re-read every sync, show changes), needed, assigned
+- [ ] Resolve a TA request that lists a class name only (several sections) to a section id
+- [ ] Assignments page: course, student, percent, agreement (Yes / Sent time)
+- [ ] Professor matching: legacy "LAST, F" string to a faculty page entry, with a manual review list
+- [ ] Add to the model: commitment, other-support and declined flags; GRA "applied"; HR accounting fields; English assessment; "In Candidacy"
+- [ ] Keep the filters Doug uses in the legacy list (Search, color) and map each to a filter here
+- [ ] Refresh on demand with a "what changed" log (new, changed, removed, professor change)
+- [ ] Compare counts with the legacy screens until they match (166 TA applicants, 264 UGCA, 118 TA classes, 101 proctor classes, 78 assignments)
+- Need from you: the "Still needed" list in docs/LEGACY_APP_MAP.md, and Doug's answers to its questions
 
 ## Phase 2. Real storage and sign-in
 Output: data survives a reload; each person sees only what they should.
