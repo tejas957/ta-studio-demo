@@ -21,7 +21,7 @@ function start(opts = {}) {
       req.resume(); return send(200, 'text/html', 'ok');
     }
     stats.gets.push(p + u.search);
-    if (p.startsWith('/assets/css/')) return send(200, 'text/css', p.endsWith('bg_colors.css') ? pages.css : '/* css */');
+    if (p.startsWith('/assets/css/')) return send(200, 'text/css', p.endsWith('bg_colors.css') ? pages.css : p.endsWith('theme.css') ? pages.theme : '/* css */');
     if (p === '/people') return send(200, 'text/html', pages.peoplePage());
     const pm = p.match(/^\/people\/faculty-researchers\/([a-z-]+)$/);
     if (pm) { const f = db.faculty.find(x => x.slug === pm[1]); return f ? send(200, 'text/html', pages.profilePage(f)) : send(404, 'text/html', 'not found'); }
