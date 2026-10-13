@@ -59,6 +59,11 @@ Process order, with the transition points between processes marked. "Lives in" s
 | 38 | Role switcher and privacy boundary | Tool | None | UT sign-in | Fake |
 | 39 | Walkthrough and reset | Demo | Demo only | None | Demo only |
 
+## Added Oct 13
+
+- **Assign someone who did not apply** (any TA or UGCA, as in the legacy app, and UGCAs too): box at the bottom of every course workspace. Marked "Added", raises a "Did not apply" warning that needs a note before publishing, skips the audience and "not selected" blocks, keeps the GRA, eligibility and 1.0 FTE checks.
+- **Slots up to 100 FTE per role** per course (number box, 0.25 steps), instead of a 0 to 2 dropdown.
+
 ## Decisions so far (Oct 9)
 
 1. Student notices are sent from this tool.

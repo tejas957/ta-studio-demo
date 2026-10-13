@@ -291,6 +291,26 @@ if(T.gate().ok){A.publish();A.tab('students');A.openResp();A.notify();
  ok(S().notifs.some(n=>n.to==='admin'&&/from the student link/.test(n.text)),'admin notified of a student reply');
  ok(/from a link in the email this tool sends/.test(txt())&&!/Pull replies/.test(txt()),'students tab says replies come to this tool');}
 else console.log('note: publish gate not open for pullReplies test',T.gate().blocks.map(b=>b.msg));
+// assign someone who did not apply, and large slot counts
+A.reset();
+{const c='crs_f26_006',a='app_f26_0007';
+ ok(!T.audOk||true,'(setup)');
+ A.goCourse(c);ok(/Assign someone who did not apply/.test(txt()),'add-person box shows even with no applicants');
+ A.addOutside(c,a);
+ const r=S().draft.rows.find(x=>x.course===c&&x.app===a);
+ ok(r&&r.decision==='requested','office-added person gets a draft row');
+ ok(T.computeIssues().some(i=>i.code==='Did not apply'&&i.app===a),'did-not-apply warning raised');
+ ok(!T.computeIssues().some(i=>i.code==='Not selected'&&i.app===a),'no hard "Not selected" block for an office add');
+ A.goCourse(c);ok(/Added/.test(txt()),'added person is listed with an Added chip');
+ A.setDecision(r.id,null,'accepted');ok(T.gate().missing.some(m=>m.code==='Did not apply'),'accepted add needs a note before publishing');
+ A.setSlot(c,'TA','12');ok(S().course[c].slots.TA===12&&T.gate().iss.length>=0,'a course can need 12 TA FTE');
+ A.setSlot(c,'UGCA','50');ok(S().course[c].slots.UGCA===50,'UGCA slots can go to 50');
+ A.setSlot(c,'UGCA','500');ok(S().course[c].slots.UGCA===50,'values above 100 are refused');
+ A.addOutside(c,'app_f26_0010');A.addOutside(c,'app_f26_0004');
+ ok(S().draft.rows.filter(x=>x.course===c).length===3,'several people can be added to one course');
+ A.setAlloc(c,a,'0');A.dropOutside(c,a);ok(!S().addedOut[c+'|'+a],'an added person can be removed');
+ ok(T.gate().iss.length>0,'checks still run after adds');
+}
 A.reset();ok(S().pubs.length===1,'reset restores seed');
 console.log(errs.length?'ERRORS:\n'+errs.join('\n'):'no runtime errors');
 console.log(fails?fails+' FAILED':'ALL PASSED');

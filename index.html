@@ -332,7 +332,7 @@ function initState(){
   const s={user:{type:'admin'},tab:'dashboard',selCourse:LIVE?((SEED.courses.find(c=>(SEED.course_preferences.some(p=>p.course_id===c.course_id)))||SEED.courses[0]||{}).course_id||null):'crs_f26_002',facCourse:null,drawer:null,drawerNew:false,
     f:{dash:{prof:'',status:'',staffed:''},fac:{tier:'',ret:'',avail:'',elig:''},app:{tier:'',type:''}},
     facErrors:{},rank:{},overrides:{},concernNotes:{},emailFor:null,confirmClone:null,selPub:null,
-    gra:new Set(),graText:LIVE?'':'Candidate Cedar\nCandidate Zephyr',graResult:null,replyBy:isoOf(new Date(Date.now()+14*864e5)).slice(0,10),typeView:'both',tierOv:{},tx:{},graBack:new Set(),ext:{},mailAddrNote:'',hrSel:null,
+    gra:new Set(),graText:LIVE?'':'Candidate Cedar\nCandidate Zephyr',graResult:null,replyBy:isoOf(new Date(Date.now()+14*864e5)).slice(0,10),typeView:'both',tierOv:{},tx:{},graBack:new Set(),addedOut:{},ext:{},mailAddrNote:'',hrSel:null,
     sync:{cursor:0,at:'2026-10-05T08:00:00-05:00',newApps:[]}};
   s.course={};SEED.courses.forEach(c=>{s.course[c.course_id]=JSON.parse(JSON.stringify(EXT.courses[c.course_id]));COURSE[c.course_id].ta_slots_required=sum(Object.values(s.course[c.course_id].slots))});
   SEED.courses.forEach(c=>{
@@ -481,8 +481,10 @@ const rankedCount=c=>Object.values(S.rank[c].entries).filter(e=>e.rank!=null).le
 function candidates(cid){
   return SEED.course_preferences.filter(p=>p.course_id===cid&&APP[p.application_id].application_status==='submitted'&&audOk(p.application_id,cid))
     .map(p=>({app:p.application_id,pref:p}))
+    .concat(Object.keys((S&&S.addedOut)||{}).filter(k=>k.split('|')[0]===cid).map(k=>{const a=k.split('|')[1];return{app:a,pref:{preference_rank:999,outside:true,preparedness:'',applicant_note:'Added by the office. Did not apply for this course.'}}}))
     .sort((a,b)=>a.pref.preference_rank-b.pref.preference_rank||nm(a.app).localeCompare(nm(b.app)));
 }
+const isOutside=(c,a)=>!!(S&&S.addedOut&&S.addedOut[c+'|'+a]);
 
 function applyGra(text,silent){
   const names=text.split(/\n/).map(x=>x.trim()).filter(Boolean);
@@ -521,8 +523,10 @@ function computeIssues(){
     if(APP[a].employment_eligibility_status==='ineligible')out.push({sev:'block',key:'inel:'+a,code:'Ineligible',courses:cs,app:a,msg:nm(a)+' is not eligible for employment.'});
   });
   rows.forEach((r,i)=>{
-    if(!prefOf(r.app,r.course))out.push({sev:'block',key:'nosel:'+r.id,code:'Not selected',courses:[r.course],app:r.app,msg:nm(r.app)+' did not select '+cname(r.course)+'.'});
-    if(!audOk(r.app,r.course))out.push({sev:'block',key:'aud:'+r.id,code:'Not allowed here',courses:[r.course],app:r.app,msg:nm(r.app)+' is '+(isGrad(r.app)?'a graduate':'an undergraduate')+' student, and '+cname(r.course)+' is set to '+(S.course[r.course].aud==='grad'?'graduate':'undergraduate')+' students only.'});
+    const outside=isOutside(r.course,r.app);
+    if(outside)out.push({sev:'warn',key:'outside:'+r.course+'|'+r.app,code:'Did not apply',courses:[r.course],app:r.app,gate:r.decision==='accepted',msg:nm(r.app)+' did not apply for '+cname(r.course)+' and was added by the office.'});
+    else if(!prefOf(r.app,r.course))out.push({sev:'block',key:'nosel:'+r.id,code:'Not selected',courses:[r.course],app:r.app,msg:nm(r.app)+' did not select '+cname(r.course)+'.'});
+    if(!outside&&!audOk(r.app,r.course))out.push({sev:'block',key:'aud:'+r.id,code:'Not allowed here',courses:[r.course],app:r.app,msg:nm(r.app)+' is '+(isGrad(r.app)?'a graduate':'an undergraduate')+' student, and '+cname(r.course)+' is set to '+(S.course[r.course].aud==='grad'?'graduate':'undergraduate')+' students only.'});
     const ita=ex(r.app).ita;
     if(ita==='ITA workshop needed'||ita==='English test pending')out.push({sev:'warn',key:'ita:'+r.id,code:'English / ITA',courses:[r.course],app:r.app,gate:false,msg:nm(r.app)+': '+ita.toLowerCase()+' ('+cname(r.course)+').'});
     if(rows.findIndex(x=>x.course===r.course&&x.app===r.app)!==i)out.push({sev:'block',key:'dup:'+r.id,code:'Duplicate',courses:[r.course],app:r.app,msg:nm(r.app)+' appears twice in '+cname(r.course)+'.'});
@@ -738,11 +742,10 @@ function liveSource(){
 function vSetup(){
   const audL={both:'Graduate and undergraduate',grad:'Graduate students only',undergrad:'Undergraduates only'};
   const hid=cid=>SEED.course_preferences.filter(p=>p.course_id===cid&&APP[p.application_id].application_status==='submitted'&&!audOk(p.application_id,cid)).length;
-  const sl=[0,0.25,0.5,0.75,1,1.5,2];
   const rows=SEED.courses.map(c=>{
     const id=c.course_id,cs=S.course[id];
     return '<tr><td><b>'+esc(cname(id))+'</b><div class="small muted">'+esc(c.title)+'</div>'+(drift(id)?'<div style="margin-top:4px">'+chip('Differs from legacy app','warn')+'</div>':'')+'</td><td>'+esc(prof(id))+'</td><td><select data-chg="setAud" data-a="'+id+'" aria-label="Who can apply to '+esc(cname(id))+'">'+Object.keys(audL).map(k=>opt(k,audL[k],cs.aud)).join('')+'</select>'+(hid(id)?'<div class="small muted">'+hid(id)+' applicant'+(hid(id)>1?'s are':' is')+' hidden by this rule</div>':'')+'</td>'+
-      ['TA','UGCA','Proctor'].map(r=>'<td><select data-chg="setSlot" data-a="'+id+'" data-b="'+r+'" aria-label="'+r+' FTE for '+esc(cname(id))+'">'+sl.map(v=>opt(v,f(v),cs.slots[r])).join('')+'</select></td>').join('')+'<td class="num"><b>'+f(c.ta_slots_required)+'</b></td></tr>';
+      ['TA','UGCA','Proctor'].map(r=>'<td><input type="number" min="0" max="100" step="0.25" value="'+cs.slots[r]+'" data-chg="setSlot" data-a="'+id+'" data-b="'+r+'" aria-label="'+r+' FTE for '+esc(cname(id))+'" style="width:76px"></td>').join('')+'<td class="num"><b>'+f(c.ta_slots_required)+'</b></td></tr>';
   }).join('');
   const li=a=>'<ul class="plain tight">'+a.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
   return '<div class="stack"><div class="card"><h3>Courses: who can apply and how many assistants</h3><p class="muted" style="margin-bottom:10px">These values mirror the edit-class screen in the legacy app, which also decides which courses applicants see on the application form. Changing a row here updates the pools, needs and checks in this tool, so you can plan. It does not change the form. The real change has to be made in the legacy app, so changed rows are marked. A hidden applicant stays hidden here, and an existing assignment for one blocks publishing.</p>'+
@@ -820,13 +823,20 @@ function vAssign(){
     (graList.length?'<div style="margin-top:12px"><div class="eyebrow">Excluded: on GRA list</div>'+graList.map(a=>'<div>'+nameBtn(a,sel)+'</div>').join('')+'<div class="small muted" style="margin-top:4px">Add back from the course row, or on <button class="link" data-act="tab" data-a="applicants">Applicants</button>.</div></div>':'')+'</div></div>'+
     '<div class="stack">'+vWorkspace(sel,g)+'</div></div>';
 }
+function addBox(cid){
+  const have=new Set(candidates(cid).map(x=>x.app));
+  const apps=SEED.applications.filter(a=>a.application_status==='submitted'&&!have.has(a.application_id)).sort((x,y)=>nm(x.application_id).localeCompare(nm(y.application_id)));
+  const lab=a=>nm(a)+' · '+TIER[APP[a].degree_level]+' · '+APP[a].assistant_type+(S.gra.has(a)?' · GRA':'')+(isCommit(a)?' · must place':'')+(appAlloc(a)>0?' · '+f(appAlloc(a))+' FTE already':'');
+  const un=Object.keys(S.addedOut).filter(k=>k.split('|')[0]===cid&&!S.draft.rows.some(r=>r.course===cid&&r.app===k.split('|')[1]&&r.decision!=='declined'));
+  return '<div class="card"><h3>Assign someone who did not apply</h3><div class="small muted" style="margin-bottom:8px">Any TA or UGCA can be added, as in the legacy app. They are marked "Added", raise a "Did not apply" warning that needs a note before publishing, and still go through the GRA, eligibility and 1.0 FTE checks.</div><div class="row" style="align-items:flex-end;gap:10px"><label class="f">Person<select id="outsidePick" aria-label="Person to add">'+apps.map(a=>'<option value="'+a.application_id+'">'+esc(lab(a.application_id))+'</option>').join('')+'</select></label><button class="btn primary" data-act="addOutside" data-a="'+cid+'">Add to this course</button></div>'+(un.length?'<div class="small muted" style="margin-top:8px">Added but not allocated: '+un.map(k=>esc(nm(k.split('|')[1]))+' <button class="btn sm" data-act="dropOutside" data-a="'+cid+'" data-b="'+k.split('|')[1]+'">Remove</button>').join(', ')+'</div>':'')+'</div>';
+}
 function vWorkspace(cid,g){
   const c=COURSE[cid],rq=REQ[cid],rk=S.rank[cid],cands=candidates(cid),need=c.ta_slots_required;
   const issues=g.iss.filter(i=>i.courses.includes(cid));
   const head='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(c.catalog_number)+' · '+esc(c.section_label)+' <span class="muted" style="font-weight:500">'+esc(c.title)+'</span></h2><div class="muted">'+esc(prof(cid))+' · needs '+Object.entries(S.course[cid].slots).filter(e=>e[1]>0).map(e=>f(e[1])+' '+e[0]).join(' + ')+' = '+f(need)+' FTE</div></div><div class="row">'+(cands.length?rkChip(rk.status):chip('No applicants'))+(live().some(r=>r.course===cid&&r.decision==='requested')?'<button class="btn sm" data-act="acceptAll" data-a="'+cid+'">Accept all requested</button>':'')+'</div></div>'+
     '<div class="small muted" style="margin-top:8px">'+((rq.required_skills||rq.faculty_notes||rq.experience_required)?'Requirements: '+(rq.experience_required?'prior experience required · ':'')+'skill '+esc(rq.required_skills)+' · '+esc(rq.faculty_notes):'No requirements recorded in the legacy app')+'</div><div class="small muted">Who can apply: '+({both:'graduate and undergraduate students',grad:'graduate students only',undergrad:'undergraduates only'}[S.course[cid].aud])+(SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length?' · '+SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length+' hidden by this rule':'')+'</div></div>';
   const iss=issues.length?'<div class="card"><h3>Issues for this course</h3>'+issues.map(i=>issueRow(i,cid)).join('')+'</div>':'';
-  if(!cands.length)return head+iss+'<div class="note">No applicants selected this course. That is zero demand from students, not unfinished faculty work.</div>';
+  if(!cands.length)return head+iss+'<div class="note">No applicants selected this course. That is zero demand from students, not unfinished faculty work.</div>'+addBox(cid);
   const info=rk.status!=='submitted'?'<div class="note warn"><b>'+esc(prof(cid))+' has not submitted a ranking</b> (status: '+rk.status.replace('_',' ')+'). Below is everyone who applied for this course, with facts only and no match score. <button class="btn sm" data-act="copyPool" data-a="'+cid+'" style="margin-left:6px">Copy list for the professor</button></div>':'';
   const shown=cands.filter(x=>typeOk(x.app));
   const rows=shown.map(x=>{
@@ -839,7 +849,7 @@ function vWorkspace(cid,g){
     const opts=[0,.25,.5,.75,1].filter(v=>v<=cap+1e-9||v===cur);
     const itaw=ex(a).ita==='ITA workshop needed'||ex(a).ita==='English test pending';
     return '<tr'+(S.gra.has(a)?' class="dim"':'')+'><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+lgChips(a)+(S.gra.has(a)?chip('GRA','bad'):'')+eligChipAdm(a)+(itaw?chip(ex(a).ita,'warn'):'')+(S.tx[a]&&S.tx[a].checked?chip('Transcript checked','ok'):chip('Transcript not checked'))+'</div></td>'+
-      '<td class="num">#'+x.pref.preference_rank+'</td>'+
+      '<td class="num">'+(x.pref.outside?chip('Added','warn'):'#'+x.pref.preference_rank)+'</td>'+
       '<td>'+(e.rank!=null?'<b class="mono">#'+e.rank+'</b> '+chip(e.rec.replace('_',' '),e.rec==='strong_yes'?'ok':'')+(e.comment?'<div class="small muted">'+esc(e.comment)+'</div>':''):(e.rec==='do_not_rank'?chip('Do not rank','bad'):'<span class="muted">Not ranked</span>'))+'</td>'+
       '<td><div class="chips">'+factsFor(a,cid)+'</div>'+(else_.length?'<div class="small muted" style="margin-top:4px">'+else_.map(esc).join('<br>')+'</div>':'')+'</td>'+
       '<td class="num">'+f(appAlloc(a))+' / '+f(APP[a].max_assignment_fte)+'</td>'+
@@ -847,7 +857,7 @@ function vWorkspace(cid,g){
         (row&&row.decision!=='declined'?'<div style="margin-top:4px"><select data-chg="setDecision" data-a="'+row.id+'" aria-label="Decision">'+opt('requested','Requested',row.decision)+opt('accepted','Accepted',row.decision)+opt('declined','Declined',row.decision)+'</select></div><div style="margin-top:4px"><select data-chg="setRole" data-a="'+row.id+'" aria-label="Appointment">'+(isGrad(a)?opt('TA','TA',row.role)+opt('AI','AI (assistant instructor)',row.role):opt('UGCA','UGCA',row.role))+'</select></div>':'')+'</td>'+
       '<td>'+(S.gra.has(a)?'<div class="small" style="margin-bottom:4px">On the GRA list. '+graBtn(a)+'</div>':'')+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
   }).join('');
-  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th class="num">Pref</th><th>Professor</th><th>Facts and other requests</th><th class="num">Total FTE</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><div class="small muted">Candidates are listed by their own preference, then name. Nothing here is scored. Accepting an assignment keeps the applicant within their 1.0 FTE maximum unless an exception is set.</div>';
+  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th class="num">Pref</th><th>Professor</th><th>Facts and other requests</th><th class="num">Total FTE</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><div class="small muted">Candidates are listed by their own preference, then name. Nothing here is scored. Accepting an assignment keeps the applicant within their 1.0 FTE maximum unless an exception is set.</div>'+addBox(cid);
 }
 
 /* ---------- views: applicants ---------- */
@@ -1160,8 +1170,24 @@ const ACT={
     toast(item.label+' arrived from the legacy app (demo)');render();
   },
   setAud(a,b,v){S.course[a].aud=v;log('course audience changed','course',a,cname(a)+': '+v);render()},
+  addOutside(a,b){
+    const el=$('#outsidePick');const app=b||(el&&el.value);
+    if(!app||!APP[app]){toast('Pick a person first');return}
+    if(candidates(a).some(x=>x.app===app)&&!isOutside(a,app)){toast(nm(app)+' already applied for this course');return}
+    S.addedOut[a+'|'+app]=true;
+    const cap=Math.max(0.25,Math.min(1,Math.round((COURSE[a].ta_slots_required-courseAlloc(a))*4)/4));
+    if(!S.draft.rows.some(r=>r.course===a&&r.app===app&&r.decision!=='declined')){
+      const row={id:'draft_new_'+(S.newRow++),course:a,app,fte:cap,role:defaultRole(app),decision:'requested',published:false,note:'Added by the office. Did not apply for this course.'};
+      S.draft.rows.push(row);
+    }
+    log('assigned without application','assignment',a+'|'+app,nm(app)+' added to '+cname(a)+' by the office');
+    toast(nm(app)+' added to '+cname(a));render();
+  },
+  dropOutside(a,b){delete S.addedOut[a+'|'+b];log('added person removed','assignment',a+'|'+b,nm(b)+' removed from '+cname(a));render()},
   setSlot(a,b,v){
-    const sl=S.course[a].slots,old=sl[b];sl[b]=parseFloat(v);
+    v=Math.round(parseFloat(v)*4)/4;
+    if(!isFinite(v)||v<0||v>100){toast('Enter a number of FTE from 0 to 100');render();return}
+    const sl=S.course[a].slots,old=sl[b];sl[b]=v;
     const tot=sum(Object.values(sl));
     if(tot<0.25){sl[b]=old;toast('A course needs at least 0.25 FTE');render();return}
     COURSE[a].ta_slots_required=tot;log('course slots changed','course',a,cname(a)+': '+b+' '+f(old)+' to '+f(sl[b])+', total '+f(tot));render();

@@ -103,6 +103,12 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(S().sync.newApps.length === 1, 'the new applicant is marked New');
   ok(S().win[withMail.faculty_id].state === 'open', 'refresh keeps open ranking windows');
   A.tab('applicants'); ok(/New from legacy app/.test(main()), 'new applicant is labeled');
+  // office adds a UGCA to a TA-only course, and a course with a large need
+  { const ugca = Object.keys(T.lg()).find(a => T.lg()[a].kind === 'UGCA'), cs = Object.keys(S().course).find(k => S().course[k].aud === 'grad');
+    A.addOutside(cs, ugca);
+    ok(S().draft.rows.some(r => r.course === cs && r.app === ugca), 'a UGCA can be assigned to a TA-only class by the office');
+    ok(!T.gate().blocks.some(b => b.app === ugca && /Not allowed here|Not selected/.test(b.code)), 'an office add is not blocked for audience or selection');
+    A.setSlot(cs, 'TA', '50'); ok(S().course[cs].slots.TA === 50, 'live course can need 50 FTE'); }
   // bad files
   let e1 = null; try { T.loadFeed({ foo: 1 }); } catch (e) { e1 = e; } ok(e1 && /not a sync file/.test(e1.message), 'a wrong file is rejected with a plain message');
   ok(txt().length > 0 && errs.length === 0, 'no script errors in the app' + (errs.length ? ': ' + errs[0].slice(0, 200) : ''));
