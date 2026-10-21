@@ -176,7 +176,7 @@ let d3=T.hrDiff(T.hrRows(),S().hr.drafts[0].rows);
 ok(d3.some(r=>r.ch==='added'&&r.app==='app_f26_0005'),'HR preview shows Ember as added');
 A.tab('hr');ok(/Create draft 16/.test(txt()),'HR tab offers draft 16');
 A.createHr();ok(S().hr.drafts.length===2&&S().hr.drafts[1].n===16,'draft 16 created');
-ok(/^draft,change,course,section,course_title,instructor,assignee_alias,appointment,hr_tier,fte,citizenship,note/.test(T.hrCsv(16)),'HR csv header');
+ok(/^draft,change,course,section,course_title,instructor,assignee_alias,appointment,size,hours_per_week,fte,hr_tier,citizenship,note/.test(T.hrCsv(16)),'HR csv header (size, hours for UGCAs, FTE for TAs)');
 ok(/,added,/.test(T.hrCsv(16)),'HR csv marks added rows');
 ok(/draft 16/.test(T.hrEmail(16))&&/Added:/.test(T.hrEmail(16))&&/Candidate Ember/.test(T.hrEmail(16)),'HR email text lists Ember');
 A.createHr();ok(S().hr.drafts.length===2,'no draft created when nothing changed');
@@ -202,8 +202,8 @@ A.reset();A.role(null,null,'admin');
 A.setAud('crs_f26_002','','grad');
 ok(T.computeIssues().some(i=>i.code==='Not allowed here'),'grad-only course blocks an undergrad assignment');
 A.setAud('crs_f26_002','','both');ok(!T.computeIssues().some(i=>i.code==='Not allowed here'),'audience rule clears');
-A.setSlot('crs_f26_002','UGCA','0.5');A.goCourse('crs_f26_002');ok(/1\.5 FTE/.test(w.document.querySelector('main').textContent),'slots by role change the need');
-A.setSlot('crs_f26_002','UGCA','0');A.setSlot('crs_f26_002','TA','0');ok(/1\.0 FTE/.test((A.goCourse('crs_f26_002'),w.document.querySelector('main').textContent)),'a course cannot drop below 0.25 FTE');
+A.setSlot('crs_f26_002','UGCAh','15');A.goCourse('crs_f26_002');ok(/1\.0 TA FTE \+ 15 UGCA hours/.test(w.document.querySelector('main').textContent),'slots by role change the need (TA FTE + UGCA hours)');
+A.setSlot('crs_f26_002','UGCAh','0');A.setSlot('crs_f26_002','TA','0');ok(/1\.0 TA FTE/.test((A.goCourse('crs_f26_002'),w.document.querySelector('main').textContent)),'a course cannot drop to no need at all');
 // transcript
 A.txToggle('app_f26_0002');ok(S().tx.app_f26_0002.checked,'transcript marked checked');
 A.goCourse('crs_f26_004');ok(/Transcript checked/.test(w.document.querySelector('main').textContent),'workspace shows transcript checked');
@@ -266,9 +266,9 @@ A.goCourse('crs_f26_002');ok(/Add back to pool/.test(w.document.querySelector('m
 A.tab('applicants');ok(/Add back to pool/.test(w.document.querySelector('main').textContent),'GRA add-back stays on Applicants');
 // one issue renderer, no repeated list in Publish
 A.reset();A.role(null,null,'admin');A.tab('publish');
-ok(/blocking issue/.test(txt())&&!/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'Publish summarizes blockers instead of repeating each message');
-A.tab('dashboard');ok(/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'Dashboard keeps the full blocker messages');
-A.goCourse('crs_f26_002');ok(/is allocated 2\.0 FTE/.test(w.document.querySelector('main').textContent),'course workspace keeps its own issues');
+ok(/blocking issue/.test(txt())&&!/is assigned 30 hours a week/.test(w.document.querySelector('main').textContent),'Publish summarizes blockers instead of repeating each message');
+A.tab('dashboard');ok(/is assigned 30 hours a week/.test(w.document.querySelector('main').textContent),'Dashboard keeps the full blocker messages');
+A.goCourse('crs_f26_002');ok(/is assigned 30 hours a week/.test(w.document.querySelector('main').textContent),'course workspace keeps its own issues');
 A.tab('dashboard');ok(/Reopen ranking/.test(txt()),'dashboard button says Reopen ranking');
 
 // ---- legacy-app scope ----
@@ -304,13 +304,103 @@ A.reset();
  A.goCourse(c);ok(/Added/.test(txt()),'added person is listed with an Added chip');
  A.setDecision(r.id,null,'accepted');ok(T.gate().missing.some(m=>m.code==='Did not apply'),'accepted add needs a note before publishing');
  A.setSlot(c,'TA','12');ok(S().course[c].slots.TA===12&&T.gate().iss.length>=0,'a course can need 12 TA FTE');
- A.setSlot(c,'UGCA','50');ok(S().course[c].slots.UGCA===50,'UGCA slots can go to 50');
- A.setSlot(c,'UGCA','500');ok(S().course[c].slots.UGCA===50,'values above 100 are refused');
+ A.setSlot(c,'UGCAh','50');ok(S().course[c].slots.UGCAh===50,'UGCA need can be 50 hours');
+ A.setSlot(c,'TA','500');ok(S().course[c].slots.TA===12,'TA values above 100 are refused');
  A.addOutside(c,'app_f26_0010');A.addOutside(c,'app_f26_0004');
  ok(S().draft.rows.filter(x=>x.course===c).length===3,'several people can be added to one course');
  A.setAlloc(c,a,'0');A.dropOutside(c,a);ok(!S().addedOut[c+'|'+a],'an added person can be removed');
  ok(T.gate().iss.length>0,'checks still run after adds');
 }
+
+// ---- v5 (Oct 14 walkthrough) ----
+A.reset();A.role(null,null,'admin');
+const M=()=>w.document.querySelector('main').textContent,D=()=>w.document.querySelector('#drawer').textContent;
+ok(/demo v5/.test(txt()),'header says demo v5');
+// hours for UGCAs, full/half for TAs
+ok(T.gate().blocks.some(b=>b.code==='Over capacity'&&/Atlas is assigned 30 hours a week/.test(b.msg)&&/at most 20 hours/.test(b.msg)),'Atlas over 20 UGCA hours blocks');
+A.setAlloc('crs_f26_002','app_f26_0001','5');ok(!T.gate().blocks.some(b=>b.code==='Over capacity'&&b.app==='app_f26_0001'),'Atlas at 15 + 5 = 20 hours is allowed');
+const at=S().draft.rows.find(r=>r.course==='crs_f26_002'&&r.app==='app_f26_0001');ok(at.hrs===5&&T.sizeTxt(at)==='5 hours','UGCA row stores hours (any number, not steps of 5)');
+A.setAlloc('crs_f26_002','app_f26_0001','12');ok(S().draft.rows.find(r=>r.course==='crs_f26_002'&&r.app==='app_f26_0001').hrs===12,'12 hours is accepted');
+A.setAlloc('crs_f26_002','app_f26_0001','21');ok(S().draft.rows.find(r=>r.course==='crs_f26_002'&&r.app==='app_f26_0001').hrs===12,'more than 20 hours is refused');
+A.goCourse('crs_f26_002');ok(w.document.querySelector('input[data-chg=setAlloc][data-b=app_f26_0001]')!==null,'UGCA gets an hours box');
+const sel=w.document.querySelector('select[data-chg=setAlloc][data-b=app_f26_0005]');ok(sel&&[...sel.options].map(o=>o.textContent).join('|')==='None|Half-time|Full-time','TA gets None / Half-time / Full-time');
+const fsel=(A.goCourse('crs_f26_003'),w.document.querySelector('select[data-chg=setAlloc][data-b=app_f26_0006]'));ok(fsel&&![...fsel.options].some(o=>o.textContent==='Full-time'),'Finch (max half-time) is not offered full-time');
+A.setAlloc('crs_f26_002','app_f26_0001','0');
+// roles: TA, AI, UGCA only; Proctor gone
+A.tab('setup');ok(!/Proctor/.test(M())&&/AI \(FTE\)/.test(M())&&/UGCA \(hours\)/.test(M()),'Setup has TA, AI and UGCA hours columns and no Proctor');
+A.setAlloc('crs_f26_002','app_f26_0005','0.5');const em=S().draft.rows.find(r=>r.course==='crs_f26_002'&&r.app==='app_f26_0005');A.setRole(em.id,null,'AI');ok(em.role==='AI'&&T.sizeTxt(em)==='Half-time','grad can be a half-time AI');
+A.setRole(em.id,null,'Proctor');ok(em.role==='AI','Proctor is not a role');
+A.setSlot('crs_f26_002','AI','0.5');ok(S().course.crs_f26_002.slots.AI===0.5,'a course can need an AI');
+// co-teaching: two half-time AIs
+A.setAlloc('crs_f26_002','app_f26_0011','0.5');const k2=S().draft.rows.find(r=>r.course==='crs_f26_002'&&r.app==='app_f26_0011');A.setRole(k2.id,null,'AI');
+ok(S().draft.rows.filter(r=>r.course==='crs_f26_002'&&r.role==='AI'&&r.fte===0.5).length===2,'two half-time AIs can co-teach a class');
+// HR output
+A.acceptAll('crs_f26_002');A.setAlloc('crs_f26_002','app_f26_0001','0');A.createHr();const hc=T.hrCsv(S().hr.drafts.slice(-1)[0].n);
+ok(/,AI,Half-time,,0\.5,/.test(hc),'HR csv shows AI half-time');ok(/,UGCA,15 hours,15,,/.test(hc),'HR csv shows UGCA hours per week');
+// commitment overrides self-reported degree
+A.reset();A.role(null,null,'admin');
+ok(w.__ta.state()&&T.isCommit('app_f26_0011')===1,'Kestrel is on the commitment list');
+A.drawer('app_f26_0011',null);ok(/PhD/.test(D())&&/Applied as Master's/.test(D())&&/Commitment student/.test(D()),'Kestrel shows as PhD, applied as Master\'s, commitment student');A.closeDrawer();
+ok(T.computeIssues().some(i=>i.code==='Must place'&&i.app==='app_f26_0011'),'Kestrel raises Must place in the demo');
+ok(T.needsHome().indexOf('app_f26_0011')<T.needsHome().indexOf('app_f26_0003')||!T.needsHome().includes('app_f26_0003'),'commitment students lead the placement queue');
+ok(T.tierOf('app_f26_0011').code==='PhD','HR tier follows the commitment override');
+// GRA by EID
+A.tab('applicants');ok(S().gra.has('app_f26_0003')&&S().graResult.byEid.includes('app_f26_0003')&&S().graResult.unmatched.includes('zp9001'),'GRA check matches Cedar by EID and lists an unknown EID');
+w.document.querySelector('#graText').value='in4109\nCandidate Birch\ntypo name';A.applyGra();
+ok(S().graResult.byEid.includes('app_f26_0009')&&S().graResult.byName.includes('app_f26_0002')&&S().graResult.unmatched.length===1,'EID match, name-only match and no match are reported separately');
+ok(/matched by name only/.test(M())&&/check these/.test(M()),'name-only matches are called out');
+// declines from the legacy app on refresh
+A.reset();A.role(null,null,'admin');A.sync();A.sync();A.sync();
+ok(T.FL('app_f26_0010').color==='declined','third demo refresh turns Juniper red');
+ok(T.gate().blocks.some(b=>b.code==='Declined offer'&&b.app==='app_f26_0010'),'a declined student with an assignment blocks publishing');
+ok(S().notifs.some(n=>n.to==='admin'&&/Juniper/.test(n.text)&&/declined/.test(n.text)),'admin notified of the decline');
+A.tab('applicants');ok(/Turned red on refresh/.test(M()),'applicant list marks who turned red');
+A.reset();ok(!T.FL('app_f26_0010').color,'reset clears the demo decline');
+// applied courses in order, discussion section
+A.role(null,null,'admin');A.drawer('app_f26_0002',null);
+ok(/Courses applied for \(3\)/.test(D())&&/#1/.test(D())&&/Discussion section/.test(D())&&/No discussion/.test(D()),'admin card lists every course applied for, in order, with discussion choice');
+A.closeDrawer();A.tab('applicants');ok(/Courses chosen, in their order/.test(M())&&/#1 303E/.test(M()),'applicant list shows the first choices');
+A.goCourse('crs_f26_004');ok(/Student's choice/.test(M())&&/Professor's rank/.test(M())&&/of 3/.test(M()),'workspace labels the student choice column clearly');
+// résumé request
+A.drawer('app_f26_0002',null);ok(/Request résumé/.test(D()),'TA card offers Request résumé');
+const ob=S().outbox.length;A.reqResume('app_f26_0002');ok(S().outbox.length===ob+1&&S().outbox.slice(-1)[0].kind==='Résumé request','résumé request queued');
+A.mockResume('app_f26_0002');ok(T.resumeOf('app_f26_0002').st==='received'&&/resume_birch\.pdf/.test(D()),'mock reply attaches the résumé to the card');
+A.tab('mail');ok(/Attachment: resume_birch\.pdf/.test(M()),'reply shows in the mock inbox with its attachment');
+ok(T.resumeOf('app_f26_0001').st==='legacy','UGCA résumé comes from the legacy form');
+A.tab('applicants');const nr=S().outbox.length;A.bulkResume();ok(S().outbox.length>nr+3&&S().outbox.slice(-1)[0].kind==='Résumé request','bulk résumé requests go to everyone without one');
+// mass and single email
+A.composeOpen();A.composeWho(null,null,'needs');const tg=T.composeTargets();ok(tg.length>0&&tg.every(a=>!S().draft.rows.some(r=>r.app===a&&r.decision!=='declined')),'mass email targets people who still need a position');
+const o2=S().outbox.length;A.composeSend();ok(S().outbox.length===o2+tg.length&&S().outbox.slice(-1)[0].kind==='Message'&&S().compose===null,'mass email queues one message per student');
+A.composeOne('app_f26_0003');ok(T.composeTargets().length===1&&/Email Candidate Cedar/.test(M()),'single email from the card');
+w.document.querySelector('#composeBody').value='Hello {name}, quick question.';A.composeSend();ok(/Hello Candidate Cedar, quick question/.test(S().outbox.slice(-1)[0].body),'name placeholder filled');
+// faculty browse all applicants
+A.reset();A.role(null,null,'admin');A.tab('windows');ok(/Professors can browse all applicants/.test(M()),'admin has the browse switch');
+A.role(null,null,'fac:fac_v_ravishankar');A.facOpen('crs_f26_004');ok(/Browse all applicants/.test(M()),'professor with an open window can browse');
+ok(!/Applied as Master's/.test(M())&&!/Commitment student/.test(M()),'faculty does not see commitment details');
+A.facBrowseToggle();const bm=M();ok(/Candidate Delta/.test(bm)&&!/Their choice #/.test(bm.split('Browse all applicants')[1]),'browse list shows people who did not choose the course, without their choices');
+A.drawer('app_f26_0004','crs_f26_004');ok(!/Courses applied for/.test(D()),'faculty never sees which courses a student chose');A.closeDrawer();
+A.facAdd('crs_f26_004','app_f26_0006');ok(S().addedOut['crs_f26_004|app_f26_0006'].by==='fac','professor pick recorded');
+ok(/added from Browse all applicants/.test(M()),'professor sees their pick in the list');
+A.addRank('crs_f26_004','app_f26_0006');ok(S().rank.crs_f26_004.entries.app_f26_0006.rank>0,'professor can rank their pick');
+A.role(null,null,'admin');A.goCourse('crs_f26_004');ok(/Picked by V Ravishankar/.test(M()),'admin sees "picked by" the professor');
+A.setAlloc('crs_f26_004','app_f26_0006','0.5');ok(T.computeIssues().some(i=>i.code==='Did not apply'&&/picked by V Ravishankar/.test(i.msg)),'did-not-apply warning names the professor');
+ok(S().notifs.some(n=>n.to==='admin'&&/picked Candidate Finch/.test(n.text)),'admin notified of the pick');
+A.tab('windows');A.facBrowseOne('fac_v_ravishankar');A.role(null,null,'fac:fac_v_ravishankar');A.facOpen('crs_f26_004');ok(!/Browse all applicants \(/.test(M()),'browse can be turned off for one professor');
+A.role(null,null,'admin');A.facBrowseOne('fac_v_ravishankar');A.facBrowseAll();A.role(null,null,'fac:fac_v_ravishankar');A.facOpen('crs_f26_004');ok(!/Browse all applicants \(/.test(M()),'browse can be turned off for everyone');
+// course list import
+A.reset();A.role(null,null,'admin');A.tab('setup');ok(/Import a course list/.test(M()),'Setup has the course import');
+A.sampleCsv();A.importCsv();let ir=S().importRes;
+ok(ir&&ir.added.length===1&&ir.same===6&&ir.autoIds===7,'sample import: 1 new class, 6 unchanged, 7 IDs filled in');
+ok(/^GUID,Course Number/.test(ir.csv)&&/\n2026-9-1,303E/.test(ir.csv)&&/2026-9-7,314/.test(ir.csv),'blank GUIDs are filled in from the term (2026-9-1, 2026-9-2, ...)');
+const nc=ir.added[0];ok(S().course[nc]&&S().course[nc].slots.UGCAh===30&&S().rank[nc],'imported class has a need and a ranking slot');
+A.goCourse(nc);ok(/Assign someone who did not apply/.test(M()),'imported class opens in the workspace');
+const csv2=ir.csv.replace(',314,Data Structures,002,',',314,Data Structures II,002,')+'\n,429,Computer Organization,001,"Young, W",1,0,0';
+S().importDraft=csv2;A.tab('setup');w.document.querySelector('#courseCsv').value=csv2;A.importCsv();ir=S().importRes;
+ok(ir.added.length===1&&ir.updated.length===1&&ir.updated[0].ch.includes('title'),'re-import adds the new class and updates the changed one, keeping the rest');
+ok(SEED_COUNT()===8,'eight classes after two imports');
+function SEED_COUNT(){return Object.keys(S().course).length}
+let bad=null;try{T.importCourses('foo,bar\n1,2')}catch(e){bad=e}ok(bad&&/course number column/.test(bad.message),'a file without the needed columns is refused with a plain message');
+A.reset();ok(Object.keys(S().course).length===6,'reset removes imported classes');
 A.reset();ok(S().pubs.length===1,'reset restores seed');
 console.log(errs.length?'ERRORS:\n'+errs.join('\n'):'no runtime errors');
 console.log(fails?fails+' FAILED':'ALL PASSED');

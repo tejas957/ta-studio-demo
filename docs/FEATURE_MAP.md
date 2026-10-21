@@ -59,6 +59,19 @@ Process order, with the transition points between processes marked. "Lives in" s
 | 38 | Role switcher and privacy boundary | Tool | None | UT sign-in | Fake |
 | 39 | Walkthrough and reset | Demo | Demo only | None | Demo only |
 
+## Added Oct 21 (v5, from the Oct 14 walkthrough)
+
+- **Appointment size:** UGCA hours per week (1 to 20, any number; 15 = one full UGCA). TA and AI full-time or half-time. Course need = TA FTE + AI FTE + UGCA hours. HR spreadsheet gains `size` and `hours_per_week`.
+- **Roles:** TA, AI, UGCA only. Proctor removed (old name for UGCA). AI set up like a TA; two half-time AIs can share a class. Live mode defaults a grad to AI when the legacy AI column is 1.
+- **GRA check by EID** first, names as a fallback reported separately.
+- **Commitment override:** a commitment student who applied as master's is treated as PhD (chip "Applied as Master's", office only). The scraper reads the Commitment students page (ASSUMED path) and falls back to the yellow color.
+- **Declines on refresh:** students who turned red are reported, labeled and blocked ("Declined offer").
+- **Courses applied for, in order, with discussion-section choice** on the applicant card (office only); first choices in the applicant list; clear "Student's choice" / "Professor's rank" columns.
+- **Résumé requests** (one or bulk) through the outbox, with the mock mailbox pulling the attachment onto the card. UGCA résumé links come from the legacy modal (path only).
+- **Email applicants:** composer for a filtered group or one student, `{name}` placeholder.
+- **Faculty browse all applicants:** global and per-professor switch. Names and qualifications only. Picks are labeled "Did not apply, picked by <professor>" and notify the office.
+- **Course list CSV import:** loose header matching, blank GUIDs filled in from the term, re-import adds and updates, file with IDs ready to copy.
+
 ## Added Oct 13
 
 - **Assign someone who did not apply** (any TA or UGCA, as in the legacy app, and UGCAs too): box at the bottom of every course workspace. Marked "Added", raises a "Did not apply" warning that needs a note before publishing, skips the audience and "not selected" blocks, keeps the GRA, eligibility and 1.0 FTE checks.

@@ -41,7 +41,8 @@ function buildPayload(P) {
     const t = taCls.get(id), p = prCls.get(id), base = t || p;
     const taN = t ? t.needed : 0, ugN = p ? p.needed : 0;
     courses.push({ course_id: cid(id), term_id: 'term_live', catalog_number: base.number, title: title(base.title), section_label: String(id), faculty_id: facByRaw[base.prof], ta_slots_required: Math.round((taN + ugN) * 100) / 100, status: 'open' });
-    coursesExt[cid(id)] = { aud: t && p ? 'both' : t ? 'grad' : 'undergrad', slots: { TA: taN, UGCA: ugN, Proctor: 0 } };
+    // v5: TA and AI in appointments (1 = full-time), UGCAs in hours. "Proctors Needed" is a head count; a full UGCA is 15 hours.
+    coursesExt[cid(id)] = { aud: t && p ? 'both' : t ? 'grad' : 'undergrad', slots: { TA: taN, AI: 0, UGCAh: Math.round(ugN * 15 * 10) / 10 } };
     reqs.push({ course_id: cid(id), experience_required: false, spoken_english_requirement: 'standard_assessment', required_skills: '', faculty_notes: '' });
     rw.push({ course_id: cid(id), ranking_status: 'not_started', last_saved_at: '', submitted_at: '', admin_reopened: false });
   }
@@ -55,6 +56,7 @@ function buildPayload(P) {
   const appIdTA = id => 'app_ta_' + id, appIdUG = id => 'app_ug_' + id;
   let prefN = 0;
   const idxByEid = {};
+  const commitByEid = {}; (P.commitments || []).forEach(c => { commitByEid[c.eid] = c; });
 
   for (const a of P.applicants.ta) {
     const d = (P.taDetails && P.taDetails[a.id]) || null, aid = appIdTA(a.id), pid = 'apl_ta_' + a.id;
@@ -63,22 +65,28 @@ function buildPayload(P) {
     const nat = d ? d.nativeEnglish : '';
     const eng = d ? d.english.toLowerCase() : '';
     const spoken = !d ? 'pending' : /^yes/i.test(nat) ? 'not_required' : /^pass/.test(eng) ? 'verified' : 'pending';
+    const cm = commitByEid[String(a.eid).toLowerCase()] || null;
+    const commit = a.color === 'commitment' || !!cm || !!(d && /^yes/i.test(d.commitSupport));
     const hist = d ? d.hist.filter(h => h.number) : [];
     const returning = a.nr === 'Return' || hist.length > 0;
     applicants.push({ applicant_id: pid, display_name: a.first + ' ' + a.last, synthetic_person: false });
     applications.push({
-      application_id: aid, applicant_id: pid, term_id: 'term_live', degree_level: /masters/i.test(a.status) ? 'Masters' : 'PhD', assistant_type: 'TA',
+      // Doug (Oct 14): a commitment student is a PhD even if the application says master's. The app records the self-reported value.
+      application_id: aid, applicant_id: pid, term_id: 'term_live', degree_level: /masters/i.test(a.status) && !commit ? 'Masters' : 'PhD', self_degree: /masters/i.test(a.status) && commit ? 'Masters' : undefined, assistant_type: 'TA',
       program: d ? d.major : '', expected_graduation_term: '', returning_ta: returning, prior_ta_terms: hist.length, max_assignment_fte: 1,
       employment_eligibility_status: red ? 'ineligible' : 'eligible', spoken_english_assessment: spoken, availability_status: /^yes/i.test(a.avail) ? 'available' : 'limited',
       teaching_statement: d ? d.teaching : '', experience_summary: d ? d.supportive : '', application_status: 'submitted', submitted_at: toIso(a.updated) || now.slice(0, 19)
     });
-    // requested classes: names only, so every section with that name is requested at the same rank
+    // requested classes: names only, so every section with that name is requested at the same rank.
+    // The legacy page has two lists, discussion-session and non-discussion-session classes. Both count; the flag is kept.
+    // ASSUMED: rank runs through the non-discussion list first, then the discussion list, each in page order. Confirm with Doug.
     let rank = 0; const seenC = new Set();
-    const addPref = (secId, r, note) => { if (seenC.has(secId)) return; seenC.add(secId); prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(secId), preference_rank: r, preparedness: 'moderate', applicant_note: note || '' }); };
-    for (const label of d ? d.requests : []) {
+    const addPref = (secId, r, note, disc) => { if (seenC.has(secId)) return; seenC.add(secId); prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(secId), preference_rank: r, preparedness: 'moderate', applicant_note: note || '', discussion: disc }); };
+    const reqList = d ? d.requests.map(l => [l, false]).concat((d.requestsDiscussion || []).map(l => [l, true])) : [];
+    for (const [label, disc] of reqList) {
       const secs = bySecLabel[nrm(label)] || [];
       if (!secs.length) { warnings.push('Requested class not found in class list: "' + label + '" (applicant ' + a.id + ')'); continue; }
-      rank++; secs.forEach(s => addPref(s, rank, 'Requested the course by name; all sections of it count.'));
+      rank++; secs.forEach(s => addPref(s, rank, 'Requested the course by name' + (disc ? ', with a discussion session' : '') + '; all sections of it count.', disc));
     }
     a.assignments.forEach(s => { if (taCls.has(s)) addPref(s, rank + 1, 'Assigned in the legacy app.'); });
     if (d) {
@@ -89,7 +97,7 @@ function buildPayload(P) {
     extApps[aid] = ex;
     lg[aid] = {
       legacyId: a.id, kind: 'TA', first: a.first, last: a.last, eid: a.eid, email: d ? d.email : '', phone: d ? d.phone : '', color: a.color, gra: a.gra, status: a.status, avail: a.avail,
-      commit: a.color === 'commitment' || (d && /^yes/i.test(d.commitSupport)), updated: a.updated, nr: a.nr, degree: a.degree, ai: a.ai, gpa: a.gpa, ssn: d ? d.ssn : '', graDetail: d ? d.gra : '', agree: ''
+      commit, commitExpires: cm ? cm.expires : '', updated: a.updated, nr: a.nr, degree: a.degree, ai: a.ai, gpa: a.gpa, ssn: d ? d.ssn : '', graDetail: d ? d.gra : '', agree: ''
     };
     idxByEid[a.eid.toLowerCase()] = aid;
   }
@@ -106,7 +114,7 @@ function buildPayload(P) {
     (d ? d.requests : []).forEach((s, i) => { if (prCls.has(s)) prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(s), preference_rank: i + 1, preparedness: 'moderate', applicant_note: '' }); else warnings.push('UGCA ' + u.id + ' requested unknown proctor class ' + s); });
     (d ? d.courses : []).forEach(l => { const m = l.match(/^CS\s+(\S+)\s+(.*)$/i); if (m) cw.push({ application_id: aid, catalog_number: m[1], course_title: title(m[2]), completion_status: 'completed', grade_band: '' }); });
     extApps[aid] = { cit: '', yr: '', hrs: 0 };
-    lg[aid] = { legacyId: u.id, kind: 'UGCA', first: first, last: rest.join(' '), eid: u.eid, email: u.email || (d && d.email) || '', phone: u.phone, color: '', gra: '', status: 'Undergraduate', avail: '', commit: false, updated: '', nr: '', degree: '', ai: '', gpa: '', ssn: '', graDetail: '', agree: '' };
+    lg[aid] = { legacyId: u.id, kind: 'UGCA', first: first, last: rest.join(' '), eid: u.eid, email: u.email || (d && d.email) || '', phone: u.phone, color: '', gra: '', status: 'Undergraduate', avail: '', commit: false, updated: '', nr: '', degree: '', ai: '', gpa: '', ssn: '', graDetail: '', agree: '', resume: d ? d.resume : '' };
     idxByEid[u.eid.toLowerCase()] = aid;
   }
 
@@ -143,7 +151,7 @@ function buildPayload(P) {
 
   const unmatchedCount = review.filter(x => x.status === 'unmatched').length;
   return {
-    meta: { source: 'legacy', syncedAt: now, term, counts: { taApplicants: P.applicants.ta.length, ugcaApplicants: P.applicants.ugca.length, taClasses: taCls.size, proctorClasses: prCls.size, sections: secIds.length, assignments: draftRows.length, faculty: faculty.length, facultyToReview: review.length, facultyUnmatched: unmatchedCount }, warnings, facultyReview: review },
+    meta: { source: 'legacy', syncedAt: now, term, commitmentList: P.commitments ? P.commitments.length : null, counts: { taApplicants: P.applicants.ta.length, ugcaApplicants: P.applicants.ugca.length, taClasses: taCls.size, proctorClasses: prCls.size, sections: secIds.length, assignments: draftRows.length, faculty: faculty.length, facultyToReview: review.length, facultyUnmatched: unmatchedCount }, warnings, facultyReview: review },
     terms: [{ term_id: 'term_live', name: term, application_deadline: '', faculty_ranking_deadline: '', status: 'faculty_ranking' }],
     faculty, users, courses, applicants, applications, applicant_skills: skills, applicant_coursework: cw, teaching_history: th, course_preferences: prefs, course_requirements: reqs,
     ranking_workflow: rw, faculty_rankings: [], assignment_drafts: [{ draft_id: 'draft_live', term_id: 'term_live', name: term + ' working draft (from the legacy assignments)', status: 'working', created_at: now, created_by_user_id: '' }],

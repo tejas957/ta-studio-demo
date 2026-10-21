@@ -17,6 +17,7 @@ No names, EIDs, emails or phone numbers belong in this file or anywhere in the r
 | UGCA applicant modal | fetched on click | Contact, Major, Expected graduation, Experience, two essays, Highest CS courses, Resume link, Requested courses to proctor (with section ids) | Resume link is `upload/view?file=...` |
 | Assignments | `admin/assignments` (to confirm) | 78 rows: Course, Student, Percent Assigned, Agreement. Form posts to `admin/assignment_notifiy` with button "Notify applicants" | Agreement is "Yes" or "Sent:<time>" so accept state is readable |
 | Drafts | `admin/drafts` (to confirm) | "TA assignment drafts, Fall 2026 - Draft 15", draft picker, semester picker, "Download this draft" | Semester ids: Fall = 8, Spring = 1, Summer = 6 |
+| Commitment students | `admin/commitment_students` (ASSUMED) | Doug (Oct 14): first name, last name, EID, commitment expiry (usually 5 years). This is what makes a row yellow | Read in v5 if found; otherwise the yellow color is used |
 | Settings menu | | Application settings, Users, View student application, View faculty application, Commitment students, Content, Drafts, Email TAs | "View faculty application" and "Email TAs" are not seen yet |
 
 ## Rules for the scraper (read only)

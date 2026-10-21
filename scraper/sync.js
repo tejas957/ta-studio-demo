@@ -37,7 +37,9 @@ async function sync(opt = {}) {
     prog('UGCA applicant ' + (++i) + '/' + applicants.ugca.length);
     try { ugcaDetails[u.id] = parse.ugcaModal(await c.get(L(routes.ugcaModal(u.id)))); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('UGCA applicant ' + u.id + ': ' + e.message); }
   }
-  let notify = null, drafts = null;
+  let notify = null, drafts = null, commitments = null;
+  prog('commitment students');
+  try { commitments = parse.commitments(await c.get(L(routes.commitments))); if (!commitments) warnings.push('Commitment students page has no table with EID and expiry; the yellow row color is used instead.'); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('Commitment students page not read (' + e.message + '); the yellow row color is used instead.'); }
   prog('agreements');
   try { notify = parse.notify(await c.get(L(routes.notify))); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('Agreement table not read (' + e.message + '). Assignments will come from the applicant list only.'); }
   prog('draft');
@@ -59,7 +61,7 @@ async function sync(opt = {}) {
     }
   } catch (e) { warnings.push('Faculty directory not read: ' + e.message); }
 
-  const payload = buildPayload({ classes, applicants, taDetails, ugcaDetails, notify, drafts, directory, emails, warnings, term: opt.term, now: opt.now });
+  const payload = buildPayload({ classes, applicants, taDetails, ugcaDetails, notify, drafts, commitments, directory, emails, warnings, term: opt.term, now: opt.now });
   payload.meta.requests = c.sent.length;
   payload.meta.nonGetRequests = c.sent.filter(x => !x.startsWith('GET ')).length;
   return payload;

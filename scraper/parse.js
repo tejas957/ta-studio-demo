@@ -120,11 +120,35 @@ function ugcaModal(html) {
   const lines = k => f[k] ? (f[k].html() || '').split(/<br\s*\/?>/i).map(x => clean(cheerio.load('<p>' + x + '</p>').text())).filter(Boolean) : [];
   const head = clean($('.modal-title').first().text()), hm = head.match(/\(([^)]+)\)\s*$/);
   const reqs = lines('requested courses to proctor').map(l => { const m = l.match(/^(\d+)\s*-/); return m ? +m[1] : null; }).filter(Boolean);
+  const resume = f.resume ? (f.resume.find('a').attr('href') || '') : '';
   return {
     eid: hm ? hm[1] : '', phone: t('phone'), email: f.email ? clean(f.email.find('a').text() || f.email.text()) : '', major: t('major'), grad: t('expected graduation'),
     experience: t('experience'), supportive: t('what a supportive learning environment means to you'), challenges: t('challenges faced by cs students'),
-    courses: lines('highest cs courses'), requests: reqs
+    courses: lines('highest cs courses'), requests: reqs,
+    resume: resume ? resume.replace(/^https?:\/\/[^/]+/, '').replace(/^.*?index\.php/, '') : '' // path only; the file itself is not downloaded
   };
+}
+
+/* ----- Settings > Commitment students (ASSUMED page: a table with name, EID and when the commitment expires) -----
+   Doug (Oct 14): admitted PhD students with a commitment of support are entered here (first name, last name, EID, expiry,
+   usually 5 years). That is what turns a row yellow. It is the reliable PhD signal, even when the student says "master's". */
+function commitments(html) {
+  const $ = cheerio.load(html);
+  let hit = null;
+  $('table').each((_, t) => {
+    const heads = $(t).find('thead th, tr:first-child th').map((__, th) => clean($(th).text()).toLowerCase()).get();
+    if (!hit && heads.includes('eid') && heads.some(h => /expir|end|until/.test(h))) hit = { table: $(t), heads };
+  });
+  if (!hit) return null;
+  const col = re => hit.heads.findIndex(h => re.test(h));
+  const ci = { first: col(/^first/), last: col(/^last/), eid: col(/^eid$/), exp: col(/expir|end|until/) };
+  const rows = [];
+  hit.table.find('tbody tr').each((_, tr) => {
+    const td = $(tr).children('td').map((__, x) => clean($(x).text())).get(); if (td.length < 2) return;
+    const eid = (td[ci.eid] || '').toLowerCase(); if (!eid) return;
+    rows.push({ eid, first: ci.first >= 0 ? td[ci.first] : '', last: ci.last >= 0 ? td[ci.last] : '', expires: ci.exp >= 0 ? td[ci.exp] : '' });
+  });
+  return rows;
 }
 
 /* ----- course page (shape unconfirmed: used only to cross-check, never required) ----- */
@@ -186,4 +210,4 @@ function profile(html) {
   return { email };
 }
 
-module.exports = { classes, applicants, taDetail, ugcaModal, course, drafts, notify, people, profile, clean };
+module.exports = { classes, applicants, taDetail, ugcaModal, commitments, course, drafts, notify, people, profile, clean };

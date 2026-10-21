@@ -55,7 +55,7 @@ function make(db, origin) {
       th('TA History:', '\t\t\n\t\t\t\t\n\t\t\t\t' + histLines.join('<br>\n') + '\t\t\t') + th('Are you looking to gain teaching experience:', d.gainTeaching) + th('Teaching Experience:', '\n\t\t\t\t\n\t\t\t\t' + esc(d.teaching) + '\t\t\t') +
       th('Describe any past experience or background that has made you aware of challenges that might be faced by computer science students:', esc(d.challenges)) + th('Briefly explain what a supportive learning environment means to you, and provide examples of ways to provide appropriate support in classrooms, office hours, and online environments.  You can draw examples from your own experience as a student or TA:', esc(d.supportive)) +
       '\t<tr>\n\t<th>Programming Experience:</th>\n\t<td>\t\n\t\t<table class="table">\n\t\t\t<tbody><tr>\n\t\t\t\t<th>Language</th>\n\t\t\t\t<th>Experience</th>\n\t\t\t</tr>\n' + d.langs.map(l => '\t\t\t\t\t\t<tr>\n\t\t\t\t<td>' + l[0] + '</td>\n\t\t\t\t<td>' + l[1] + '</td>\n\t\t\t</tr>').join('\n') + '\n\t\t\t<tr>\n\t\t\t\t<td>Other</td>\n\t\t\t\t<td>' + esc(d.other) + '\n</td>\n\t\t\t</tr>\n\t\t</tbody></table>\t\n\t</td>\n\t</tr>\n' +
-      th('Reseach:', '\t\n\t\t<ol>\n' + d.research.map(r => '\t\t\t\t<li>' + esc(r) + '</li>').join('\n') + '\n\t\t\t\t</ol>\n\t') + th('Discussion session classes requested:', '\n\t\t<ol>\n\t\t</ol>\t\t\n\t') +
+      th('Reseach:', '\t\n\t\t<ol>\n' + d.research.map(r => '\t\t\t\t<li>' + esc(r) + '</li>').join('\n') + '\n\t\t\t\t</ol>\n\t') + th('Discussion session classes requested:', '\n\t\t<ol>\n' + (t.discussion || []).map(s => '\t\t\t\t\t\t\t\t\t\t<li>' + esc(labelOf(s).replace(/\s+/g, ' ').replace(/^(\S+) /, '$1  ')) + '</li>').join('\n') + '\n\t\t</ol>\t\t\n\t') +
       th('Non-Discussion session classes requested:', '\n\t\t<ol>\n' + t.requests.map(s => '\t\t\t\t\t\t\t\t\t\t<li>' + esc(labelOf(s).replace(/\s+/g, ' ').replace(/^(\S+) /, '$1  ')) + '</li>').join('\n') + '\n\t\t\t\t\t\t\t\t</ol>\t\n\t') + '</tbody></table>\n\n</div></div>';
     const asg = '<div class="panel panel-default"><div class="panel-heading">Assignments</div><table class="table table-bordered"><thead><tr><th>Course</th><th>Prof</th><th>Semester</th><th>Percent Assigned</th><th>Grade</th><th>Profs Comments</th></tr></thead><tbody>' +
       d.hist.map(h => '<tr><td>' + esc(h.number) + '</td><td>' + esc(h.prof) + '</td><td>' + h.term + '</td><td>1</td><td>' + d.grade + '</td><td>' + esc(d.profComment) + '</td></tr>').join('') + t.assignments.map(a => { const c = cls(a.sid); return '<tr><td>' + esc(c.label) + '</td><td>' + esc(c.prof) + '</td><td>Fall 2026</td><td>' + a.pct + '</td><td></td><td></td></tr>'; }).join('') + '</tbody></table></div>';
@@ -115,7 +115,12 @@ function make(db, origin) {
   function profilePage(f) { // ASSUMED: email as a mailto link in a contact block
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(f.full) + '</title></head><body><h1>' + esc(f.full) + '</h1><div class="title">' + esc(f.title) + '</div><div class="contact"><div>Office: GDC 4.' + (100 + f.slug.length) + '</div>' + (f.email ? '<div>Email: <a href="mailto:' + f.email + '">' + f.email + '</a></div>' : '') + '</div></body></html>';
   }
+  // ----- Settings > Commitment students (ASSUMED, not seen yet) -----
+  function commitmentPage() {
+    return layout('Commitment students', '<h1>Commitment students</h1><table class="table table-bordered"><thead><tr><th>First name</th><th>Last name</th><th>EID</th><th>Commitment expires</th></tr></thead><tbody>' +
+      db.commitList.map(c => '<tr><td>' + esc(c.first) + '</td><td>' + esc(c.last) + '</td><td>' + c.eid + '</td><td>' + c.expires + '</td></tr>').join('') + '</tbody></table>');
+  }
   const loginPage = () => '<!DOCTYPE html><html><head><title>Login</title></head><body><form action="' + B + '/login" method="post"><input name="username"><input name="password" type="password"><button>Login</button></form></body></html>';
-  return { theme, css, classesPage, applicantsPage, taDetail, ugcaModal, coursePage, assignmentsPage, draftCsv, notifyPage, peoplePage, profilePage, loginPage, taAll };
+  return { theme, css, classesPage, applicantsPage, taDetail, ugcaModal, commitmentPage, coursePage, assignmentsPage, draftCsv, notifyPage, peoplePage, profilePage, loginPage, taAll };
 }
 module.exports = { make };

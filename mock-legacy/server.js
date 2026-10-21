@@ -38,6 +38,7 @@ function start(opts = {}) {
     if (a === '/assignments') return send(200, 'text/html', pages.assignmentsPage(+u.searchParams.get('draft') || undefined));
     if (a === '/assignments/download') return send(200, 'text/csv', pages.draftCsv(+u.searchParams.get('draft') || db.draftNo));
     if (a === '/assignment_notify') return send(200, 'text/html', pages.notifyPage());
+    if (a === '/commitment_students') return send(200, 'text/html', pages.commitmentPage());
     return send(404, 'text/html', 'not found');
   });
   return new Promise(resolve => server.listen(opts.port || 0, '127.0.0.1', () => {

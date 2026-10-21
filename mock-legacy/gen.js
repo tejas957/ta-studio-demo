@@ -100,6 +100,17 @@ function build(seed = 20261010) {
   const lp = person();
   const later = { id: nextId + 7, first: lp.first, last: lp.last, eid: eid(lp), email: (lp.first + '.' + lp.last).toLowerCase() + '@mock.invalid', phone: '5125559999', status: 'Masters', gra: 'no', cls: '', avail: 'Yes', nr: 'New', degree: '', ai: '0', gpa: '', updated: '', assignments: [], requests: [classes[3].id, classes[4].id], commitSupport: 'No', requestedBy: 'None', detail: { ssn: 'Yes', nativeEnglish: 'Yes', english: '', supervisor: 'Prof. ' + faculty[0].full, major: 'Computer Science', admitted: '2026-08-24', degrees: 'bachelors', citizenship: 'US Citizen', gainTeaching: 'Yes', teaching: '', challenges: '', supportive: '', langs: LANGS.map(l => [l, 'None']), other: '', research: ['Theory'], hist: [], grade: '', profComment: '' } };
 
+  // v5: some TAs ask for classes with a discussion session (the legacy page has a second request list).
+  // Deterministic (no extra random draws), so the rest of the fake data stays the same.
+  ta.forEach(t => { t.discussion = []; if (t.id % 3 === 0 && t.requests.length > 1) { t.discussion = t.requests.filter((_, k) => k % 2 === 1); t.requests = t.requests.filter((_, k) => k % 2 === 0); } });
+  // Commitment students are PhDs, except two who applied as master's students (the case Doug described on Oct 14).
+  let keepMasters = 0;
+  ta.filter(t => t.cls === 'commitment' && t.status === 'Masters').forEach(t => {
+    if (keepMasters < 2) { keepMasters++; return; }
+    const sw = ta.find(o => !o.cls && o.status === 'Ph.D.'); if (sw) { sw.status = 'Masters'; t.status = 'Ph.D.'; }
+  });
+  const commitList = ta.filter(t => t.cls === 'commitment').map(t => ({ first: t.first, last: t.last, eid: t.eid, expires: '2031-05-31' }));
+
   // ----- UGCA applicants -----
   const ugca = [];
   let uid = 1180;
@@ -119,7 +130,7 @@ function build(seed = 20261010) {
   const sentRow = ta.find(t => t.assignments.length && t.cls === '');
   if (sentRow) sentRow.assignments[0].agree = 'Sent:08-05-26 6:09pm';
 
-  return { classes, proctor, ta, later, ugca, faculty, draftNo: 15, draftRows, profFull, notifies: 0, nonGet: [] };
+  return { classes, proctor, ta, later, ugca, faculty, commitList, draftNo: 15, draftRows, profFull, notifies: 0, nonGet: [] };
 }
 
 module.exports = { build, profLast, profInit, titleCase };

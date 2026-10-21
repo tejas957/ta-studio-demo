@@ -11,5 +11,6 @@ module.exports = {
   course: id => '/admin/course/' + id,              // seen in the links
   assignments: '/admin/assignments',                // given by Doug
   notify: '/admin/assignment_notify',               // ASSUMED: the page that shows the Agreement table and the "Notify applicants" button
+  commitments: '/admin/commitment_students',        // ASSUMED: Settings > Commitment students (name, EID, expiry)
   people: '/people'                                 // given by Doug
 };

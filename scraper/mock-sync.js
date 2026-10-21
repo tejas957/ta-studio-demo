@@ -2,7 +2,8 @@
 /* Runs the scraper against the fake legacy site (fake data only).
      node scraper/mock-sync.js           -> samples/mock-payload.json    (the first scrape)
      node scraper/mock-sync.js --update  -> samples/mock-payload-2.json  (a later scrape: 1 new applicant,
-                                            2 students turn blue, 1 commitment student gets placed) */
+                                            2 students turn blue, 1 assigned student turns red (declined),
+                                            1 commitment student gets placed) */
 const fs = require('fs');
 const { start } = require('../mock-legacy/server');
 const { sync } = require('./sync');
@@ -13,6 +14,8 @@ const { sync } = require('./sync');
     s.addLateApplicant();
     const plain = s.db.ta.filter(t => !t.cls && !t.assignments.length);
     plain.slice(0, 2).forEach(t => { t.cls = 'other_support'; });
+    const assignedPlain = s.db.ta.find(t => !t.cls && t.assignments.length);
+    if (assignedPlain) assignedPlain.cls = 'declined';
     const c = s.db.ta.find(t => t.cls === 'commitment' && !t.assignments.length), slot = s.db.classes.find(x => x.assigned < x.needed);
     if (c && slot) { c.assignments.push({ sid: slot.id, pct: 1, agree: 'Sent:10-11-26 9:00am' }); slot.assigned += 1; }
   }

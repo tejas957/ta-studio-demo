@@ -100,4 +100,6 @@ All values in the demo are invented. Where each would really come from is a gues
 
 Conventions: course id = `crs_{section id}`; TA applicant = `app_ta_{legacy id}`; UGCA = `app_ug_{legacy id}`; professor = `fac_{last}_{initial}`. A TA's requested classes are names only, so every section with that number and title is requested at the same rank. Section "label" in the app shows the legacy section id.
 
+v5 (Oct 21): `ext.courses[*].slots` is `{TA, AI, UGCAh}` (TA and AI in FTE, UGCA in hours; "Proctors Needed" × 15). Older files with `{TA, UGCA, Proctor}` are converted on load. Preferences carry `discussion: true|false`. Applications of commitment students who said master's carry `self_degree: "Masters"` and `degree_level: "PhD"`. `ext.lg` gains `commitExpires` (from the Commitment students page, ASSUMED path `admin/commitment_students`) and, for UGCAs, `resume` (path only). Assumed: request rank runs through the non-discussion list, then the discussion list.
+
 Assumptions to confirm: Available "Yes" = available, anything else = limited; "In Candidacy" = PhD; red rows = ineligible; a student's English status "pass" = verified, anything else for non-native speakers = pending; "Agreement: Yes" is shown in the applicant drawer only for now (it does not yet create a student reply).
