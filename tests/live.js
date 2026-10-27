@@ -45,6 +45,15 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   const cl = http.client({ base, peopleBase: 'http://localhost:1/', cookie: 'x=1', fetchImpl: async (u, o) => { seen.push([u, o.headers.Cookie]); return { status: 200, ok: true, headers: { get: () => 'text/html' }, text: async () => '<html></html>' }; } });
   await cl.get(cl.people('/people')); await cl.get(cl.legacy('/admin/classes'));
   ok(seen[0][1] === undefined && seen[1][1] === 'x=1', 'cookie is sent to the legacy host only');
+  { let n = 0; const seen2 = [];
+    const fake = async (u, o) => { seen2.push([u, o.method, o.headers.Cookie]); n++;
+      if (n === 1) return { status: 302, ok: false, headers: { get: k => k === 'location' ? u : null, getSetCookie: () => ['taproc_session=fresh; path=/; HttpOnly'] } };
+      return { status: 200, ok: true, headers: { get: () => 'text/html', getSetCookie: () => [] }, text: async () => '<p>ok</p>' }; };
+    const c2 = http.client({ base, cookie: 'taproc_session=old; other=1', fetchImpl: fake });
+    const t = await c2.get(c2.legacy('/admin/applicants'));
+    ok(t === '<p>ok</p>' && seen2.length === 2 && seen2.every(x => x[1] === 'GET') && /taproc_session=fresh/.test(seen2[1][2]) && /other=1/.test(seen2[1][2]), 'a redirect back to the same page is followed with the refreshed cookie, GET only');
+    let n3 = 0; const c3 = http.client({ base, cookie: 'x=1', fetchImpl: async () => { n3++; return { status: 302, ok: false, headers: { get: () => 'https://apps.cs.utexas.edu/apps/user?app=ta&action=login', getSetCookie: () => [] } }; } });
+    let ae = null; try { await c3.get(c3.legacy('/admin/applicants')); } catch (e) { ae = e; } ok(ae instanceof AuthError && n3 === 1, 'a redirect to the UTCS login page stops the run'); }
   let refused = false; try { await cl.get('https://example.com/'); } catch (e) { refused = true; }
   ok(refused, 'any other host is refused');
 
