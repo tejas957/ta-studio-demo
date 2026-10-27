@@ -34,6 +34,9 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(Object.values(p.ext.courses).every(x => 'UGCAh' in x.slots && !('Proctor' in x.slots)) && Object.values(p.ext.courses).some(x => x.slots.UGCAh > 0), 'course need is TA / AI / UGCA hours, no proctor');
   const agreeSent = Object.values(p.ext.lg).filter(x => /^Sent:/.test(x.agree)).length;
   ok(agreeSent === 1, 'one agreement is "Sent:" (waiting for the student)');
+  { const g0 = srv.stats.gets.length; const pl = await sync({ ...opt, only: 'courses,applicants' }); const g = srv.stats.gets.slice(g0);
+    ok(pl.meta.counts.taApplicants === 166 && pl.meta.counts.ugcaApplicants === 264 && pl.meta.counts.sections === 121, 'courses-and-applicants pull reads every course and applicant');
+    ok(!g.some(x => /assignment|people/.test(x)) && pl.meta.counts.assignments === 0 && pl.meta.nonGetRequests === 0, 'it skips agreements, drafts and the directory, GET only'); }
   let authErr = null; try { await sync({ ...opt, cookie: 'ci_session=wrong' }); } catch (e) { authErr = e; }
   ok(authErr instanceof AuthError, 'wrong cookie stops with a sign-in error');
   ok(srv.stats.loginRedirects > 0, 'the mock saw the login redirect');

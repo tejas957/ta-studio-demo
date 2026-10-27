@@ -39,6 +39,7 @@ The app can load a sync file made by the scraper. In live mode it shows the lega
 npm run mock        # fake legacy site on http://127.0.0.1:8787/taproc/index.php (fake data only)
 npm run sync:mock   # scrapes the fake site into samples/mock-payload.json (committed, fake)
 npm run sync        # REAL app: needs LEGACY_COOKIE (see docs/LEGACY_APP_MAP.md); writes sync/payload.json (git-ignored)
+npm run sync:lean   # REAL app, courses and applicants only (no assignments, HR draft or professor emails)
 npm run test:live   # mock site -> scraper -> app, end to end
 ```
 Open the app, go to Setup, and choose the file under "Load a sync file". Loading a newer file later keeps the office's work.

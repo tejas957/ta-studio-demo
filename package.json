@@ -7,6 +7,7 @@
     "test:live": "node tests/live.js index.html",
     "mock": "node mock-legacy/server.js 8787",
     "sync": "node scraper/sync.js --out sync/payload.json",
+    "sync:lean": "node scraper/sync.js --only courses,applicants --out sync/payload.json",
     "sync:mock": "node scraper/mock-sync.js"
   },
   "devDependencies": {

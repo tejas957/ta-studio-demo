@@ -17,6 +17,9 @@ async function sync(opt = {}) {
   const L = p => c.legacy(p);
   const prog = opt.progress || (() => {});
   const warnings = [];
+  // opt.only = 'courses,applicants' reads the class lists, the applicant lists, each applicant's page and the commitment
+  // list, and skips agreements, drafts (HR) and the faculty directory. Still GET only.
+  const lean = !!opt.only && !/assign|draft|faculty|all/.test(String(opt.only));
   const first = async paths => { let last; for (const p of paths) { try { return await c.get(L(p)); } catch (e) { if (e instanceof AuthError) throw e; last = e; } } throw last; };
 
   prog('classes');
@@ -40,6 +43,8 @@ async function sync(opt = {}) {
   let notify = null, drafts = null, commitments = null;
   prog('commitment students');
   try { commitments = parse.commitments(await c.get(L(routes.commitments))); if (!commitments) warnings.push('Commitment students page has no table with EID and expiry; the yellow row color is used instead.'); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('Commitment students page not read (' + e.message + '); the yellow row color is used instead.'); }
+  let directory = [], emails = {};
+  if (!lean) {
   prog('agreements');
   try { notify = parse.notify(await c.get(L(routes.notify))); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('Agreement table not read (' + e.message + '). Assignments will come from the applicant list only.'); }
   prog('draft');
@@ -47,7 +52,6 @@ async function sync(opt = {}) {
 
   // faculty directory
   prog('faculty directory');
-  let directory = [], emails = {};
   try {
     directory = parse.people(await c.get(c.people(routes.people)));
     if (directory.length < 20) warnings.push('The people page returned only ' + directory.length + ' names. It may be paged: add the other pages in scraper/routes.js.');
@@ -60,6 +64,7 @@ async function sync(opt = {}) {
       try { emails[s] = parse.profile(await c.get(c.people((directory.find(d => d.slug === s).href || '').replace(/^https?:\/\/[^/]+/, '')))).email; } catch (e) { warnings.push('Profile ' + s + ': ' + e.message); }
     }
   } catch (e) { warnings.push('Faculty directory not read: ' + e.message); }
+  } else warnings.push('Courses and applicants only: current assignments, HR draft and professor emails were not read.');
 
   const payload = buildPayload({ classes, applicants, taDetails, ugcaDetails, notify, drafts, commitments, directory, emails, warnings, term: opt.term, now: opt.now });
   payload.meta.requests = c.sent.length;
@@ -72,9 +77,10 @@ if (require.main === module) {
   const arg = n => { const i = process.argv.indexOf(n); return i > 0 ? process.argv[i + 1] : ''; };
   const out = arg('--out') || path.join('sync', 'payload.json');
   if (!process.env.LEGACY_COOKIE) { console.error('Set LEGACY_COOKIE first (the session cookie of a signed-in browser). See docs/INTEGRATION.md.'); process.exit(2); }
-  sync({ progress: s => process.stderr.write('\r' + s.padEnd(50)) }).then(p => {
+  sync({ only: arg('--only'), progress: s => process.stderr.write('\r' + s.padEnd(50)) }).then(p => {
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, JSON.stringify(p));
-    console.error('\nWrote ' + out + ' ' + JSON.stringify(p.meta.counts) + ', ' + p.meta.warnings.length + ' warnings, ' + p.meta.requests + ' GET requests, 0 changes made.');
+    console.error('\nWrote ' + out + ' ' + JSON.stringify(p.meta.counts) + ', ' + p.meta.warnings.length + ' warnings, ' + p.meta.requests + ' GET requests, ' + p.meta.nonGetRequests + ' changes made.');
+    if (p.meta.warnings.length) console.error('First warnings (no names):\n  ' + p.meta.warnings.slice(0, 8).map(w => w.replace(/: .{0,40}$/, ': …')).join('\n  '));
   }).catch(e => { console.error('\n' + (e instanceof AuthError ? 'Sign-in needed: ' : 'Failed: ') + e.message); process.exit(1); });
 }
