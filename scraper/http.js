@@ -13,7 +13,8 @@ function client({ base, peopleBase, cookie, delayMs = 0, fetchImpl = fetch, log 
     const wait = last + delayMs - Date.now();
     if (wait > 0) await new Promise(r => setTimeout(r, wait));
     last = Date.now();
-    const headers = { 'User-Agent': 'ta-studio-sync (read-only)' };
+    // LEGACY_UA: the browser's own User-Agent, for when the site's Cloudflare check ties the session to the browser.
+    const headers = { 'User-Agent': process.env.LEGACY_UA || 'ta-studio-sync (read-only)' };
     if (legacy && cookie) headers.Cookie = cookie;
     let res;
     try { res = await fetchImpl(u.href, { method: 'GET', headers, redirect: 'manual' }); }
@@ -29,6 +30,7 @@ function client({ base, peopleBase, cookie, delayMs = 0, fetchImpl = fetch, log 
       if (/login/i.test(to)) throw new AuthError('Not signed in (redirected to login). Set LEGACY_COOKIE to a fresh session cookie.');
       throw new Error('Unexpected redirect to ' + to);
     }
+    if (res.status === 403 && legacy && /cf-|cloudflare|challenge/i.test(res.headers.get('server') || '') ) throw new AuthError('Blocked by the site\'s Cloudflare check. Set LEGACY_UA to your browser\'s User-Agent (same Request Headers section) and try again.');
     if (!res.ok) throw new Error(res.status + ' for ' + u.pathname);
     const text = await res.text();
     if (legacy && /type="password"/i.test(text)) throw new AuthError('The login form came back instead of the page. Set LEGACY_COOKIE to a fresh session cookie.');
