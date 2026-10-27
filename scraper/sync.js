@@ -76,6 +76,21 @@ module.exports = { sync, AuthError };
 if (require.main === module) {
   const arg = n => { const i = process.argv.indexOf(n); return i > 0 ? process.argv[i + 1] : ''; };
   const out = arg('--out') || path.join('sync', 'payload.json');
+  if (process.argv.includes('--probe')) {
+    // Saves the class and applicant pages as they come back, to sync/probe/ (git-ignored, stays on this computer),
+    // so the parsers can be matched to the real markup. GET only, two pages.
+    const { client } = require('./http');
+    const c = client({ base: routes.base, peopleBase: routes.peopleBase, cookie: process.env.LEGACY_COOKIE || '' });
+    const dir = path.join('sync', 'probe'); fs.mkdirSync(dir, { recursive: true });
+    (async () => {
+      for (const [name, p] of [['classes', routes.classes[0]], ['applicants', routes.applicants[0]]]) {
+        try { const t = await c.get(c.legacy(p)); fs.writeFileSync(path.join(dir, name + '.html'), t); console.error('saved ' + name + ' (' + t.length + ' bytes)'); }
+        catch (e) { console.error(name + ': ' + e.message); }
+      }
+      console.error('Done. ' + c.sent.length + ' GET requests, 0 changes made.');
+    })();
+    return;
+  }
   if (!process.env.LEGACY_COOKIE) { console.error('Set LEGACY_COOKIE first (the session cookie of a signed-in browser). See docs/INTEGRATION.md.'); process.exit(2); }
   sync({ only: arg('--only'), progress: s => process.stderr.write('\r' + s.padEnd(50)) }).then(p => {
     fs.mkdirSync(path.dirname(out), { recursive: true });
