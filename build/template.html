@@ -1,86 +1,111 @@
 <title>TA Studio Desk</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap">
+<meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout concept: a staffing desk. Top bar with role switch, a tab strip, then dense tables and a two-pane course workspace. Pine green is the only accent; status colors are separate. */
+/* Layout concept: the legacy UTCS TA/UGCA admin, so Doug feels at home. Burnt-orange band, "UTCS TA/UGCA … - Term" header
+   with orange nav, Bootstrap 3 tabs, bordered tables with plain bold headers, gray count badges, and the legacy row colors
+   (yellow = commitment, blue = other support / GRA, red = declined). Helvetica throughout, as in the legacy app. */
 :root{
-  --bg:#f4f6f4; --surface:#ffffff; --surface-2:#eaeeea; --line:#d5dcd6;
-  --fg:#16201c; --muted:#56655d;
-  --accent:#1d5a49; --accent-soft:#dcebe5; --accent-fg:#ffffff;
-  --ok:#17703f; --ok-soft:#dcf0e4; --warn:#8f5b00; --warn-soft:#faedcf; --bad:#a82820; --bad-soft:#fae0dd;
-  --shadow:0 12px 40px rgba(10,25,20,.18);
-  --f-display:"Bricolage Grotesque","Public Sans",system-ui,sans-serif;
-  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --bar:#b5581f; --bar-fg:#ffffff;
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f5f5; --line:#dddddd; --line-2:#cccccc;
+  --fg:#333333; --muted:#777777; --title:#555555;
+  --accent:#bf5700; --accent-hover:#8f4100; --accent-soft:#fbeee3; --accent-fg:#ffffff;
+  --badge:#777777; --badge-fg:#ffffff;
+  --ok:#2e7d32; --ok-soft:#dff0d8; --warn:#8a6d3b; --warn-soft:#fcf8e3; --bad:#a94442; --bad-soft:#f2dede;
+  --row-commit:#fff7a6; --row-gra:#cdd9ff; --row-red:#ffcdc9;
+  --sw-commit:#ffff55; --sw-gra:#0000ff; --sw-red:#ff3333;
+  --shadow:0 6px 24px rgba(0,0,0,.18);
+  --f-display:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --f-body:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --f-mono:Menlo,Monaco,Consolas,"Courier New",monospace;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0e1512; --surface:#151e1a; --surface-2:#1c2723; --line:#2a3832;
-    --fg:#e4ede8; --muted:#92a39a;
-    --accent:#5fbb9f; --accent-soft:#183329; --accent-fg:#07130e;
-    --ok:#62d096; --ok-soft:#14301f; --warn:#e5b65e; --warn-soft:#352a10; --bad:#f28b83; --bad-soft:#3a1a17;
-    --shadow:0 12px 40px rgba(0,0,0,.5);
+    --bar:#8f461a; --bar-fg:#ffffff;
+    --bg:#1b1a19; --surface:#22201f; --surface-2:#2b2928; --line:#3d3a38; --line-2:#4a4644;
+    --fg:#e6e2df; --muted:#a39d98; --title:#cfc9c4;
+    --accent:#f08a3c; --accent-hover:#ffad6e; --accent-soft:#3a2617; --accent-fg:#1b1a19;
+    --badge:#5f5a56; --badge-fg:#ffffff;
+    --ok:#7fcf86; --ok-soft:#1f3322; --warn:#e3c36f; --warn-soft:#3a3218; --bad:#f19a95; --bad-soft:#40201f;
+    --row-commit:#4a4417; --row-gra:#1f2b57; --row-red:#4e211e;
+    --sw-commit:#e6e64a; --sw-gra:#4d6dff; --sw-red:#ff5c5c;
+    --shadow:0 6px 24px rgba(0,0,0,.5);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0e1512; --surface:#151e1a; --surface-2:#1c2723; --line:#2a3832;
-  --fg:#e4ede8; --muted:#92a39a;
-  --accent:#5fbb9f; --accent-soft:#183329; --accent-fg:#07130e;
-  --ok:#62d096; --ok-soft:#14301f; --warn:#e5b65e; --warn-soft:#352a10; --bad:#f28b83; --bad-soft:#3a1a17;
-  --shadow:0 12px 40px rgba(0,0,0,.5);
+  --bar:#8f461a; --bar-fg:#ffffff;
+  --bg:#1b1a19; --surface:#22201f; --surface-2:#2b2928; --line:#3d3a38; --line-2:#4a4644;
+  --fg:#e6e2df; --muted:#a39d98; --title:#cfc9c4;
+  --accent:#f08a3c; --accent-hover:#ffad6e; --accent-soft:#3a2617; --accent-fg:#1b1a19;
+  --badge:#5f5a56; --badge-fg:#ffffff;
+  --ok:#7fcf86; --ok-soft:#1f3322; --warn:#e3c36f; --warn-soft:#3a3218; --bad:#f19a95; --bad-soft:#40201f;
+  --row-commit:#4a4417; --row-gra:#1f2b57; --row-red:#4e211e;
+  --sw-commit:#e6e64a; --sw-gra:#4d6dff; --sw-red:#ff5c5c;
+  --shadow:0 6px 24px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--f-body);padding-inline:16px;padding-block:0}
-.wrap{max-width:1280px;margin:0 auto;padding-bottom:48px}
-h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
-h2{font-size:20px;font-weight:700}
-h3{font-size:15px;font-weight:700}
+body{background:var(--bg);color:var(--fg);font:14px/1.42857 var(--f-body);margin:0;padding:0}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1400px;margin:0 auto;padding-bottom:48px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;font-weight:500;color:var(--fg)}
+h2{font-size:24px}
+h3{font-size:17px}
 p{margin:0}
+a{color:var(--accent)}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.mono{font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
 .small{font-size:12px}
-.eyebrow{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.eyebrow{font:bold 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 
-/* top bar */
-.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:16px 12px}
-.brand{font:700 22px var(--f-display);letter-spacing:-.02em}
-.brand small{display:block;font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.who{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* legacy band + header */
+.uband{background:var(--bar);color:var(--bar-fg)}
+.uband .in{max-width:1400px;margin:0 auto;min-height:40px;display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;padding-block:5px}
+.uband label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--bar-fg)}
+.uband select{background:transparent;color:var(--bar-fg);border:1px solid rgba(255,255,255,.7);border-radius:3px;padding:2px 6px;font-size:12px;max-width:62vw}
+.uband select option{color:#333;background:#fff}
+.uband .bandbtn{background:transparent;color:var(--bar-fg);border:1px solid rgba(255,255,255,.85);border-radius:3px;padding:2px 8px;font-size:12px;cursor:pointer}
+.uband .bandbtn:hover{background:rgba(255,255,255,.15)}
+.uband .src{font-size:11px;font-weight:bold;letter-spacing:.03em;text-transform:uppercase;border:1px solid rgba(255,255,255,.55);border-radius:3px;padding:1px 6px}
+.top{display:flex;gap:12px 24px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:14px 12px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.brand{font:300 28px/1.2 var(--f-display);color:var(--title);letter-spacing:-.005em}
+.brand small{font-size:12px;color:var(--muted);margin-left:8px;font-weight:400;white-space:nowrap}
+.who{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.who .navlink{background:none;border:0;padding:0;color:var(--accent);font-size:17px;cursor:pointer}
+.who .navlink:hover{color:var(--accent-hover);text-decoration:underline}
+/* Bootstrap 3 nav-tabs */
 .tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:20px}
-.tab{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font:600 13px var(--f-body);color:var(--muted);white-space:nowrap;cursor:pointer;display:flex;gap:6px;align-items:center}
-.tab:hover{color:var(--fg)}
-.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
-.badge{font:600 11px var(--f-mono);padding:1px 6px;border-radius:99px;background:var(--surface-2);color:var(--fg)}
-.badge.bad{background:var(--bad-soft);color:var(--bad)}
-.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.tab{background:none;border:1px solid transparent;border-bottom:0;border-radius:4px 4px 0 0;padding:10px 15px;font-size:15px;color:var(--accent);white-space:nowrap;cursor:pointer;display:flex;gap:6px;align-items:center;margin-bottom:-1px}
+.tab:hover{background:var(--surface-2);border-color:var(--surface-2) var(--surface-2) var(--line)}
+.tab[aria-selected="true"]{color:var(--title);background:var(--bg);border-color:var(--line);border-bottom:1px solid var(--bg);cursor:default}
+.badge{display:inline-block;min-width:10px;padding:3px 7px;font:bold 12px/1 var(--f-body);color:var(--badge-fg);text-align:center;white-space:nowrap;background:var(--badge);border-radius:10px;font-variant-numeric:tabular-nums}
+.badge.bad{background:var(--bad);color:var(--surface)}
+.badge.warn{background:var(--accent);color:var(--accent-fg)}
 
-/* controls */
-.btn{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:6px;font:600 13px var(--f-body);cursor:pointer;color:var(--fg);white-space:nowrap}
-.btn:hover{background:var(--surface-2)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.btn.primary:hover{filter:brightness(1.08)}
+/* controls: Bootstrap 3 default buttons */
+.btn{border:1px solid var(--line-2);background:var(--surface);padding:6px 12px;border-radius:4px;font-size:14px;cursor:pointer;color:var(--fg);white-space:nowrap;line-height:1.42857}
+.btn:hover{background:var(--surface-2);border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent-hover);color:var(--accent-fg)}
+.btn.primary:hover{background:var(--accent-hover)}
 .btn.danger{color:var(--bad)}
-.btn.sm{padding:3px 8px;font-size:12px}
-.btn[disabled]{opacity:.5;cursor:not-allowed}
-.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;cursor:pointer;text-align:left}
-.link:hover{text-decoration:underline}
-input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+.btn.sm{padding:4px 10px;font-size:12px;line-height:1.5;border-radius:3px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.link{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-align:left;font-weight:normal}
+.link:hover{color:var(--accent-hover);text-decoration:underline}
+input,select,textarea{background:var(--surface);border:1px solid var(--line-2);border-radius:4px;padding:5px 8px;max-width:100%;box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}
 input[type=number]{width:64px}
 textarea{width:100%;resize:vertical}
-label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:13px;font-weight:bold;color:var(--fg)}
 .filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
 
-/* chips */
-.chip{display:inline-flex;align-items:center;gap:4px;font:600 11px/1.4 var(--f-body);padding:1px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
-.chip.ok{background:var(--ok-soft);color:var(--ok)}
-.chip.warn{background:var(--warn-soft);color:var(--warn)}
-.chip.bad{background:var(--bad-soft);color:var(--bad)}
-.chip.acc{background:var(--accent-soft);color:var(--accent)}
+/* labels (Bootstrap .label, softened) */
+.chip{display:inline-flex;align-items:center;gap:4px;font:bold 11px/1.5 var(--f-body);padding:0 6px;border-radius:3px;background:var(--surface-2);color:var(--muted);white-space:nowrap;border:1px solid var(--line)}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.chip.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 
 /* layout */
@@ -89,48 +114,63 @@ label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mu
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
 .split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+/* Bootstrap panel */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:15px;min-width:0;box-shadow:0 1px 1px rgba(0,0,0,.05)}
 .card>h3{margin-bottom:8px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
-.stat b{display:block;font:500 26px var(--f-mono);letter-spacing:-.02em}
-.stat span{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
-table{border-collapse:collapse;width:100%;min-width:680px}
-th{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
-td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-tr:last-child td{border-bottom:0}
+/* legacy-style counts: "Total Classes: [114]" */
+.stats{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center}
+.stat{display:inline-flex;flex-direction:row-reverse;align-items:center;gap:6px;font-size:15px}
+.stat b{display:inline-block;min-width:10px;padding:3px 8px;font:bold 12px/1 var(--f-body);color:var(--badge-fg);background:var(--badge);border-radius:10px;font-variant-numeric:tabular-nums}
+.stat span::after{content:":"}
+/* Bootstrap table table-bordered */
+.tbl{overflow-x:auto;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:680px;border:1px solid var(--line)}
+th{font:bold 14px var(--f-body);color:var(--fg);text-align:left;padding:8px;border:1px solid var(--line);border-bottom-width:2px;white-space:nowrap;background:var(--surface);vertical-align:bottom}
+td{padding:8px;border:1px solid var(--line);vertical-align:top}
 tr.sel td{background:var(--accent-soft)}
-td.num,th.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-.bar{position:relative;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+/* legacy row colors */
+tr.lg-commitment>td{background:var(--row-commit)}
+tr.lg-gra>td{background:var(--row-gra)}
+tr.lg-red>td{background:var(--row-red)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:13px;color:var(--fg)}
+.legend i{display:inline-block;width:12px;height:12px;border:1px solid var(--line-2);vertical-align:-1px;margin-right:5px}
+.legend i.y{background:var(--sw-commit)}.legend i.b{background:var(--sw-gra)}.legend i.r{background:var(--sw-red)}
+.bar{position:relative;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
 .bar i{position:absolute;inset:0 auto 0 0;display:block}
-.bar i.d{background:var(--accent-soft);outline:1px solid var(--accent);outline-offset:-1px}
+.bar i.d{background:var(--accent-soft)}
 .bar i.c{background:var(--accent)}
-.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:8px 12px;border-radius:0 6px 6px 0}
-.note.warn{border-color:var(--warn);background:var(--warn-soft)}
-.note.bad{border-color:var(--bad);background:var(--bad-soft)}
-.course-btn{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
-.course-btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.course-btn+.course-btn{margin-top:8px}
+/* Bootstrap alerts */
+.note{border:1px solid var(--line);background:var(--accent-soft);padding:10px 15px;border-radius:4px}
+.note.warn{background:var(--warn-soft);color:var(--fg)}
+.note.bad{background:var(--bad-soft);color:var(--fg)}
+/* list-group course list */
+.course-btn{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:10px 12px;cursor:pointer;color:var(--fg)}
+.course-btn b{color:var(--accent);font-weight:normal;font-size:15px}
+.course-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.course-btn[aria-pressed="true"] b{font-weight:bold}
+.course-btn+.course-btn{margin-top:6px}
 .issue{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
 .issue:last-child{border-bottom:0}
 .issue>div{min-width:0}
 .guide ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
-.guide summary{cursor:pointer;font:700 15px var(--f-display)}
+.guide summary{cursor:pointer;font:500 17px var(--f-display)}
 ul.plain{list-style:none;margin:0;padding:0}
 
 /* notifications */
 .bellwrap{position:relative}
-.bellpanel{position:absolute;right:0;top:calc(100% + 6px);width:min(380px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);z-index:15;max-height:70vh;overflow-y:auto}
+.bellpanel{position:absolute;right:0;top:calc(100% + 6px);width:min(380px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:4px;box-shadow:var(--shadow);z-index:15;max-height:70vh;overflow-y:auto}
 @media (max-width:560px){.bellpanel{position:fixed;left:16px;right:16px;top:72px;width:auto}}
 .notif{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;cursor:pointer;color:var(--fg)}
 .notif:last-child{border-bottom:0}
 .notif.unread{background:var(--accent-soft)}
-.notif.unread span:first-child{font-weight:600}
+.notif.unread span:first-child{font-weight:bold}
 
-/* v3 */
-.seg{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
-.seg .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.seg{display:inline-flex;align-items:center;gap:0;flex-wrap:wrap}
+.seg .btn{border-radius:0;margin-left:-1px}
+.seg .btn:first-of-type{border-radius:3px 0 0 3px;margin-left:0}
+.seg .btn:last-child{border-radius:0 3px 3px 0}
+.seg .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent-hover);color:var(--accent-fg)}
 tr.dim td{opacity:.62}
 tr.dim td:last-child,tr.dim td:nth-last-child(2){opacity:1}
 tr.add td{background:var(--ok-soft)}
@@ -140,16 +180,16 @@ tr.chg td{background:var(--warn-soft)}
 .cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:800px){.cols3{grid-template-columns:minmax(0,1fr)}}
 ul.plain.tight li{padding:3px 0}
-/* drawer */
-.scrim{position:fixed;inset:0;background:rgba(5,15,10,.45);z-index:20}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--surface);z-index:21;box-shadow:var(--shadow);overflow-y:auto;padding:20px 20px 40px;border-left:1px solid var(--line)}
+/* drawer (applicant record) */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--surface);z-index:21;box-shadow:var(--shadow);overflow-y:auto;padding:calc(18px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) 20px;border-left:1px solid var(--line)}
 .drawer h2{margin-bottom:4px}
-.drawer dl{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:6px 12px;margin:12px 0}
-.drawer dt{color:var(--muted);font-size:12px}
-.drawer dd{margin:0;overflow-wrap:anywhere}
-.drawer .stmt{white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow-y:auto;background:var(--surface-2);padding:10px;border-radius:6px}
+.drawer dl{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:0;margin:12px 0;border-top:1px solid var(--line)}
+.drawer dt{font-weight:bold;font-size:13px;padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+.drawer dd{margin:0;overflow-wrap:anywhere;padding:6px 0;border-bottom:1px solid var(--line)}
+.drawer .stmt{white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow-y:auto;background:var(--surface-2);padding:10px;border-radius:4px}
 .drawer h3{margin-top:16px}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:6px;z-index:30;font-weight:600;opacity:0;pointer-events:none;transition:opacity .15s;max-width:calc(100vw - 32px)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:4px;z-index:30;font-weight:bold;opacity:0;pointer-events:none;transition:opacity .15s;max-width:calc(100vw - 32px)}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 footer.foot{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
@@ -157,7 +197,7 @@ footer.foot{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);co
 .pre{white-space:pre-wrap;overflow-wrap:anywhere}
 </style>
 
-<div class="wrap" id="app"></div>
+<div id="app"></div>
 <div id="drawer"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -674,17 +714,24 @@ const opt=(v,l,cur)=>'<option value="'+esc(v)+'"'+(String(v)===String(cur)?' sel
 /* ---------- views: shell ---------- */
 function bell(){
   const mine=S.notifs.filter(n=>n.to===me()).sort((a,b)=>Date.parse(b.at)-Date.parse(a.at)),unread=mine.filter(n=>!n.read).length;
-  return '<span class="bellwrap"><button class="btn" data-act="bell" aria-expanded="'+S.bell+'" aria-label="Notifications, '+unread+' unread">Notifications'+(unread?' <span class="badge warn">'+unread+'</span>':'')+'</button>'+
+  return '<span class="bellwrap"><button class="navlink" data-act="bell" aria-expanded="'+S.bell+'" aria-label="Notifications, '+unread+' unread">Notifications'+(unread?' <span class="badge warn">'+unread+'</span>':'')+'</button>'+
     (S.bell?'<div class="bellpanel" role="dialog" aria-label="Notifications"><div class="row" style="justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)"><b>Notifications</b><button class="link" data-act="notifAll">Mark all read</button></div>'+
       (mine.length?mine.slice(0,10).map(n=>'<button class="notif'+(n.read?'':' unread')+'" data-act="notifGo" data-a="'+n.id+'"><span>'+esc(n.text)+'</span><span class="small muted">'+when(n.at)+'</span></button>').join(''):'<div class="muted" style="padding:12px">Nothing yet.</div>')+'</div>':'')+'</span>';
 }
 function header(){
   const sel=S.user.type==='admin'?'admin':'fac:'+S.user.fid;
-  return '<header class="top"><div class="brand"><small>Computer Science · '+esc(TERM.name)+' · demo v5</small>TA Studio Desk</div>'+
-    '<div class="who">'+(LIVE?'<span class="chip acc">From the legacy app</span>':'<span class="chip warn">Synthetic demo data</span>')+''+bell()+
-    '<label class="f" style="flex-direction:row;align-items:center;gap:6px">View as <select data-chg="role" id="roleSel">'+opt('admin',ADMIN+' (admin)',sel)+SEED.faculty.map(x=>opt('fac:'+x.faculty_id,x.display_name+' (faculty)',sel)).join('')+'</select></label>'+
-    '<button class="btn" data-act="reset">'+(LIVE?'Reset my changes':'Reset demo')+'</button></div></header>';
+  return '<header class="top"><div class="brand">UTCS TA/UGCA '+(S.user.type==='admin'?'Studio':'Faculty')+' - '+esc(TERM.name)+'<small>TA Studio demo v5</small></div>'+
+    '<div class="who">'+bell()+'</div></header>';
 }
+/* The burnt-orange band from the legacy app. It carries the data source, the "View as" switch and Reset (where the legacy app has Logout). */
+function band(){
+  const sel=S.user.type==='admin'?'admin':'fac:'+S.user.fid;
+  return '<div class="uband"><div class="in gut"><span class="src">'+(LIVE?'From the legacy app · read only':'Synthetic demo data')+'</span>'+
+    '<label for="roleSel">View as <select data-chg="role" id="roleSel">'+opt('admin',ADMIN+' (admin)',sel)+SEED.faculty.map(x=>opt('fac:'+x.faculty_id,x.display_name+' (faculty)',sel)).join('')+'</select></label>'+
+    '<button class="bandbtn" data-act="reset">'+(LIVE?'Reset my changes':'Reset demo')+'</button></div></div>';
+}
+const LEGEND='<div class="legend"><span><i class="y"></i>Yellow = Commitment student</span><span><i class="b"></i>Blue = Other support (GRA)</span><span><i class="r"></i>Red = Declined offer, graduated, or other</span></div>';
+const rowCls=a=>isRed(a)?'lg-red':(S.gra.has(a)||FL(a).color==='other_support')?'lg-gra':isCommit(a)?'lg-commitment':'';
 function tabsFor(){
   const g=gate(),open=S.concerns.filter(c=>c.status==='open'||c.status==='under_review').length;
   if(S.user.type==='admin'){
@@ -1006,7 +1053,7 @@ function vWorkspace(cid,g){
     const sizeCtl=ug?'<label class="f" style="flex-direction:row;align-items:center;gap:6px"><input type="number" min="0" max="'+UG_MAX+'" step="1" value="'+cur+'" list="ugHours" data-chg="setAlloc" data-a="'+cid+'" data-b="'+a+'" data-fid="alloc:'+cid+':'+a+'" aria-label="Hours per week for '+esc(nm(a))+'" style="width:64px">hours</label>'
       :'<select data-chg="setAlloc" data-a="'+cid+'" data-b="'+a+'" data-fid="alloc:'+cid+':'+a+'" aria-label="Appointment for '+esc(nm(a))+'">'+opts.sort((x,y)=>x-y).map(v=>opt(v,v===0?'None':v===1?'Full-time':v===0.5?'Half-time':f(v)+' FTE',cur)).join('')+'</select>';
     const itaw=ex(a).ita==='ITA workshop needed'||ex(a).ita==='English test pending';
-    return '<tr'+(S.gra.has(a)?' class="dim"':'')+'><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+lgChips(a)+(S.gra.has(a)?chip('GRA','bad'):'')+eligChipAdm(a)+(itaw?chip(ex(a).ita,'warn'):'')+(S.tx[a]&&S.tx[a].checked?chip('Transcript checked','ok'):chip('Transcript not checked'))+'</div></td>'+
+    return '<tr class="'+rowCls(a)+(S.gra.has(a)?' dim':'')+'"><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+lgChips(a)+(S.gra.has(a)?chip('GRA','bad'):'')+eligChipAdm(a)+(itaw?chip(ex(a).ita,'warn'):'')+(S.tx[a]&&S.tx[a].checked?chip('Transcript checked','ok'):chip('Transcript not checked'))+'</div></td>'+
       '<td>'+choiceCell(x,a,cid)+'</td>'+
       '<td>'+(e.rank!=null?'<b class="mono">#'+e.rank+'</b> '+chip(e.rec.replace('_',' '),e.rec==='strong_yes'?'ok':'')+(e.comment?'<div class="small muted">'+esc(e.comment)+'</div>':''):(e.rec==='do_not_rank'?chip('Do not rank','bad'):'<span class="muted">Not ranked</span>'))+'</td>'+
       '<td><div class="chips">'+factsFor(a,cid)+'</div>'+(else_.length?'<div class="small muted" style="margin-top:4px">'+else_.map(esc).join('<br>')+'</div>':'')+'</td>'+
@@ -1015,7 +1062,7 @@ function vWorkspace(cid,g){
         (row&&row.decision!=='declined'?'<div style="margin-top:4px"><select data-chg="setDecision" data-a="'+row.id+'" aria-label="Decision">'+opt('requested','Requested',row.decision)+opt('accepted','Accepted',row.decision)+opt('declined','Declined',row.decision)+'</select></div><div style="margin-top:4px"><select data-chg="setRole" data-a="'+row.id+'" aria-label="Appointment type">'+(isGrad(a)?opt('TA','TA',row.role)+opt('AI','AI (assistant instructor)',row.role):opt('UGCA','UGCA',row.role))+'</select></div>':'')+'</td>'+
       '<td>'+(S.gra.has(a)?'<div class="small" style="margin-bottom:4px">On the GRA list. '+graBtn(a)+'</div>':'')+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
   }).join('');
-  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th title="Where the applicant ranked this course among their own choices (#1 = first choice)">Student\'s choice</th><th>Professor\'s rank</th><th>Facts and other requests</th><th class="num">Assigned / max</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><datalist id="ugHours"><option value="5"><option value="10"><option value="12"><option value="13"><option value="15"><option value="20"></datalist><div class="small muted">Student\'s choice is where the applicant ranked this course among the courses they applied for (#1 of 4 = their first of four). Professor\'s rank is the professor\'s order. Nothing here is scored. UGCAs are set in hours per week (up to '+UG_MAX+'); TAs and AIs are full-time or half-time.</div>'+addBox(cid);
+  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th title="Where the applicant ranked this course among their own choices (#1 = first choice)">Student\'s choice</th><th>Professor\'s rank</th><th>Facts and other requests</th><th class="num">Assigned / max</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><div style="margin:8px 0">'+LEGEND+'</div><datalist id="ugHours"><option value="5"><option value="10"><option value="12"><option value="13"><option value="15"><option value="20"></datalist><div class="small muted">Student\'s choice is where the applicant ranked this course among the courses they applied for (#1 of 4 = their first of four). Professor\'s rank is the professor\'s order. Nothing here is scored. UGCAs are set in hours per week (up to '+UG_MAX+'); TAs and AIs are full-time or half-time.</div>'+addBox(cid);
 }
 
 /* ---------- views: applicants ---------- */
@@ -1059,7 +1106,7 @@ function vApplicants(){
   const rows=apps.map(a=>{
     const id=a.application_id,al=appAlloc(id);
     const state=a.application_status==='draft'?chip('Draft application','warn'):S.gra.has(id)?chip('GRA, excluded','bad'):elig(id)==='ineligible'?chip(FL(id).color==='declined'?'Declined':'Not eligible','bad'):al>0?chip('Assigned '+appLoadTxt(id).split(' / ')[0]+(isUG(id)?' h':' FTE'),'ok'):chip('Needs a position',a.degree_level==='PhD'||isCommit(id)?'warn':'');
-    return '<tr><td>'+nameBtn(id,'')+(S.sync.newApps.includes(id)?' '+chip('New from legacy app','warn'):'')+((S.sync.declined||[]).includes(id)?' '+chip('Turned red on refresh','bad'):'')+(lgChips(id)?'<div class="chips" style="margin-top:4px">'+lgChips(id)+'</div>':'')+'</td><td>'+tierChip(id)+'</td><td>'+chip(tierOf(id).code,'acc')+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="small">'+choiceTxt(id)+'</td><td>'+resumeChip(id)+'</td><td class="num">'+appLoadTxt(id)+'</td><td>'+state+'</td><td>'+graBtn(id)+'</td></tr>';
+    return '<tr class="'+rowCls(id)+'"><td>'+nameBtn(id,'')+(S.sync.newApps.includes(id)?' '+chip('New from legacy app','warn'):'')+((S.sync.declined||[]).includes(id)?' '+chip('Turned red on refresh','bad'):'')+(lgChips(id)?'<div class="chips" style="margin-top:4px">'+lgChips(id)+'</div>':'')+'</td><td>'+tierChip(id)+'</td><td>'+chip(tierOf(id).code,'acc')+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="small">'+choiceTxt(id)+'</td><td>'+resumeChip(id)+'</td><td class="num">'+appLoadTxt(id)+'</td><td>'+state+'</td><td>'+graBtn(id)+'</td></tr>';
   }).join('');
   const res=gr?'<div class="eyebrow">Result</div><div style="margin-top:6px">'+chip((gr.byEid||[]).length+' matched by EID','ok')+' '+((gr.byName||[]).length?chip(gr.byName.length+' matched by name only','warn')+' ':'')+chip(gr.unmatched.length+' not in the pool',gr.unmatched.length?'warn':'')+'</div>'+
     ((gr.byEid||[]).length?'<div style="margin-top:8px"><b>Flagged by EID:</b> '+gr.byEid.map(a=>esc(nm(a))+' <span class="mono small">'+esc(FL(a).eid||'')+'</span>').join(', ')+'</div>':'')+
@@ -1072,7 +1119,7 @@ function vApplicants(){
     '<div class="card"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste their EIDs here, one per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand. Refreshing from the legacy app also excludes anyone who has turned blue.</p>'+
     '<div class="grid2"><div><label class="f" for="graText">Grant-admin list: EIDs, one per line (a name works as a fallback)</label><textarea id="graText" rows="5" data-inp="graText">'+esc(S.graText)+'</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="applyGra">Run GRA check</button></div></div>'+
     '<div>'+res+'</div></div></div>'+
-    '<div><div class="filters"><h3 style="margin-right:auto">Applicant pool</h3><label class="f">Level<select data-chg="appFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label>'+typeToggle()+'<button class="btn" data-act="composeOpen">Email applicants</button><button class="btn" data-act="bulkResume"'+(noRes?'':' disabled')+'>Request résumés ('+noRes+' without one)</button></div>'+
+    '<div><div class="filters"><div style="margin-right:auto;display:flex;flex-direction:column;gap:6px"><h3>Applicant pool</h3>'+LEGEND+'</div><label class="f">Level<select data-chg="appFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label>'+typeToggle()+'<button class="btn" data-act="composeOpen">Email applicants</button><button class="btn" data-act="bulkResume"'+(noRes?'':' disabled')+'>Request résumés ('+noRes+' without one)</button></div>'+
     '<div class="tbl"><table><thead><tr><th>Candidate</th><th>Level</th><th>HR tier</th><th>Type</th><th>Program</th><th>Application</th><th>Eligibility (admin only)</th><th>Courses chosen, in their order</th><th>Résumé</th><th class="num">Assigned / max</th><th>Placement</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="small muted" style="margin-top:6px">Open a name to see every course they applied for, in their order, and whether they asked for a discussion section.</div></div></div>';
 }
 
@@ -1257,7 +1304,7 @@ function render(){
   let main;
   if(S.user.type==='admin')main={dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,hr:vHR,students:vStudents,concerns:vConcerns,mail:vMail,setup:vSetup,audit:vAudit}[S.tab]();
   else main=S.tab==='published'?vFacPublished():vFacCourses();
-  $('#app').innerHTML=header()+nav()+'<main>'+main+'</main><footer class="foot">'+(LIVE?'Data read from the legacy TA app at '+when(FEEDMETA.syncedAt)+'. Nothing is written back to it and no email has been sent. The page resets when you refresh, and picking a profile is not sign-in.':'Every applicant here is fictional and labeled as synthetic. The page resets when you refresh, and picking a profile is not sign-in. Course titles and faculty names come from public Fall 2026 UT Austin Computer Science listings.')+'</footer>';
+  $('#app').innerHTML=band()+'<div class="wrap gut">'+header()+nav()+'<main>'+main+'</main><footer class="foot">'+(LIVE?'Data read from the legacy TA app at '+when(FEEDMETA.syncedAt)+'. Nothing is written back to it and no email has been sent. The page resets when you refresh, and picking a profile is not sign-in.':'Every applicant here is fictional and labeled as synthetic. The page resets when you refresh, and picking a profile is not sign-in. Course titles and faculty names come from public Fall 2026 UT Austin Computer Science listings.')+'</footer></div>';
   const d=$('#drawer');d.innerHTML=drawerHtml();
   if(S.drawer&&S.drawerNew){const b=$('#drawerClose');if(b)b.focus();S.drawerNew=false}
   window.scrollTo(0,y);

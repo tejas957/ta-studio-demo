@@ -81,7 +81,7 @@ async function sync(opt = {}) {
   } catch (e) { warnings.push('Faculty directory not read: ' + e.message); }
   } else warnings.push('Courses and applicants only: current assignments, HR draft and professor emails were not read.');
 
-  const payload = buildPayload({ classes, applicants, taDetails, ugcaDetails, notify, drafts, commitments, directory, emails, warnings, term: opt.term, now: opt.now });
+  const payload = buildPayload({ classes, applicants, taDetails, ugcaDetails, notify, drafts, commitments, directory, emails, warnings, term: opt.term || classes.term, now: opt.now });
   payload.meta.requests = c.sent.length;
   payload.meta.nonGetRequests = c.sent.filter(x => !x.startsWith('GET ')).length;
   return payload;

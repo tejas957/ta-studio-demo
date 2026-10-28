@@ -19,7 +19,8 @@ const splitLabel = s => { const t = clean(s); const m = t.match(/^(\S+)\s+(.*)$/
 /* ----- classes ----- */
 function classes(html) {
   const $ = cheerio.load(html);
-  const out = { ta: [], proctor: [] };
+  const tm = (clean($('.navbar-brand').first().text()) + ' ' + clean($('title').first().text())).match(/(Fall|Spring|Summer)\s+(\d{4})/i);
+  const out = { ta: [], proctor: [], term: tm ? tm[1][0].toUpperCase() + tm[1].slice(1).toLowerCase() + ' ' + tm[2] : '' };
   const ta = tableByHeaders($, ['Id', 'Course', 'Prof', 'TAs Needed']);
   if (ta) ta.table.find('tbody tr').each((_, tr) => {
     const td = $(tr).children('td'); if (td.length < 4) return;
