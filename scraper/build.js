@@ -132,7 +132,7 @@ function buildPayload(P) {
     draftRows.push({ draft_assignment_id: 'draft_live_' + String(dn++).padStart(3, '0'), draft_id: 'draft_live', course_id: cid(sec), application_id: aid, allocation_fte: r.pct, admin_decision_status: 'accepted', publication_status: 'unpublished', admin_note: '' });
   }
   // Assignments seen on the applicant list but missing from the notify table
-  for (const a of P.applicants.ta) a.assignments.forEach(s => { const aid = appIdTA(a.id); if (!draftRows.some(r => r.application_id === aid && r.course_id === cid(s)) && taCls.has(s)) warnings.push('Applicant ' + a.id + ' shows an assignment in ' + s + ' that is not in the Agreement table'); });
+  if (P.notify) for (const a of P.applicants.ta) a.assignments.forEach(s => { const aid = appIdTA(a.id); if (!draftRows.some(r => r.application_id === aid && r.course_id === cid(s)) && taCls.has(s)) warnings.push('Applicant ' + a.id + ' shows an assignment in ' + s + ' that is not in the Agreement table'); });
 
   // ----- HR baseline: the latest draft on the assignments page -----
   let hr = null;

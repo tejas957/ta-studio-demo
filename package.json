@@ -9,6 +9,7 @@
     "sync": "node scraper/sync.js --out sync/payload.json",
     "sync:lean": "node scraper/sync.js --only courses,applicants --out sync/payload.json",
     "sync:probe": "node scraper/sync.js --probe",
+    "sync:dump": "node scraper/sync.js --dump ~/Downloads/legacy-dump.json --out sync/payload.json",
     "sync:mock": "node scraper/mock-sync.js"
   },
   "devDependencies": {

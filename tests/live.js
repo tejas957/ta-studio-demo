@@ -57,6 +57,27 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   let refused = false; try { await cl.get('https://example.com/'); } catch (e) { refused = true; }
   ok(refused, 'any other host is refused');
 
+  // ---- browser dump (scraper/browser-dump.js run in a signed-in tab), parsed offline ----
+  { const g0 = srv.stats.gets.length, n0 = srv.stats.nonGet.length;
+    const page = await (await fetch(base + '/admin/applicants', { headers: { Cookie: srv.cookie } })).text();
+    const bd = new JSDOM(page, { url: base + '/admin/applicants', runScripts: 'outside-only', pretendToBeVisual: true });
+    const bw = bd.window; let blob = null, done = null; const fin = new Promise(r => { done = r; });
+    bw.__TA_DUMP_TEST = true; bw.console.log = (...a) => { if (/Done:|Stopped:/.test(a.join(' '))) done(); };
+    bw.fetch = (u, o) => fetch(new URL(u, bw.location.href).href, { method: (o && o.method) || 'GET', headers: { Cookie: srv.cookie } });
+    bw.Blob = class { constructor(parts) { blob = parts.join(''); } }; bw.URL.createObjectURL = () => 'blob:x';
+    bw.HTMLAnchorElement.prototype.click = function () {};
+    bw.eval(fs.readFileSync(require('path').join(__dirname, '../scraper/browser-dump.js'), 'utf8'));
+    await fin; const dump = JSON.parse(blob);
+    ok(dump.meta.source === 'legacy-browser-dump' && dump.pages['@classes'] === '/admin/classes' && dump.pages['@applicants'] === '/admin/applicants' && dump.pages['@ugcaModal'] === '/admin/proctor_applicant/', 'browser dump finds the class, applicant and UGCA pages');
+    ok(srv.stats.nonGet.length === n0 && srv.stats.gets.length - g0 > 400, 'browser dump sends only GET requests (' + (srv.stats.gets.length - g0) + ')');
+    const pd = await sync({ dump });
+    ok(pd.meta.counts.taApplicants === 166 && pd.meta.counts.ugcaApplicants === 264 && pd.meta.counts.sections === 121 && pd.meta.commitmentList === 65, 'the dump parses offline into all courses and applicants');
+    ok(pd.applications.filter(x => x.self_degree).length === 2 && pd.course_preferences.some(x => x.discussion), 'offline parse keeps commitment override and discussion requests');
+    const bad = { meta: { source: 'legacy-browser-dump' }, pages: { '@classes': '/admin/classes', '/admin/classes': '<p>Access denied. You must be logged in to access that page.</p>' } };
+    let e2 = null; try { await sync({ dump: bad }); } catch (e) { e2 = e; } ok(e2, 'a dump of the login page does not produce an empty file');
+    const hc = http.client({ base, cookie: 'x=1', fetchImpl: async () => ({ status: 200, ok: true, headers: { get: () => 'text/html', getSetCookie: () => [] }, text: async () => '<h2>Admin login</h2><p>Access denied. You must be logged in to access that page.</p>' }) });
+    let e3 = null; try { await hc.get(hc.legacy('/admin/classes')); } catch (e) { e3 = e; } ok(e3 instanceof AuthError, 'the "Access denied" page stops a cookie pull with a sign-in error'); }
+
   // ---- app ----
   const html = fs.readFileSync(process.argv[2], 'utf8');
   const errs = []; const vc = new VirtualConsole();

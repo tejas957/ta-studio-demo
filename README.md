@@ -40,6 +40,9 @@ npm run mock        # fake legacy site on http://127.0.0.1:8787/taproc/index.php
 npm run sync:mock   # scrapes the fake site into samples/mock-payload.json (committed, fake)
 npm run sync        # REAL app: needs LEGACY_COOKIE (see docs/LEGACY_APP_MAP.md); writes sync/payload.json (git-ignored)
 npm run sync:lean   # REAL app, courses and applicants only (no assignments, HR draft or professor emails)
+# If the copied cookie is refused (the UTCS sign-in ties it to the browser), pull from inside the signed-in tab instead:
+pbcopy < scraper/browser-dump.js   # paste into DevTools > Console on any TA admin page; downloads ~/Downloads/legacy-dump.json (GET only)
+npm run sync:dump                  # parses that file offline into sync/payload.json
 npm run test:live   # mock site -> scraper -> app, end to end
 ```
 Open the app, go to Setup, and choose the file under "Load a sync file". Loading a newer file later keeps the office's work.

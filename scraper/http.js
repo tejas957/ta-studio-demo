@@ -49,7 +49,7 @@ function client({ base, peopleBase, cookie, delayMs = 0, fetchImpl = fetch, log 
     if (res.status === 403 && legacy && /cf-|cloudflare|challenge/i.test(res.headers.get('server') || '') ) throw new AuthError('Blocked by the site\'s Cloudflare check. Set LEGACY_UA to your browser\'s User-Agent (same Request Headers section) and try again.');
     if (!res.ok) throw new Error(res.status + ' for ' + u.pathname);
     const text = await res.text();
-    if (legacy && /type="password"/i.test(text)) throw new AuthError('The login form came back instead of the page. Set LEGACY_COOKIE to a fresh session cookie.');
+    if (legacy && /type="password"|You must be logged in/i.test(text)) throw new AuthError('The login form came back instead of the page. Set LEGACY_COOKIE to a fresh session cookie.');
     return opt.raw ? { text, type: res.headers.get('content-type') } : text;
   }
   return { get, sent, legacy: p => base.replace(/\/$/, '') + p, people: p => peopleBase.replace(/\/$/, '') + p };
