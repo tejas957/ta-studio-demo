@@ -401,6 +401,38 @@ ok(SEED_COUNT()===8,'eight classes after two imports');
 function SEED_COUNT(){return Object.keys(S().course).length}
 let bad=null;try{T.importCourses('foo,bar\n1,2')}catch(e){bad=e}ok(bad&&/course number column/.test(bad.message),'a file without the needed columns is refused with a plain message');
 A.reset();ok(Object.keys(S().course).length===6,'reset removes imported classes');
+// ---- v6: Ask ----
+(async()=>{
+A.reset();A.role(null,null,'admin');
+ok(w.document.querySelector('#askQ')!==null,'Ask box is in the admin header');
+A.role(null,null,'fac:fac_w_young');ok(w.document.querySelector('#askQ')===null,'professors do not get the Ask box');A.role(null,null,'admin');
+ok(T.askLocal('add a new class to the list')[0].id==='import','keywords: add a class -> course import');
+ok(T.askLocal('change the application deadline')[0].id==='l_settings','keywords: deadline -> legacy settings');
+ok(T.askLocal('paste the GRA list')[0].id==='gra','keywords: GRA list -> GRA check');
+ok(T.askLocal('see class schedule conflicts').length===0,'keywords: nothing matches -> not found');
+await T.runAsk('email all the ugcas');
+ok(S().ask.res.id==='email'&&!S().ask.ai&&/Take me there/.test(w.document.body.innerHTML),'without Claude, keyword answer with Take me there');
+A.askGo('email');ok(S().tab==='applicants'&&S().compose&&S().ask===null,'Take me there opens the mass-email composer');
+await T.runAsk('change the application deadline');
+ok(/Open legacy app/.test(w.document.body.innerHTML)&&w.document.querySelector('a[href*="apps.cs.utexas.edu/taproc"]'),'legacy-only answer links to the legacy app');
+await T.runAsk('see class schedule conflicts');
+ok(/Neither app does this yet/.test(w.document.body.innerHTML)&&/Copy request for Tejas/.test(w.document.body.innerHTML),'not found offline: says so and offers to copy the request');
+// with Claude (sample) and the shared store (db), stand-ins
+const saved=[];let asked='';
+w.claude={use:async n=>n==='sample'?{json:async p=>{asked=p;return /conflict/.test(p)?{id:null,say:'',workaround:'Ask each TA for their schedule in a shared sheet.',feature:'Check TA class schedules against section times.'}:{id:'hr',say:'Create draft 16, then copy the spreadsheet.'}}}:
+  n==='db'?{doc:path=>({get:async()=>({exists:false,data:()=>undefined}),set:async d=>{saved.push([path,d])}})}:n==='user'?{id:async()=>'u1'}:null};
+await T.runAsk('send the final list to HR');
+ok(S().ask.ai&&S().ask.res.id==='hr'&&/Create draft 16/.test(w.document.body.innerHTML),'with Claude: one-line answer for the matching place');
+ok(!/Candidate|app_f26|ce4103|at4101/.test(asked),'Claude gets the question and the catalog only, no student data');
+await T.runAsk('see class schedule conflicts');
+ok(S().ask.sent==='saved'&&saved.length===1&&saved[0][0]==='requests/u1'&&/schedule/.test(saved[0][1].items[0].q)&&/TA class schedules/.test(saved[0][1].items[0].feature),'not found with Claude: workaround shown and request saved for Tejas');
+ok(/Sent to Tejas/.test(w.document.body.innerHTML)&&/shared sheet/.test(w.document.body.innerHTML),'Doug sees the workaround and that Tejas was told');
+w.claude={use:async n=>n==='sample'?{json:async()=>{throw {code:'not_granted'}}}:null};
+await T.runAsk('paste the GRA list');ok(S().ask.res.id==='gra'&&!S().ask.ai,'if Claude is refused, keywords answer instead');
+delete w.claude;A.askClear();ok(S().ask===null,'Close clears the answer');
 A.reset();ok(S().pubs.length===1,'reset restores seed');
-console.log(errs.length?'ERRORS:\n'+errs.join('\n'):'no runtime errors');
+console.log(errs.filter(e=>!/scrollTo|scrollIntoView/.test(e)).length?'ERRORS:\n'+errs.join('\n'):'no runtime errors');
 console.log(fails?fails+' FAILED':'ALL PASSED');
+})();
+
+

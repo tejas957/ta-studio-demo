@@ -4,6 +4,9 @@ A clickable, single-file demo of the TA scheduling workflow for the CS office. O
 
 **Synthetic data only.** Applicants are fictional aliases from the small dataset in `data/seed.json` (from `ta-scheduler-mvp-dataset`). No PID, SSN or real student information. The demo EIDs (like `ce4103`) are made up so the EID-based GRA check can be tried.
 
+## Ask box (Oct 29)
+Top right of every admin page (or press `/`): type what you want to do. On the published page, Claude matches it against a fixed catalog of what TA Studio and the legacy app can do (`ASK` in `build/template.html`) and answers in one line with "Take me there" or a link to the legacy page. If neither does it, it gives the quickest workaround and saves the request with a feature idea for Tejas (Setup > Requests from the Ask box; stored in the page's `requests` collection). Claude is sent the question and the catalog only, never student data. In a local copy, or if Claude is not allowed, keyword matching answers and a request can be copied instead. Add a catalog entry whenever a feature is added.
+
 ## New in v5 (from the Oct 14 walkthrough with Doug)
 - Appointments: UGCAs in hours per week (any number, up to 20; a full UGCA is 15). TAs and AIs are full-time or half-time. HR output lists hours for UGCAs.
 - Roles are TA, AI and UGCA. "Proctor" (the old name for UGCA) is gone. Two half-time AIs can co-teach a class.

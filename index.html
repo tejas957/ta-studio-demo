@@ -156,6 +156,16 @@ tr.lg-red>td{background:var(--row-red)}
 .guide ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .guide summary{cursor:pointer;font:500 17px var(--f-display)}
 ul.plain{list-style:none;margin:0;padding:0}
+/* Ask */
+.askwrap{position:relative;flex:1 1 380px;max-width:520px;min-width:0}
+@media (min-width:760px){.who{flex-wrap:nowrap;flex:1 1 auto;justify-content:flex-end}.who .navlink{white-space:nowrap}}
+.ask{display:flex;gap:6px}
+.ask input{flex:1;min-width:0;padding:6px 10px;font-size:14px}
+.askres{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:4px;box-shadow:var(--shadow);padding:10px 12px;z-index:16}
+@media (max-width:560px){.askres{position:static;margin-top:6px}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.flash{outline:3px solid var(--accent);outline-offset:3px;transition:outline-color 1.2s}
+@media (prefers-reduced-motion:reduce){.flash{transition:none}}
 
 /* notifications */
 .bellwrap{position:relative}
@@ -721,7 +731,7 @@ function bell(){
 function header(){
   const sel=S.user.type==='admin'?'admin':'fac:'+S.user.fid;
   return '<header class="top"><div class="brand">UTCS TA/UGCA '+(S.user.type==='admin'?'Studio':'Faculty')+' - '+esc(TERM.name)+'<small>TA Studio demo v5</small></div>'+
-    '<div class="who">'+bell()+'</div></header>';
+    '<div class="who">'+askBox()+bell()+'</div></header>';
 }
 /* The burnt-orange band from the legacy app. It carries the data source, the "View as" switch and Reset (where the legacy app has Logout). */
 function band(){
@@ -772,6 +782,7 @@ function vDashboard(){
   return '<div class="stack">'+
   '<div class="stats">'+[['Courses',cs.length],['TA and AI need (FTE)',f(needT.g)],['UGCA need (hours)',fh(needT.h)],['Accepted TA and AI',f(conf.g)],['Accepted UGCA hours',fh(conf.h)],['Still open',mixTxt(open_)],['Published v'+(lp?lp.version:'—'),lp?lp.rows.length+' people':'0']].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
   (LIVE?liveSummary():'<details class="card guide" open><summary>Try this: a short walkthrough (v5)</summary><div class="small muted" style="margin-top:4px">Items marked New come from the Oct 14 walkthrough with Doug.</div><ol>'+
+   '<li><b>Ask box</b> (top right, or press /): type what you want to do, like "add a class" or "change the application deadline". It takes you there, points to the legacy app page, or tells Tejas if neither does it. '+chip('New','acc')+'</li>'+
    '<li><button class="link" data-act="goCourse" data-a="crs_f26_002">Open 303E · 002</button>: Atlas, a UGCA, is double-booked at 30 hours and a UGCA can work 20 at most. Set Atlas to 0 hours, give Ember a full-time TA appointment, and accept it. '+chip('New: hours for UGCAs, full-time or half-time for TAs','acc')+'</li>'+
    '<li><button class="link" data-act="go" data-a="admin" data-b="applicants">Applicants</button>: the GRA check now matches on EID. The list starts with Cedar\'s EID and one EID nobody has. Add a name on its own line and run it again: the name still matches, but it is listed as "name only" for a second look. '+chip('New','acc')+'</li>'+
    '<li>Kestrel applied as a master\'s student but is on the commitment list, so the tool treats Kestrel as a PhD who must be placed. <button class="link" data-act="goCourse" data-a="crs_f26_004">Open 311</button> and place Kestrel. '+chip('New','acc')+'</li>'+
@@ -867,7 +878,8 @@ function vSetup(){
      ['Class year, hours per week, grade in the course','Undergraduate','To confirm','Confirm or add','warn'],
      ['Courses chosen with notes, availability, skills, coursework, teaching statement','Everyone','Collected today','Nothing to change','ok']
    ].map(r=>'<tr><td><b>'+esc(r[0])+'</b></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+chip(r[3],r[4])+'</td></tr>').join('')+'</tbody></table></div></div>'+
-   '<div class="card"><h3>Data source</h3>'+(LIVE?liveSource():'<p class="muted" style="margin-bottom:8px">Today the demo reads a synthetic dataset. The real tool pulls new applications, course setup and prior TA history from the legacy app, read-only. Rankings, decisions, student replies and all email live in this tool. Press the button to pretend new applicants applied there, or load a sync file made by the scraper.</p>'+
+   reqCard()+
+   '<div class="card" id="dataSource"><h3>Data source</h3>'+(LIVE?liveSource():'<p class="muted" style="margin-bottom:8px">Today the demo reads a synthetic dataset. The real tool pulls new applications, course setup and prior TA history from the legacy app, read-only. Rankings, decisions, student replies and all email live in this tool. Press the button to pretend new applicants applied there, or load a sync file made by the scraper.</p>'+
    '<div class="row"><button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button><span class="small muted">Last refresh: '+when(S.sync.at)+' · '+S.sync.newApps.length+' new since the start of this session</span></div>')+feedLoader()+'</div></div>';
 }
 
@@ -958,7 +970,7 @@ function importCard(){
     (r.missing.length?'<div class="small muted" style="margin-top:4px">Not in this file, kept as they are: '+r.missing.slice(0,10).map(c=>esc(cname(c))).join(', ')+(r.missing.length>10?' and '+(r.missing.length-10)+' more':'')+'</div>':'')+
     '<div class="small muted" style="margin-top:6px">Columns used: '+esc(r.cols.join(', '))+'.</div>'+
     '<label class="f" style="margin-top:8px" for="courseOut">The same file with every GUID filled in (ready for the legacy importer)</label><textarea id="courseOut" class="csv" rows="5" readonly>'+esc(r.csv)+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyCourseOut">Copy CSV</button></div></div>':'';
-  return '<div class="card"><h3>Import a course list (CSV)</h3><p class="muted" style="margin-bottom:10px">Use the CSV you download from the courses app. Leave the GUID column blank: each row gets its own ID ('+esc(termCode())+'-1, '+esc(termCode())+'-2 and so on), so nothing has to be typed by hand. Importing a newer file later adds new classes, updates changed ones and keeps your work. Column names are matched loosely until we see a real file.</p>'+
+  return '<div class="card" id="importCard"><h3>Import a course list (CSV)</h3><p class="muted" style="margin-bottom:10px">Use the CSV you download from the courses app. Leave the GUID column blank: each row gets its own ID ('+esc(termCode())+'-1, '+esc(termCode())+'-2 and so on), so nothing has to be typed by hand. Importing a newer file later adds new classes, updates changed ones and keeps your work. Column names are matched loosely until we see a real file.</p>'+
     '<div class="row" style="align-items:flex-end;gap:10px"><label class="f">Choose a CSV file<input type="file" id="courseFile" accept=".csv,text/csv"></label><button class="btn" data-act="sampleCsv">Use a sample file</button></div>'+
     '<label class="f" style="margin-top:8px" for="courseCsv">Or paste the CSV</label><textarea id="courseCsv" class="csv" rows="4" data-inp="courseCsv">'+esc(S.importDraft||'')+'</textarea><div class="row" style="margin-top:6px"><button class="btn primary" data-act="importCsv">Import</button>'+(S.importMsg?'<span class="small">'+esc(S.importMsg)+'</span>':'')+'</div>'+res+'</div>';
 }
@@ -991,7 +1003,7 @@ function vWindows(){
 
 function browseCard(){
   const b=S.facBrowse,profs=SEED.faculty.filter(fa=>SEED.courses.some(c=>c.faculty_id===fa.faculty_id));
-  return '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Professors can browse all applicants</h3><div class="small muted" style="max-width:720px">When this is on, a professor with an open window can look through every applicant, not only those who chose the course, and add someone to their list. They see names and qualifications only, never which courses a student picked or ranked. Anyone they add shows as "Did not apply, picked by" that professor, so you can tell at a glance. Try it for a term and turn it off for everyone, or for one professor.</div></div><button class="btn'+(b.on?' primary':'')+'" data-act="facBrowseAll" aria-pressed="'+b.on+'">'+(b.on?'On for everyone':'Off for everyone')+'</button></div>'+
+  return '<div class="card" id="browseCard"><div class="row" style="justify-content:space-between"><div><h3>Professors can browse all applicants</h3><div class="small muted" style="max-width:720px">When this is on, a professor with an open window can look through every applicant, not only those who chose the course, and add someone to their list. They see names and qualifications only, never which courses a student picked or ranked. Anyone they add shows as "Did not apply, picked by" that professor, so you can tell at a glance. Try it for a term and turn it off for everyone, or for one professor.</div></div><button class="btn'+(b.on?' primary':'')+'" data-act="facBrowseAll" aria-pressed="'+b.on+'">'+(b.on?'On for everyone':'Off for everyone')+'</button></div>'+
    (b.on?'<details style="margin-top:10px"><summary class="small" style="cursor:pointer">Turn it off for one professor ('+Object.keys(b.off).filter(k=>b.off[k]).length+' off)</summary><div class="chips" style="margin-top:8px">'+profs.map(fa=>'<button class="btn sm" data-act="facBrowseOne" data-a="'+fa.faculty_id+'" aria-pressed="'+!b.off[fa.faculty_id]+'">'+esc(fa.display_name)+': '+(b.off[fa.faculty_id]?'off':'on')+'</button>').join('')+'</div></details>':'')+'</div>';
 }
 
@@ -1031,7 +1043,7 @@ function addBox(cid){
   const apps=SEED.applications.filter(a=>a.application_status==='submitted'&&!have.has(a.application_id)).sort((x,y)=>nm(x.application_id).localeCompare(nm(y.application_id)));
   const lab=a=>nm(a)+' · '+TIER[APP[a].degree_level]+' · '+APP[a].assistant_type+(S.gra.has(a)?' · GRA':'')+(isCommit(a)?' · must place':'')+(appAlloc(a)>0?' · '+appLoadTxt(a)+' already':'');
   const un=Object.keys(S.addedOut).filter(k=>k.split('|')[0]===cid&&!S.draft.rows.some(r=>r.course===cid&&r.app===k.split('|')[1]&&r.decision!=='declined'));
-  return '<div class="card"><h3>Assign someone who did not apply</h3><div class="small muted" style="margin-bottom:8px">Any TA or UGCA can be added, as in the legacy app. They are marked "Added", raise a "Did not apply" warning that needs a note before publishing, and still go through the GRA, eligibility and hours checks. Professors can also pick people who did not apply, from Browse all applicants; those are labeled with the professor\'s name.</div><div class="row" style="align-items:flex-end;gap:10px"><label class="f">Person<select id="outsidePick" aria-label="Person to add">'+apps.map(a=>'<option value="'+a.application_id+'">'+esc(lab(a.application_id))+'</option>').join('')+'</select></label><button class="btn primary" data-act="addOutside" data-a="'+cid+'">Add to this course</button></div>'+(un.length?'<div class="small muted" style="margin-top:8px">Added but not allocated: '+un.map(k=>esc(nm(k.split('|')[1]))+' <button class="btn sm" data-act="dropOutside" data-a="'+cid+'" data-b="'+k.split('|')[1]+'">Remove</button>').join(', ')+'</div>':'')+'</div>';
+  return '<div class="card" id="addBox"><h3>Assign someone who did not apply</h3><div class="small muted" style="margin-bottom:8px">Any TA or UGCA can be added, as in the legacy app. They are marked "Added", raise a "Did not apply" warning that needs a note before publishing, and still go through the GRA, eligibility and hours checks. Professors can also pick people who did not apply, from Browse all applicants; those are labeled with the professor\'s name.</div><div class="row" style="align-items:flex-end;gap:10px"><label class="f">Person<select id="outsidePick" aria-label="Person to add">'+apps.map(a=>'<option value="'+a.application_id+'">'+esc(lab(a.application_id))+'</option>').join('')+'</select></label><button class="btn primary" data-act="addOutside" data-a="'+cid+'">Add to this course</button></div>'+(un.length?'<div class="small muted" style="margin-top:8px">Added but not allocated: '+un.map(k=>esc(nm(k.split('|')[1]))+' <button class="btn sm" data-act="dropOutside" data-a="'+cid+'" data-b="'+k.split('|')[1]+'">Remove</button>').join(', ')+'</div>':'')+'</div>';
 }
 function vWorkspace(cid,g){
   const c=COURSE[cid],rq=REQ[cid],rk=S.rank[cid],cands=candidates(cid),need=c.ta_slots_required;
@@ -1116,7 +1128,7 @@ function vApplicants(){
     (gr.fromLegacy&&gr.fromLegacy.length?'<div style="margin-top:4px"><b>Also excluded because the legacy row is blue:</b> '+gr.fromLegacy.length+' applicants</div>':'')+
     '<div class="small muted" style="margin-top:8px">EIDs are matched exactly. A line without a known EID is tried as a name ("Last, First" or "First Last"); those are listed separately because grant-admin lists often misspell names.'+(LIVE?'':' The demo EIDs are made up.')+'</div>':'';
   return '<div class="stack"><div class="card"><div class="row" style="justify-content:space-between"><div><h3>Applicant data</h3><div class="small muted">Applicants apply on the legacy TA app forms (graduate and undergraduate). This tool reads them and never edits their answers or writes back. The GRA flag, transcript check, résumé requests and HR tier are office notes kept here only. Last refresh '+when(S.sync.at)+'.</div></div>'+(LIVE?'<button class="btn primary" data-act="go" data-a="admin" data-b="setup">Load a newer sync file</button>':'<button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button>')+'</div></div>'+composeCard()+
-    '<div class="card"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste their EIDs here, one per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand. Refreshing from the legacy app also excludes anyone who has turned blue.</p>'+
+    '<div class="card" id="graCard"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste their EIDs here, one per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand. Refreshing from the legacy app also excludes anyone who has turned blue.</p>'+
     '<div class="grid2"><div><label class="f" for="graText">Grant-admin list: EIDs, one per line (a name works as a fallback)</label><textarea id="graText" rows="5" data-inp="graText">'+esc(S.graText)+'</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="applyGra">Run GRA check</button></div></div>'+
     '<div>'+res+'</div></div></div>'+
     '<div><div class="filters"><div style="margin-right:auto;display:flex;flex-direction:column;gap:6px"><h3>Applicant pool</h3>'+LEGEND+'</div><label class="f">Level<select data-chg="appFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label>'+typeToggle()+'<button class="btn" data-act="composeOpen">Email applicants</button><button class="btn" data-act="bulkResume"'+(noRes?'':' disabled')+'>Request résumés ('+noRes+' without one)</button></div>'+
@@ -1297,6 +1309,140 @@ function drawerHtml(){
   }
   return h+'</aside>';
 }
+
+/* ---------- Ask: "what do you want to do?" (v6) ----------
+   Doug types what he is trying to do. The answer is one line plus a button: a place in TA Studio, a page in the
+   legacy app, or "neither does this yet" with the quickest workaround, and the request is saved for Tejas.
+   Claude (the page's `sample` capability) matches the question against this fixed catalog only; it is sent the
+   question and the catalog, never student data. Without Claude (a local file, or no consent) keyword matching runs. */
+const LEGACY_URL='https://apps.cs.utexas.edu/taproc/index.php';
+/* Runtime capabilities exist only on the published page; a local file has no window.claude. */
+const cap=n=>{try{return window.claude&&typeof window.claude.use==='function'?Promise.resolve(window.claude.use(n)).catch(()=>null):Promise.resolve(null)}catch(e){return Promise.resolve(null)}};
+const ASK=[
+ // TA Studio
+ {id:'dash',w:'s',t:'Dashboard',h:'See what needs attention: blocking issues, rankings behind, open positions.',k:'overview status summary attention issues blocking problems progress where am i today dashboard home what is left',go:{tab:'dashboard'}},
+ {id:'win_open',w:'s',t:'Faculty windows',h:'Open a professor\'s ranking window. It drafts the email to them.',k:'professor faculty rank ranking window open send applicants ask preferences request list staffing',go:{tab:'windows'}},
+ {id:'win_track',w:'s',t:'Faculty windows',h:'See who has ranked, remind, extend or close a window.',k:'remind reminder extend deadline overdue late professor responded response tracker who has not chase close',go:{tab:'windows'}},
+ {id:'browse',w:'s',t:'Faculty windows',h:'Turn "professors can browse all applicants" on or off, for everyone or one professor.',k:'professor see all applicants browse everyone toggle turn off access abuse faculty pick did not apply',go:{tab:'windows',focus:'browseCard'}},
+ {id:'assign',w:'s',t:'Assignments',h:'Pick the course, then set hours (UGCA) or full/half time (TA, AI) under Your decision.',k:'assign place put give ta ugca hours fte full time half time appointment course section staff decision',go:{tab:'assign'}},
+ {id:'assign_out',w:'s',t:'Assignments',h:'Open the course, then use "Assign someone who did not apply" at the bottom.',k:'did not apply not applied someone else outside add person any student assign anyway',go:{tab:'assign',focus:'addBox'}},
+ {id:'accept',w:'s',t:'Assignments',h:'Open the course and press "Accept all requested".',k:'accept professor request requested approve all confirm picks',go:{tab:'assign'}},
+ {id:'ai',w:'s',t:'Assignments',h:'Assign the grad student, then set the type to AI. Two half-time AIs can share a class.',k:'ai assistant instructor teach teaching co teach coteach instructor of record',go:{tab:'assign'}},
+ {id:'queue',w:'s',t:'Assignments',h:'"Still needs a position" on the left: commitment students first, then PhDs.',k:'needs position unplaced unassigned left over commitment must place phd yellow who still',go:{tab:'assign'}},
+ {id:'cap',w:'s',t:'Assignments',h:'Conflicts show on each course and the Dashboard: over 20 UGCA hours, over full time, GRA, declined.',k:'conflict double booked over capacity too many hours twenty 20 overloaded overlap clash',go:{tab:'dashboard'}},
+ {id:'lookup',w:'s',t:'Applicants',h:'Click a name to see their application and every course they chose, in order.',k:'look up find applicant student profile application info courses applied chose ranked order discussion section supervisor languages ta history',go:{tab:'applicants'}},
+ {id:'gra',w:'s',t:'Applicants',h:'GRA cross-check: paste the grant admins\' EIDs, one per line, and run it.',k:'gra grant admin research assistant assistantship eid list cross check remove blue exclude support',go:{tab:'applicants',focus:'graCard'}},
+ {id:'addback',w:'s',t:'Applicants',h:'Press "Add back to pool" on that student\'s row.',k:'add back pool undo gra mistake include again restore',go:{tab:'applicants'}},
+ {id:'resume',w:'s',t:'Applicants',h:'Open the student and press Request résumé, or request from everyone without one.',k:'resume résumé cv internship industry experience upload attachment',go:{tab:'applicants'}},
+ {id:'email',w:'s',t:'Applicants',h:'Press "Email applicants" and pick who gets it. It is drafted in Mail.',k:'email emails message mass blast everyone all students applicants ugcas tas contact announcement write tell',go:{tab:'applicants',act:'composeOpen',focus:'composeCard'}},
+ {id:'transcript',w:'s',t:'Applicants',h:'Open the student and mark Transcript checked.',k:'transcript grade grades checked check took class',go:{tab:'applicants'}},
+ {id:'tier',w:'s',t:'Applicants',h:'Open the student and set HR tier (PhD, Masters 1, Masters 2, UGCA).',k:'hr tier pay level masters 1 2 phd rate',go:{tab:'applicants'}},
+ {id:'refresh',w:'s',t:'Setup',h:'Load a newer sync file under Data source. Your work is kept.',k:'refresh update new applicants late pull sync legacy data reload latest',go:{tab:'setup',focus:'dataSource'}},
+ {id:'slots',w:'s',t:'Setup',h:'Change TA, AI or UGCA hours needed, or who can apply, per course.',k:'how many tas needed slots need hours ugca hours course size who can apply graduate undergraduate audience',go:{tab:'setup'}},
+ {id:'import',w:'s',t:'Setup',h:'Import a course list (CSV). Blank GUIDs fill in; re-importing adds new classes.',k:'import courses classes csv course list guid add class new class courses app spreadsheet upload',go:{tab:'setup',focus:'importCard'}},
+ {id:'publish',w:'s',t:'Publish',h:'Add notes for any warnings, then Publish to faculty.',k:'publish send professors final plan version release faculty see assignments',go:{tab:'publish'}},
+ {id:'hr',w:'s',t:'HR drafts',h:'Create the next draft, then copy the spreadsheet and email for HR.',k:'hr human resources workday spreadsheet payroll draft export csv send hr',go:{tab:'hr'}},
+ {id:'notify',w:'s',t:'Students',h:'Open the response window, then Mark students notified. Replies land here.',k:'notify students offer letter tell students assignment accept decline reply response agreement',go:{tab:'students'}},
+ {id:'backup',w:'s',t:'Students',h:'Under the declined student, pick the next backup from the professor\'s list.',k:'declined decline backup replacement replace turned down said no red',go:{tab:'students'}},
+ {id:'extend_stu',w:'s',t:'Students',h:'Press Extend on that student\'s row.',k:'student extension more time extend reply deadline',go:{tab:'students'}},
+ {id:'concerns',w:'s',t:'Concerns',h:'Read and resolve what professors raised about the plan.',k:'concern complaint professor unhappy problem issue raised conflict faculty question about assignment',go:{tab:'concerns'}},
+ {id:'mail',w:'s',t:'Mail',h:'Every drafted email and the replies that came in. Nothing is sent from the demo.',k:'mail outbox inbox sent emails replies drafts message history',go:{tab:'mail'}},
+ {id:'audit',w:'s',t:'Audit log',h:'Every change, who made it and when.',k:'history log audit who changed what when undo record track changes',go:{tab:'audit'}},
+ {id:'facview',w:'s',t:'View as a professor',h:'Use "View as" in the orange bar and pick a professor.',k:'see what professor sees faculty view pretend as professor preview',go:{act:'facView'}},
+ // legacy app only
+ {id:'l_settings',w:'l',t:'Settings → Application settings',h:'Deadlines and opening or closing the application are only in the legacy app.',k:'deadline application open close settings due date semester dates application window apply',url:'/admin/classes'},
+ {id:'l_users',w:'l',t:'Settings → Users',h:'Who can sign in to the legacy app is only managed there.',k:'users access admin login give access account permission add user staff',url:'/admin/classes'},
+ {id:'l_commit',w:'l',t:'Settings → Commitment students',h:'Add admitted PhDs (name, EID, expiry) there; TA Studio reads it on the next refresh.',k:'commitment admitted phd add commitment student expiry expire yellow enter',url:'/admin/commitments'},
+ {id:'l_content',w:'l',t:'Settings → Content / View student application',h:'The application questions and page text live in the legacy app.',k:'application form question questions content wording page wording ask applicants add question',url:'/admin/classes'},
+ {id:'l_remove',w:'l',t:'Applicants → the student → Remove student from TA pool',h:'The official removal is in the legacy app. In TA Studio, flag them instead.',k:'remove delete student pool official withdraw drop take out',url:'/admin/applicants'},
+ {id:'l_editclass',w:'l',t:'Classes → Edit classes',h:'What applicants see on the form changes only there. TA Studio\'s Setup is for planning.',k:'edit class classes official legacy form course list professor teaching needed',url:'/admin/classes'},
+ {id:'l_print',w:'l',t:'Classes → Print faculty requirements',h:'Printing is in the legacy app.',k:'print printout paper faculty requirements',url:'/admin/classes'},
+ {id:'l_search',w:'l',t:'Applicants → Search',h:'Full-text search of applications is in the legacy app. In TA Studio, filter the Applicants list.',k:'search text keyword find word essay search applications',url:'/admin/applicants'},
+ {id:'l_hrfields',w:'l',t:'Applicants list → New/Return, Degree, AI, GPA → Update',h:'Those HR fields are edited in the legacy app; TA Studio shows them.',k:'new return degree gpa update hr fields',url:'/admin/applicants'},
+ {id:'l_semester',w:'l',t:'Assignments → semester picker',h:'Past semesters are in the legacy app. TA Studio holds one term per sync.',k:'past semester last year previous term fall spring summer old history semester switch',url:'/admin/assignments'}
+];
+const ASK_BY=Object.fromEntries(ASK.map(e=>[e.id,e]));
+const STOP=new Set('a an the i to do how can where is my for of in on and or with want need be it this that what get from about make we me at by'.split(' '));
+const stem=w=>w.replace(/(ings|ing|ed|es|s)$/,'');
+const toks=q=>q.toLowerCase().replace(/[^a-z0-9é ]+/g,' ').split(/\s+/).filter(w=>w&&!STOP.has(w)).map(stem);
+const ASK_TOK=ASK.map(e=>new Set(toks(e.k+' '+e.t)));
+const ASK_DF={};ASK_TOK.forEach(ts=>ts.forEach(w=>{ASK_DF[w]=(ASK_DF[w]||0)+1}));
+/* Keyword fallback: rare words count more (a word in many entries, like "student", barely counts). */
+function askLocal(q){
+  const qt=[...new Set(toks(q))];
+  if(!qt.length)return[];
+  return ASK.map((e,i)=>{let s=0;qt.forEach(w=>{if(ASK_TOK[i].has(w))s+=Math.max(.4,3-Math.log2(ASK_DF[w]))});return{e,s}})
+    .filter(x=>x.s>=2.4).sort((a,b)=>b.s-a.s).slice(0,3).map(x=>x.e);
+}
+let ASK_SEQ=0;
+async function askClaude(q){
+  const sample=await cap('sample');if(!sample)return null;
+  const cat=ASK.map(e=>({id:e.id,where:e.w==='s'?'TA Studio':'legacy app',place:e.t,does:e.h}));
+  const prompt='You help Doug, who staffs TAs for UT Computer Science, find where to do something. He is moving from the old "legacy" TA app to a new tool, TA Studio.\n'+
+   'Here is everything the two apps can do (JSON):\n'+JSON.stringify(cat)+'\n\n'+
+   'Doug asks: """'+q.slice(0,500)+'"""\n\n'+
+   'Reply with JSON only: {"id": the id from the list that fits his request, or null if neither app does it, "say": one short plain sentence (max 18 words) telling him exactly what to do there, '+
+   '"workaround": if id is null, the quickest practical way to get it done today (max 25 words, may use a spreadsheet, email, or the two apps), else null, '+
+   '"feature": if id is null, a one-line feature idea for the developer (max 20 words), else null}. Never invent places that are not in the list.';
+  const r=await sample.json(prompt,{modelTier:'quick',cache:true});
+  if(!r||typeof r!=='object')return null;
+  const id=r.id&&ASK_BY[r.id]?r.id:null;
+  return{id,say:String(r.say||'').slice(0,200),workaround:String(r.workaround||'').slice(0,240),feature:String(r.feature||'').slice(0,200)};
+}
+async function saveRequest(q,res){
+  const rec={q:q.slice(0,500),at:nowIso(),tab:S.tab,mode:LIVE?'live':'demo',workaround:res.workaround||'',feature:res.feature||''};
+  try{
+    const db=await cap('db'),user=await cap('user');
+    if(db&&user){const id=await user.id();const ref=db.doc('requests/'+id);const cur=await ref.get();const items=(cur.exists&&Array.isArray((cur.data()||{}).items))?cur.data().items:[];
+      await ref.set({items:items.concat([rec]).slice(-100),updatedAt:rec.at});return 'saved'}
+  }catch(e){}
+  return 'copy';
+}
+async function runAsk(q){
+  q=String(q||'').trim();if(!q)return;
+  const seq=++ASK_SEQ;S.ask={q,busy:true,res:null,alts:[],sent:null};render();
+  let res=null;
+  try{res=await Promise.race([askClaude(q),new Promise(r=>setTimeout(()=>r(null),15000))])}catch(e){res=null}
+  if(seq!==ASK_SEQ)return;
+  const local=askLocal(q);
+  if(res){S.ask={q,busy:false,res,alts:res.id?local.filter(e=>e.id!==res.id).slice(0,2):[],ai:true,sent:null}}
+  else S.ask={q,busy:false,res:local.length?{id:local[0].id,say:''}:{id:null,say:'',workaround:'',feature:''},alts:local.slice(1),ai:false,sent:null};
+  log('asked','ask','',q.slice(0,80)+' → '+(S.ask.res.id||'not found'));
+  render();
+  if(!S.ask.res.id&&S.ask.ai){const st=await saveRequest(q,S.ask.res);if(seq===ASK_SEQ){S.ask.sent=st;render()}}
+}
+function askBox(){
+  if(S.user.type!=='admin')return '';
+  const a=S.ask;
+  let panel='';
+  if(a){
+    const r=a.res,e=r&&r.id?ASK_BY[r.id]:null;
+    const altH=a.alts&&a.alts.length?'<div class="small muted" style="margin-top:6px">Or: '+a.alts.map(x=>'<button class="link" data-act="askPick" data-a="'+x.id+'">'+esc(x.w==='l'?'Legacy: '+x.t:x.t+': '+x.h.split(/[.:]/)[0])+'</button>').join(' · ')+'</div>':'';
+    if(a.busy)panel='<div class="askres muted">Looking…</div>';
+    else if(e)panel='<div class="askres"><div><b>'+(e.w==='l'?'In the legacy app: ':'')+esc(e.t)+'.</b> '+esc(r.say||e.h)+'</div><div class="row" style="margin-top:8px;gap:8px">'+
+      (e.w==='s'?'<button class="btn sm primary" data-act="askGo" data-a="'+e.id+'">Take me there</button>':'<a class="btn sm primary" href="'+LEGACY_URL+e.url+'" target="_blank" rel="noopener">Open legacy app ↗</a>')+
+      (a.ai?'':'<button class="btn sm" data-act="askNone">Not it</button>')+'<button class="btn sm" data-act="askClear">Close</button></div>'+altH+'</div>';
+    else panel='<div class="askres"><div><b>Neither app does this yet.</b> '+esc(r.workaround||'For now, track it in a spreadsheet or email Tejas.')+'</div>'+
+      '<div class="small" style="margin-top:6px">'+(a.sent==='saved'?'✓ Sent to Tejas as a feature request.':a.sent==='copy'||!a.ai?'<button class="btn sm" data-act="askCopy">Copy request for Tejas</button> <span class="muted">Paste it into an email to him.</span>':'Telling Tejas…')+'</div>'+
+      '<div class="row" style="margin-top:8px"><button class="btn sm" data-act="askClear">Close</button></div>'+altH+'</div>';
+  }
+  return '<div class="askwrap"><form class="ask" data-ask="1" role="search"><label for="askQ" class="sr">What do you want to do?</label><input id="askQ" type="search" placeholder="What do you want to do? e.g. add a class, email all UGCAs" value="'+esc(a?a.q:'')+'" autocomplete="off"><button class="btn sm primary" type="submit">Ask</button></form>'+panel+'</div>';
+}
+function reqCard(){
+  const r=S.reqs;
+  const body=!r?'<button class="btn sm" data-act="loadReqs">Show requests</button>':r.err?'<div class="muted">'+esc(r.err)+'</div>':!r.items.length?'<div class="muted">No requests yet.</div>':
+    '<div class="tbl"><table><thead><tr><th>When</th><th>Asked</th><th>Workaround given</th><th>Feature idea</th></tr></thead><tbody>'+r.items.map(x=>'<tr><td class="small">'+when(x.at)+'</td><td>'+esc(x.q)+'</td><td class="small">'+esc(x.workaround)+'</td><td class="small">'+esc(x.feature)+'</td></tr>').join('')+'</tbody></table></div>';
+  return '<div class="card" id="reqCard"><h3>Requests from the Ask box</h3><p class="muted small" style="margin-bottom:8px">When neither app can do what someone asked, the request is saved here for Tejas with a feature idea. Only Tejas and editors see everyone\'s; others see their own.</p>'+body+'</div>';
+}
+async function loadReqs(){
+  const db=await cap('db');
+  if(!db){S.reqs={err:'Requests are only saved on the published TA Studio page, not in a local copy.',items:[]};render();return}
+  try{const q=await db.collection('requests').get();const items=[];q.docs.forEach(d=>{const v=d.data()||{};(v.items||[]).forEach(x=>items.push(x))});
+    items.sort((a,b)=>String(b.at).localeCompare(String(a.at)));S.reqs={items}}
+  catch(e){S.reqs={err:'Could not read requests ('+(e&&e.code||'error')+').',items:[]}}
+  render();
+}
+function askFocus(id){setTimeout(()=>{const el=document.getElementById(id);if(!el)return;el.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1800)},30)}
 
 /* ---------- render ---------- */
 function render(){
@@ -1524,6 +1670,15 @@ const ACT={
     const t=candidates(a).map(x=>nm(x.app)+' · '+TIER[APP[x.app].degree_level]+' · '+APP[x.app].assistant_type+' · their choice #'+x.pref.preference_rank+(((TH[x.app]||[]).find(h=>h.catalog_number===COURSE[a].catalog_number))?' · was '+(TH[x.app].find(h=>h.catalog_number===COURSE[a].catalog_number).role)+' here':'')).join('\n');
     copyText('Applicants for '+cname(a)+' '+COURSE[a].title+':\n'+t);return false;
   },
+  /* v6: Ask */
+  askGo(a){const e=ASK_BY[a];if(!e)return;const g=e.go||{};S.ask=null;S.toTop=true;if(S.user.type!=='admin')ACT.role(null,null,'admin');
+    if(g.tab){S.tab=g.tab;S.facCourse=null}if(g.act&&ACT[g.act])ACT[g.act]();else render();if(g.focus)askFocus(g.focus);log('ask: went to','ask',a,e.t)},
+  askPick(a){const e=ASK_BY[a];if(!e||!S.ask)return;S.ask.res={id:a,say:''};S.ask.alts=S.ask.alts.filter(x=>x.id!==a);render()},
+  askNone(){if(!S.ask)return;S.ask.res={id:null,say:'',workaround:'',feature:''};S.ask.sent='copy';render()},
+  askClear(){S.ask=null;ASK_SEQ++;render()},
+  loadReqs(){loadReqs()},
+  askCopy(){const a=S.ask;if(!a)return;copyText('TA Studio request from Doug ('+day(nowIso())+'):\n"'+a.q+'"\n'+(a.res.feature?'Idea: '+a.res.feature+'\n':'')+(a.res.workaround?'Workaround given: '+a.res.workaround:''));return false},
+  facView(){const f=SEED.courses[0]&&SEED.courses[0].faculty_id;if(f)ACT.role(null,null,'fac:'+f);toast('Viewing as '+FAC[f].display_name+'. Switch back with "View as" in the orange bar.')},
   /* v5: résumés, email, faculty browse, course import */
   reqResume(a){queueResume(a);log('résumé requested','applicant',a,nm(a));toast('Résumé request queued in the Mail tab, not sent');render()},
   mockResume(a){
@@ -1684,9 +1839,11 @@ document.addEventListener('change',e=>{
   rd.onload=()=>{S.importDraft=String(rd.result||'');try{const r=importCourses(S.importDraft);S.importMsg='Imported '+r.rows+' rows from '+el.files[0].name+'.'}catch(err){S.importMsg='Could not import that file: '+err.message}render()};
   rd.readAsText(el.files[0]);
 });
+document.addEventListener('submit',e=>{const f=e.target.closest('[data-ask]');if(!f)return;e.preventDefault();const i=f.querySelector('#askQ');runAsk(i?i.value:'')});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&!/input|textarea|select/i.test((document.activeElement||{}).tagName||'')){const i=$('#askQ');if(i){e.preventDefault();i.focus()}}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S&&(S.drawer||S.bell)){S.drawer=null;S.bell=false;render()}});
 
-window.__ta={loadFeed,refreshFeed,importCourses,sampleCourseCsv,resumeOf,composeTargets,sizeTxt,FL,isCommit,live:()=>LIVE,lg:()=>LG,state:()=>S,trackRows,trackCsv,hrRows,hrDiff,hrCsv,hrEmail,tierOf,audOk,ACT,computeIssues,gate,backupsFor,validateRanking,needsHome,render};
+window.__ta={askLocal,ASK,runAsk,loadFeed,refreshFeed,importCourses,sampleCourseCsv,resumeOf,composeTargets,sizeTxt,FL,isCommit,live:()=>LIVE,lg:()=>LG,state:()=>S,trackRows,trackCsv,hrRows,hrDiff,hrCsv,hrEmail,tierOf,audOk,ACT,computeIssues,gate,backupsFor,validateRanking,needsHome,render};
 initState();render();
 })();
 </script>
