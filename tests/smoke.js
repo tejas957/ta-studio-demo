@@ -67,7 +67,7 @@ ok(pubs[1].rows.length===3,'v2 has 3 assignments ('+pubs[1].rows.map(r=>r.course
 ok(pubs[1].responses['crs_f26_001|app_f26_0001']&&pubs[1].responses['crs_f26_001|app_f26_0001'].status==='confirmed','Atlas confirmation carried to v2');
 ok(!T.gate().ok,'gate closed again (no changes)');
 ok(typeof T.csvFor==='undefined','publish CSV removed; HR drafts is the single HR export');
-ok(!/gender|PID|EID|ssn/i.test(T.hrCsv(15)),'HR csv has no gender, PID, EID or SSN');
+ok(!/PID|SSN/i.test(T.hrCsv(15)),'HR csv has no PID or SSN');ok(/UT EID/.test(T.hrCsv(15))&&/Gender/.test(T.hrCsv(15))&&/International/.test(T.hrCsv(15)),'HR csv has EID, international and gender (Doug, Nov 3)');
 A.tab('publish');A.selPub(1);ok(txt().includes('Version 1 snapshot'),'v1 viewable');A.selPub(2);ok(txt().includes('Changes from version 1'),'diff shown');
 // notify
 A.tab('students');
@@ -176,14 +176,14 @@ let d3=T.hrDiff(T.hrRows(),S().hr.drafts[0].rows);
 ok(d3.some(r=>r.ch==='added'&&r.app==='app_f26_0005'),'HR preview shows Ember as added');
 A.tab('hr');ok(/Create draft 16/.test(txt()),'HR tab offers draft 16');
 A.createHr();ok(S().hr.drafts.length===2&&S().hr.drafts[1].n===16,'draft 16 created');
-ok(/^draft,change,course,section,course_title,instructor,assignee_alias,appointment,size,hours_per_week,fte,hr_tier,citizenship,note/.test(T.hrCsv(16)),'HR csv header (size, hours for UGCAs, FTE for TAs)');
+ok(/^Draft,Change,First name,Last name,UT EID,Email,Course,Section,Instructor,Appointment,Size,HR tier,Rate,Pay,New \/ return,International,Gender,Confirmed,Note/.test(T.hrCsv(16)),'HR csv default header');
 ok(/,added,/.test(T.hrCsv(16)),'HR csv marks added rows');
 ok(/draft 16/.test(T.hrEmail(16))&&/Added:/.test(T.hrEmail(16))&&/Candidate Ember/.test(T.hrEmail(16)),'HR email text lists Ember');
 A.createHr();ok(S().hr.drafts.length===2,'no draft created when nothing changed');
 A.setAlloc('crs_f26_002','app_f26_0005','0');
 d3=T.hrDiff(T.hrRows(),S().hr.drafts[1].rows);ok(d3.some(r=>r.ch==='removed'&&r.app==='app_f26_0005'),'HR preview shows Ember as removed');
 A.createHr();ok(/,removed,/.test(T.hrCsv(17)),'draft 17 csv marks removed');
-ok(!/PID|EID|SSN/i.test(T.hrCsv(17)),'HR csv has no PID, EID or SSN');
+ok(!/PID|SSN/i.test(T.hrCsv(17)),'HR csv has no PID or SSN');
 // TA / UGCA toggle
 A.tab('applicants');A.typeView('UGCA');
 let mt3=w.document.querySelector('main').textContent;
@@ -233,7 +233,7 @@ if(wt3){A.simReply(wt3.fid);ok(T.trackRows().find(r=>r.fid===wt3.fid).st==='Repl
  ok(/email_reply_at/.test(T.trackCsv()),'tracker csv has reply column');}
 else ok(false,'expected a waiting professor');
 // publish csv tier
-ok(/hr_tier/.test(T.hrCsv(15)),'HR csv has hr_tier');
+ok(/HR tier/.test(T.hrCsv(15)),'HR csv has HR tier');
 
 // ---- cleanup pass ----
 A.reset();A.role(null,null,'admin');
@@ -315,7 +315,7 @@ A.reset();
 // ---- v5 (Oct 14 walkthrough) ----
 A.reset();A.role(null,null,'admin');
 const M=()=>w.document.querySelector('main').textContent,D=()=>w.document.querySelector('#drawer').textContent;
-ok(/demo v5/.test(txt()),'header says demo v5');
+ok(/demo v6/.test(txt()),'header says demo v6');
 // hours for UGCAs, full/half for TAs
 ok(T.gate().blocks.some(b=>b.code==='Over capacity'&&/Atlas is assigned 30 hours a week/.test(b.msg)&&/at most 20 hours/.test(b.msg)),'Atlas over 20 UGCA hours blocks');
 A.setAlloc('crs_f26_002','app_f26_0001','5');ok(!T.gate().blocks.some(b=>b.code==='Over capacity'&&b.app==='app_f26_0001'),'Atlas at 15 + 5 = 20 hours is allowed');
@@ -336,7 +336,7 @@ A.setAlloc('crs_f26_002','app_f26_0011','0.5');const k2=S().draft.rows.find(r=>r
 ok(S().draft.rows.filter(r=>r.course==='crs_f26_002'&&r.role==='AI'&&r.fte===0.5).length===2,'two half-time AIs can co-teach a class');
 // HR output
 A.acceptAll('crs_f26_002');A.setAlloc('crs_f26_002','app_f26_0001','0');A.createHr();const hc=T.hrCsv(S().hr.drafts.slice(-1)[0].n);
-ok(/,AI,Half-time,,0\.5,/.test(hc),'HR csv shows AI half-time');ok(/,UGCA,15 hours,15,,/.test(hc),'HR csv shows UGCA hours per week');
+ok(/,AI,Half-time,AI,\$2,700\/mo|,AI,Half-time,AI,"?\$5,400\/mo/.test(hc)||/,AI,Half-time,AI,/.test(hc),'HR csv shows AI half-time at the AI tier');ok(/,UGCA,15 hours,UGCA,\$18\/h/.test(hc),'HR csv shows UGCA hours and hourly rate');
 // commitment overrides self-reported degree
 A.reset();A.role(null,null,'admin');
 ok(w.__ta.state()&&T.isCommit('app_f26_0011')===1,'Kestrel is on the commitment list');

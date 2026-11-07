@@ -37,6 +37,17 @@ function buildPayload(P) {
   const courses = [], coursesExt = {}, reqs = [], rw = [];
   const bySecLabel = {}; // normalised label -> section ids (TA classes), to expand "requested class" names
   P.classes.ta.forEach(c => { (bySecLabel[nrm(c.label)] = bySecLabel[nrm(c.label)] || []).push(c.id); });
+  /* Nov 3 fix: in the real app some applicants were not linked to the courses they asked for, so professors saw empty
+     pools. The requested-class text on the detail page does not always equal the class-list label character for character
+     (a "CS " prefix, punctuation, a shortened title). Match in three steps: exact label, loose label, then catalog number. */
+  const loose = s => nrm(s).replace(/^C\.?\s?S\.?\s+/, '').replace(/[^A-Z0-9]+/g, ' ').trim();
+  const catNo = s => { const m = nrm(s).replace(/^C\.?\s?S\.?\s*/, '').match(/(^|\s)(\d{3}[A-Z]{0,2})(?=\s|$|[^A-Z0-9])/); return m ? m[2] : ''; };
+  const indexBy = (list, keyFn) => { const ix = {}; list.forEach(c => { const k = keyFn(c); if (k) (ix[k] = ix[k] || []).push(c.id); }); return ix; };
+  const taLoose = indexBy(P.classes.ta, c => loose(c.label)), taNum = indexBy(P.classes.ta, c => nrm(c.number).replace(/^C\.?\s?S\.?\s*/, ''));
+  const prLoose = indexBy(P.classes.proctor, c => loose(c.label)), prNum = indexBy(P.classes.proctor, c => nrm(c.number).replace(/^C\.?\s?S\.?\s*/, ''));
+  const unmatched = {};
+  const findSecs = (label, exact, lo, num) => { const a = exact ? exact[nrm(label)] : null; if (a && a.length) return { secs: a, how: 'label' }; const b = lo[loose(label)]; if (b && b.length) return { secs: b, how: 'loose' }; const n = catNo(label), c = n ? num[n] : null; if (c && c.length) return { secs: c, how: 'number' }; unmatched[label] = (unmatched[label] || 0) + 1; return { secs: [], how: '' }; };
+  const linkHow = { label: 0, loose: 0, number: 0 };
   for (const id of secIds) {
     const t = taCls.get(id), p = prCls.get(id), base = t || p;
     const taN = t ? t.needed : 0, ugN = p ? p.needed : 0;
@@ -84,8 +95,9 @@ function buildPayload(P) {
     const addPref = (secId, r, note, disc) => { if (seenC.has(secId)) return; seenC.add(secId); prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(secId), preference_rank: r, preparedness: 'moderate', applicant_note: note || '', discussion: disc }); };
     const reqList = d ? d.requests.map(l => [l, false]).concat((d.requestsDiscussion || []).map(l => [l, true])) : [];
     for (const [label, disc] of reqList) {
-      const secs = bySecLabel[nrm(label)] || [];
+      const hit = findSecs(label, bySecLabel, taLoose, taNum), secs = hit.secs;
       if (!secs.length) { warnings.push('Requested class not found in class list: "' + label + '" (applicant ' + a.id + ')'); continue; }
+      linkHow[hit.how]++;
       rank++; secs.forEach(s => addPref(s, rank, 'Requested the course by name' + (disc ? ', with a discussion session' : '') + '; all sections of it count.', disc));
     }
     a.assignments.forEach(s => { if (taCls.has(s)) addPref(s, rank + 1, 'Assigned in the legacy app.'); });
@@ -97,7 +109,7 @@ function buildPayload(P) {
     extApps[aid] = ex;
     lg[aid] = {
       legacyId: a.id, kind: 'TA', first: a.first, last: a.last, eid: a.eid, email: d ? d.email : '', phone: d ? d.phone : '', color: a.color, gra: a.gra, status: a.status, avail: a.avail,
-      commit, commitExpires: cm ? cm.expires : '', updated: a.updated, nr: a.nr, degree: a.degree, ai: a.ai, gpa: a.gpa, ssn: d ? d.ssn : '', graDetail: d ? d.gra : '', agree: ''
+      commit, commitExpires: cm ? cm.expires : '', updated: a.updated, nr: a.nr, degree: a.degree, ai: a.ai, gpa: a.gpa, graDetail: d ? d.gra : '', agree: ''
     };
     idxByEid[a.eid.toLowerCase()] = aid;
   }
@@ -111,10 +123,19 @@ function buildPayload(P) {
       returning_ta: false, prior_ta_terms: 0, max_assignment_fte: 1, employment_eligibility_status: 'eligible', spoken_english_assessment: 'not_required', availability_status: 'available',
       teaching_statement: d ? d.supportive : '', experience_summary: d ? d.experience : '', application_status: 'submitted', submitted_at: now.slice(0, 19)
     });
-    (d ? d.requests : []).forEach((s, i) => { if (prCls.has(s)) prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(s), preference_rank: i + 1, preparedness: 'moderate', applicant_note: '' }); else warnings.push('UGCA ' + u.id + ' requested unknown proctor class ' + s); });
+    // A request line normally starts with the class id ("1234 - CS 312 ..."). If it does not, match the text like a TA request.
+    const ugReq = d ? (d.requestsRaw && d.requestsRaw.length ? d.requestsRaw.map(l => { const m = String(l).match(/^(\d+)\s*-/); return m ? +m[1] : l; }) : d.requests) : [];
+    let ur = 0; const ugSeen = new Set();
+    ugReq.forEach(s => {
+      let secs = [];
+      if (typeof s === 'number') { if (prCls.has(s)) { secs = [s]; linkHow.label++; } else warnings.push('UGCA ' + u.id + ' requested unknown proctor class ' + s); }
+      else { const hit = findSecs(s, null, prLoose, prNum); secs = hit.secs; if (secs.length) linkHow[hit.how]++; else warnings.push('UGCA ' + u.id + ' requested a class not in the proctor class list: "' + s + '"'); }
+      if (!secs.length) return; ur++;
+      secs.forEach(x => { if (ugSeen.has(x)) return; ugSeen.add(x); prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(x), preference_rank: ur, preparedness: 'moderate', applicant_note: '' }); });
+    });
     (d ? d.courses : []).forEach(l => { const m = l.match(/^CS\s+(\S+)\s+(.*)$/i); if (m) cw.push({ application_id: aid, catalog_number: m[1], course_title: title(m[2]), completion_status: 'completed', grade_band: '' }); });
     extApps[aid] = { cit: '', yr: '', hrs: 0 };
-    lg[aid] = { legacyId: u.id, kind: 'UGCA', first: first, last: rest.join(' '), eid: u.eid, email: u.email || (d && d.email) || '', phone: u.phone, color: '', gra: '', status: 'Undergraduate', avail: '', commit: false, updated: '', nr: '', degree: '', ai: '', gpa: '', ssn: '', graDetail: '', agree: '', resume: d ? d.resume : '' };
+    lg[aid] = { legacyId: u.id, kind: 'UGCA', first: first, last: rest.join(' '), eid: u.eid, email: u.email || (d && d.email) || '', phone: u.phone, color: '', gra: '', status: 'Undergraduate', avail: '', commit: false, updated: '', nr: '', degree: '', ai: '', gpa: '', graDetail: '', agree: '', resume: d ? d.resume : '' };
     idxByEid[u.eid.toLowerCase()] = aid;
   }
 
@@ -150,8 +171,14 @@ function buildPayload(P) {
   }
 
   const unmatchedCount = review.filter(x => x.status === 'unmatched').length;
+  const linkedIds = new Set(prefs.map(p => p.application_id));
+  const linkage = {
+    ta: { total: P.applicants.ta.length, linked: P.applicants.ta.filter(a => linkedIds.has(appIdTA(a.id))).length },
+    ugca: { total: P.applicants.ugca.length, linked: P.applicants.ugca.filter(u => linkedIds.has(appIdUG(u.id))).length },
+    how: linkHow, unmatched: Object.entries(unmatched).sort((x, y) => y[1] - x[1]).slice(0, 40).map(([label, n]) => ({ label, n }))
+  };
   return {
-    meta: { source: 'legacy', syncedAt: now, term, commitmentList: P.commitments ? P.commitments.length : null, counts: { taApplicants: P.applicants.ta.length, ugcaApplicants: P.applicants.ugca.length, taClasses: taCls.size, proctorClasses: prCls.size, sections: secIds.length, assignments: draftRows.length, faculty: faculty.length, facultyToReview: review.length, facultyUnmatched: unmatchedCount }, warnings, facultyReview: review },
+    meta: { source: 'legacy', syncedAt: now, term, commitmentList: P.commitments ? P.commitments.length : null, counts: { taApplicants: P.applicants.ta.length, ugcaApplicants: P.applicants.ugca.length, taClasses: taCls.size, proctorClasses: prCls.size, sections: secIds.length, assignments: draftRows.length, faculty: faculty.length, facultyToReview: review.length, facultyUnmatched: unmatchedCount }, linkage, warnings, facultyReview: review },
     terms: [{ term_id: 'term_live', name: term, application_deadline: '', faculty_ranking_deadline: '', status: 'faculty_ranking' }],
     faculty, users, courses, applicants, applications, applicant_skills: skills, applicant_coursework: cw, teaching_history: th, course_preferences: prefs, course_requirements: reqs,
     ranking_workflow: rw, faculty_rankings: [], assignment_drafts: [{ draft_id: 'draft_live', term_id: 'term_live', name: term + ' working draft (from the legacy assignments)', status: 'working', created_at: now, created_by_user_id: '' }],

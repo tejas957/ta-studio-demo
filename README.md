@@ -4,6 +4,26 @@ A clickable, single-file demo of the TA scheduling workflow for the CS office. O
 
 **Synthetic data only.** Applicants are fictional aliases from the small dataset in `data/seed.json` (from `ta-scheduler-mvp-dataset`). No PID, SSN or real student information. The demo EIDs (like `ce4103`) are made up so the EID-based GRA check can be tried.
 
+## Presenting (Nov 10, CS department and IT)
+Press **Start the guided demo** in the orange bar. It runs Spring 2027 from the very start on the synthetic set, 13 steps, each with **Show me** and **Do it for me**. See `docs/TUESDAY_RUN_SHEET.md` for the talk track and `docs/PRODUCTION_PLAN.md` for what IT is being asked for.
+
+## New in v6 (from the Nov 3 meeting and Doug's Nov 6 email)
+- **Two scenarios** (orange bar): *Spring 2027 from the start* (nothing opened yet, for the start-to-finish run) and *Fall 2026 in progress* (the earlier demo state; the tests use it).
+- **Guided demo**: a docked panel that walks a whole term: setup → history → windows → professor ranks → office decides → publish → offers → a student answers → replace and re-publish → HR draft → UGCA roster → what IT needs.
+- **Graduate / Undergraduate lists** when adding someone who did not apply (Assignments), with search and PhD / Master's groups.
+- **Professors say what they want** per person (full-time, half-time, or UGCA hours; "Backup" otherwise) and leave a note to the office. Submitting turns those into requested rows. Undergraduates can be requested in the same list.
+- **History** tab: the past UGCA and TA list by semester. Imports Doug's Excel file directly (every tab; header or no header; EIDs cleaned; "fall 23"/"spr 24" read as semesters) or pasted cells. Matching by EID marks each applicant **new or returning**. "Add <term> to the history" appends the published term.
+- **Training**: a new UGCA (never one before) needs training; tick it complete on the UGCA roster, or email the new UGCAs.
+- **Pay rates per term** (Setup): PhD, master's first time, master's returning, AI, UGCA hourly. Raise all by a percent over last term. A master's student who TA'd in the fall is "returning" in the spring automatically. Rates are placeholders.
+- **Graduate records** (History): EID, gender, international, program, imported from the grad office list, used only in the HR draft.
+- **HR drafts**: tier, rate, pay, new/return, international, gender, EID and confirmed columns; a column chooser; Copy for Excel; the draft and its email are made automatically on publish (switchable).
+- **UGCA roster** tab: replaces the UGCA spreadsheet (assigned to whom, hours, offer sent, confirmed Y, new/returning, training, pay). Copy for Excel uses the spreadsheet's columns.
+- **Student offer page**: View as a student with a published offer to accept or decline; the answer lands in Students, the roster and the professor's published plan. Offer emails include pay and the reply link.
+- **Remove from pool with a reason** (Applicants): GRA / other support turns blue, anything else red, with an "Add back" undo.
+- **Applicants**: new/returning column; "Chose N classes" flag for applications listing more than 10.
+- **Navigation**: numbered tabs in the order the work happens, reference pages (History, Mail, Concerns, Audit log) set apart, and a one-line tip on each page (hideable). The Oct 14 checklist moved into a closed panel on the Fall 2026 dashboard.
+- **Legacy pull**: requested classes are matched by label, then loosely (ignoring "CS", punctuation, case), then by course number; UGCA requests without an id are matched the same way. The sync file reports how many applicants are linked to a course (Setup → Data source in live mode). The pull no longer reads the SSN field.
+
 ## Ask box (Oct 29)
 Top right of every admin page (or press `/`): type what you want to do. On the published page, Claude matches it against a fixed catalog of what TA Studio and the legacy app can do (`ASK` in `build/template.html`) and answers in one line with "Take me there" or a link to the legacy page. If neither does it, it gives the quickest workaround and saves the request with a feature idea for Tejas (Setup > Requests from the Ask box; stored in the page's `requests` collection). Claude is sent the question and the catalog only, never student data. In a local copy, or if Claude is not allowed, keyword matching answers and a request can be copied instead. Add a catalog entry whenever a feature is added.
 
@@ -56,7 +76,7 @@ Legacy colors in the app: yellow = commitment student (must place, raises a "Mus
 ```
 npm install
 npm run build   # template.html + data/seed.json -> index.html
-npm test        # jsdom smoke test
+npm test        # jsdom tests: tests/smoke.js and tests/nov.js
 ```
 The only expected jsdom message is the unimplemented `scrollTo`.
 

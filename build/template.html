@@ -77,7 +77,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .who .navlink:hover{color:var(--accent-hover);text-decoration:underline}
 /* Bootstrap 3 nav-tabs */
 .tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:20px}
-.tab{background:none;border:1px solid transparent;border-bottom:0;border-radius:4px 4px 0 0;padding:10px 15px;font-size:15px;color:var(--accent);white-space:nowrap;cursor:pointer;display:flex;gap:6px;align-items:center;margin-bottom:-1px}
+.tab{background:none;border:1px solid transparent;border-bottom:0;border-radius:4px 4px 0 0;padding:10px 11px;font-size:15px;color:var(--accent);white-space:nowrap;cursor:pointer;display:flex;gap:6px;align-items:center;margin-bottom:-1px}
 .tab:hover{background:var(--surface-2);border-color:var(--surface-2) var(--surface-2) var(--line)}
 .tab[aria-selected="true"]{color:var(--title);background:var(--bg);border-color:var(--line);border-bottom:1px solid var(--bg);cursor:default}
 .badge{display:inline-block;min-width:10px;padding:3px 7px;font:bold 12px/1 var(--f-body);color:var(--badge-fg);text-align:center;white-space:nowrap;background:var(--badge);border-radius:10px;font-variant-numeric:tabular-nums}
@@ -205,10 +205,36 @@ ul.plain.tight li{padding:3px 0}
 footer.foot{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 .csv{font:12px/1.5 var(--f-mono);min-height:140px;white-space:pre}
 .pre{white-space:pre-wrap;overflow-wrap:anywhere}
+/* v6 (Nov 3): workflow-ordered tabs, page tips, guided demo panel */
+.stepn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line-2);color:var(--muted);font:bold 11px/1 var(--f-body);font-variant-numeric:tabular-nums}
+.tab[aria-selected="true"] .stepn{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.tabgap{flex:1 0 16px}
+.tab.more{font-size:13px;color:var(--muted);padding:10px 7px}
+.tab.more[aria-selected="true"]{color:var(--title)}
+.tip{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin:-8px 0 16px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 4px 4px 0;font-size:13px;color:var(--fg)}
+.tip .link{white-space:nowrap}
+.uband .bandbtn.strong{background:var(--bar-fg);color:var(--bar);font-weight:bold;border-color:var(--bar-fg)}
+.uband .bandbtn.strong:hover{background:rgba(255,255,255,.88)}
+.card.hero{border-left:4px solid var(--accent);background:var(--accent-soft)}
+dl.kv{display:grid;grid-template-columns:minmax(0,140px) minmax(0,1fr);margin:10px 0;border-top:1px solid var(--line)}
+dl.kv dt{font-weight:bold;font-size:13px;padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+dl.kv dd{margin:0;padding:6px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.wrap.guided{padding-bottom:300px}
+.gpanel{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(420px,calc(100vw - 32px));max-height:min(70vh,560px);overflow-y:auto;background:var(--surface);border:1px solid var(--line-2);border-top:4px solid var(--accent);border-radius:6px;box-shadow:var(--shadow);padding:12px 14px;z-index:18}
+.gpanel.min{width:auto;max-width:calc(100vw - 32px);padding:0;border:0;background:none;box-shadow:none;overflow:visible}
+.gpanel.min .btn{box-shadow:var(--shadow);white-space:normal;text-align:left}
+.gdots{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.gdot{width:18px;height:6px;border-radius:3px;border:0;padding:0;background:var(--line-2);cursor:pointer}
+.gdot.ok{background:var(--ok)}
+.gdot.on{background:var(--accent)}
+.gquote{font-size:13px;font-style:italic;color:var(--muted);border-left:2px solid var(--line-2);padding-left:8px;margin-bottom:6px}
+.gsay{font-size:14px;line-height:1.5}
+@media (max-width:560px){.gpanel{left:16px;right:16px;width:auto;max-height:52vh}.wrap.guided{padding-bottom:58vh}}
 </style>
 
 <div id="app"></div>
 <div id="drawer"></div>
+<div id="guide"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -390,8 +416,10 @@ const isGrad=a=>APP[a].degree_level!=='Undergraduate';
 const audOk=(a,c)=>{const cs=S&&S.course&&S.course[c];if(!cs)return true;return cs.aud==='both'||(cs.aud==='grad')===isGrad(a)};
 const priorTa=a=>APP[a].returning_ta||(TH[a]||[]).length>0;
 const TIER_CODES=['PhD','Masters 1 (returning)','Masters 2','UGCA'];
-/* Assumed rule, to confirm with Doug: PhD; master's with prior TA service = Masters 1 (returning); other master's = Masters 2; undergrad = UGCA. */
-function tierAuto(a){const d=APP[a].degree_level;return d==='PhD'?'PhD':d==='Undergraduate'?'UGCA':(priorTa(a)?'Masters 1 (returning)':'Masters 2')}
+/* Doug (Nov 3): a PhD is always the PhD rate. A master's student's first term is the lowest rate; from their second term on
+   they are "returning" and stay there. An AI (a PhD teaching the class) is a fourth, higher rate, set by the appointment.
+   Returning is read from the history archive (by EID) and the legacy TA history, so a fall master's is a returner in spring. */
+function tierAuto(a){const d=APP[a].degree_level;return d==='PhD'?'PhD':d==='Undergraduate'?'UGCA':(priorTa(a)||gradTimes(a)>0?'Masters 1 (returning)':'Masters 2')}
 function tierOf(a){const o=S&&S.tierOv&&S.tierOv[a];return o?{code:o,auto:false}:{code:tierAuto(a),auto:true}}
 const typeOk=a=>!S.typeView||S.typeView==='both'||APP[a].assistant_type===S.typeView;
 const ex=a=>EXT.apps[a]||{};
@@ -399,7 +427,11 @@ const facElig=a=>({eligible:'cleared',pending_review:'pending',ineligible:'unava
 const key=r=>r.course+'|'+r.app;
 /* v5 helpers: legacy flags in both modes, units, commitment override */
 const FL=a=>(LIVE?LG[a]:DEMO_LG[a])||{};
-const isRed=a=>{const c=FL(a).color;return c==='declined'||c==='other'};
+/* Oct 27: the office can take someone out of the pool with a reason, like "Remove student from TA pool" in the legacy app.
+   GRA / other support turns the row blue (same as the GRA list); every other reason turns it red. */
+const REMOVE_WHY=[['gra','Has a GRA or other support (blue)'],['graduated','Graduated (red)'],['withdrew','Withdrew their application (red)'],['declined','Declined the offer (red)'],['ineligible','Not eligible to work (red)'],['other','Other reason (red)']];
+const removedOf=a=>(S&&S.removed&&S.removed[a])||null;
+const isRed=a=>{const c=FL(a).color;return c==='declined'||c==='other'||!!removedOf(a)};
 const elig=a=>isRed(a)?'ineligible':APP[a].employment_eligibility_status;
 const isCommit=a=>(FL(a).commit||FL(a).color==='commitment')?1:0;
 function applyCommit(){SEED.applications.forEach(ap=>{const a=ap.application_id;if(ap.degree_level==='Masters'&&isCommit(a)){ap.self_degree='Masters';ap.degree_level='PhD'}})}
@@ -419,35 +451,153 @@ const appLoadTxt=a=>isUG(a)?fh(appHrs(a))+' / '+UG_MAX+' h':f(appFte(a))+' / '+f
 const capLeft=a=>isUG(a)?(UG_MAX-appHrs(a))/UG_FULL:APP[a].max_assignment_fte-appFte(a);
 const discOf=(a,c)=>{const p=prefOf(a,c);if(!p)return null;if(p.discussion!=null)return !!p.discussion;if(LIVE||isUG(a)||!EXT.disc)return null;return !!EXT.disc[a+'|'+c]};
 
+/* ---------- Nov 3 meeting: history archive, returners, training, pay rates, graduate records ----------
+   Doug keeps a running list of every UGCA (and TA) by semester. Matching it by EID tells us who is new (needs UGCA
+   training) and who is returning (a master's student's second term moves them to the returning pay tier).
+   Rates change every year (about 2 to 3 percent), so they are set per term in Setup and applied automatically.
+   The graduate records (international, gender) come from the grad office list and only feed the HR draft. */
+const normEid=s=>String(s==null?'':s).replace(/[\s ​﻿]+/g,'').toLowerCase();
+const EID_RE=/^[a-z]{1,4}\d{2,6}[a-z]?$/;
+const SEM_N={spring:1,spr:1,sp:1,summer:2,sum:2,su:2,fall:3,fal:3,fa:3};
+function normSem(s){const m=String(s==null?'':s).trim().toLowerCase().match(/^(spring|spr|sp|summer|sum|su|fall|fal|fa)\.?\s*'?\s*(\d{2}|\d{4})$/);if(!m)return '';const y=m[2].length===2?2000+ +m[2]:+m[2];return ['','Spring','Summer','Fall'][SEM_N[m[1]]]+' '+y}
+const semKey=s=>{const m=String(s||'').match(/(Spring|Summer|Fall)\s+(\d{4})/i);return m?+m[2]*10+({spring:1,summer:2,fall:3}[m[1].toLowerCase()]):0};
+const termKey=()=>semKey(TERM.name);
+const money=n=>'$'+(Math.round(n*100)/100).toLocaleString('en-US',{minimumFractionDigits:Number.isInteger(Math.round(n*100)/100)?0:2,maximumFractionDigits:2});
+/* Synthetic archive in the shape of Doug's list (first, last, EID, semester). People are fictional; the EIDs match the demo applicants. */
+const DEMO_ARCH=(()=>{
+  const R=(first,last,eid,sem,role)=>({first,last,eid,sem,role});
+  const rows=[R('Candidate','Atlas','at4101','Fall 2024','UGCA'),R('Candidate','Atlas','at4101','Spring 2025','UGCA'),R('Candidate','Atlas','at4101','Fall 2026','UGCA'),
+    R('Candidate','Birch','bi4102','Fall 2026','TA'),R('Candidate','Ember','em4105','Fall 2024','TA'),R('Candidate','Indigo','in4109','Fall 2024','TA'),R('Candidate','Cedar','ce4103','Spring 2025','TA')];
+  const fn=['Rowan','Sage','Wren','Quill','Ash','Briar','Clover','Dale','Fern','Heath','Iris','Jade','Lark','Moss','Oak','Pike','Reed','Sorrel','Thorn','Vale'];
+  const sems=['Fall 2023','Spring 2024','Fall 2024','Spring 2025','Fall 2025','Spring 2026','Fall 2026'];
+  fn.forEach((n,i)=>{const e=n.slice(0,2).toLowerCase()+(5200+i);for(let k=0;k<1+(i%3);k++)rows.push(R(n,'Sample',e,sems[(i+k*2)%sems.length],i%4?'UGCA':'TA'))});
+  return rows;
+})();
+/* Synthetic graduate records (the grad office list): gender and international status for the demo's graduate applicants. */
+const DEMO_GRAD={bi4102:{gender:'F',intl:'Yes',program:'MSCS'},ce4103:{gender:'M',intl:'Yes',program:'PhD CS'},em4105:{gender:'F',intl:'No',program:'MSCS'},fi4106:{gender:'M',intl:'Yes',program:'PhD CS'},
+  ha4108:{gender:'M',intl:'Yes',program:'MSCS'},in4109:{gender:'F',intl:'No',program:'PhD CS'},ke4111:{gender:'M',intl:'No',program:'PhD CS'},li4112:{gender:'F',intl:'Yes',program:'PhD CS'},ma4113:{gender:'F',intl:'No',program:'MSCS'}};
+const RATE_TIERS=[['PhD','PhD','month'],['Masters 1 (returning)',"Master's, returning",'month'],['Masters 2',"Master's, first time",'month'],['AI','AI (assistant instructor)','month'],['UGCA','UGCA','hour']];
+const RATE_DEMO={PhD:5000,'Masters 1 (returning)':4700,'Masters 2':4400,AI:5400,UGCA:18};
+function archIndex(){const ix={};(S.arch.rows||[]).forEach(r=>{(ix[r.eid]=ix[r.eid]||[]).push(r)});S.archIx=ix}
+const eidOf=a=>normEid(FL(a).eid);
+function pastOf(a){const e=eidOf(a);if(!e||!S||!S.archIx)return[];const k=termKey();return (S.archIx[e]||[]).filter(r=>!r.sem||!k||semKey(r.sem)<k)}
+const pastSems=(a,roles)=>[...new Set(pastOf(a).filter(r=>!roles||roles.includes(r.role)).map(r=>r.sem||'Before records'))].sort((x,y)=>semKey(x)-semKey(y));
+const timesBefore=(a,roles)=>pastSems(a,roles).length;
+const gradTimes=a=>timesBefore(a,['TA','AI']);
+const isReturner=a=>isUG(a)?(timesBefore(a,['UGCA'])>0||(LIVE&&/^return/i.test((LG[a]||{}).nr||''))):(gradTimes(a)>0||priorTa(a)||(LIVE&&/^return/i.test((LG[a]||{}).nr||'')));
+const needsTraining=a=>isUG(a)&&!isReturner(a);
+const trained=a=>!!(S.training&&S.training[a]);
+const nrTxt=a=>{const n=isUG(a)?timesBefore(a,['UGCA']):gradTimes(a);return isReturner(a)?'Returning'+(n?' ('+n+' term'+(n>1?'s':'')+' before)':''):'New'};
+const nrChip=a=>isReturner(a)?chip(nrTxt(a),'ok'):chip(isUG(a)?'New UGCA: needs training':'New','warn');
+const gradOf=a=>(S&&S.grad&&S.grad.rows[eidOf(a)])||null;
+const intlOf=a=>{const g=gradOf(a);if(g&&g.intl)return g.intl;const c=String(ex(a).cit||'').toLowerCase();return c?(/international|f-?1|j-?1|non-?resident|visa/.test(c)?'Yes':'No'):''};
+const genderOf=a=>(gradOf(a)||{}).gender||'';
+const rowTier=r=>r.role==='AI'?'AI':r.role==='UGCA'?'UGCA':tierOf(r.app).code;
+const rateOf=t=>+((S&&S.rates&&S.rates.vals[t])||0);
+const payOf=r=>{const t=rowTier(r),v=rateOf(t);return t==='UGCA'?v*(r.hrs!=null?r.hrs:r.fte*UG_FULL):v*r.fte};
+const payTxt=r=>{const t=rowTier(r),v=rateOf(t);if(!v)return 'Rate not set';return t==='UGCA'?money(v)+'/h × '+fh(r.hrs!=null?r.hrs:r.fte*UG_FULL)+' h a week':money(v*r.fte)+' a month'+(r.fte!==1?' ('+f(r.fte)+' of '+money(v)+')':'')};
+/* Tables pasted from Excel arrive tab-separated; files arrive as CSV or .xlsx. Everything becomes rows of cells. */
+function parseGrid(t){t=String(t||'');const first=t.split(/\r?\n/).find(l=>l.trim())||'';if(first.includes('\t'))return t.split(/\r?\n/).map(l=>l.split('\t')).filter(r=>r.some(x=>String(x).trim()));return parseCsv(t)}
+let XLSX_P=null;
+function loadXlsx(){if(window.XLSX)return Promise.resolve(window.XLSX);if(XLSX_P)return XLSX_P;XLSX_P=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>window.XLSX?ok(window.XLSX):no(new Error('Spreadsheet reader did not load'));s.onerror=()=>{XLSX_P=null;no(new Error('Could not load the spreadsheet reader. Save the sheet as CSV, or copy the cells and paste them.'))};document.head.appendChild(s)});return XLSX_P}
+async function readSheets(file){
+  if(/\.(xlsx|xls)$/i.test(file.name)){const X=await loadXlsx();const wb=X.read(await file.arrayBuffer(),{type:'array'});return wb.SheetNames.map(n=>({name:n,rows:X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''})}))}
+  return [{name:file.name,rows:parseGrid(await file.text())}];
+}
+/* Find columns by header when there is one, by content when there is not (Doug's spring list has no header row). */
+function sheetCols(rows,want){
+  const head=(rows[0]||[]).map(x=>String(x==null?'':x).trim());
+  const hasHead=head.some(h=>Object.values(want).some(re=>re.test(h)));
+  const ix={};if(hasHead)Object.keys(want).forEach(k=>{const i=head.findIndex((h,j)=>want[k].test(h)&&!Object.values(ix).includes(j));if(i>=0)ix[k]=i});
+  const body=hasHead?rows.slice(1):rows,w=Math.max(0,...body.map(r=>r.length));
+  const score=fn=>{let best=-1,bi=-1;for(let j=0;j<w;j++){if(Object.values(ix).includes(j))continue;const n=body.filter(r=>fn(r[j])).length;if(n>best){best=n;bi=j}}return best>0?bi:-1};
+  if(ix.eid==null){const j=score(v=>EID_RE.test(normEid(v)));if(j>=0)ix.eid=j}
+  if('sem' in want&&ix.sem==null){const j=score(v=>!!normSem(v));if(j>=0)ix.sem=j}
+  if(ix.first==null&&ix.name==null&&ix.eid!=null){const txt=[];for(let j=0;j<w;j++)if(!Object.values(ix).includes(j)&&body.filter(r=>/^[A-Za-z][A-Za-z' .\-]*$/.test(String(r[j]||'').trim())).length>body.length/2)txt.push(j);if(txt.length>=2){ix.first=txt[0];ix.last=txt[1]}else if(txt.length===1)ix.name=txt[0]}
+  return{ix,body,hasHead};
+}
+function importArchive(sheets,role,src){
+  const res={read:0,added:0,dupes:0,noEid:0,noSem:0,people:0,sems:{},sheets:[]};const seen=new Set(S.arch.rows.map(r=>r.eid+'|'+r.sem+'|'+r.role)),add=[];
+  sheets.forEach(sh=>{
+    const {ix,body}=sheetCols(sh.rows,{first:/first/i,last:/last/i,name:/^(name|full name|student)$/i,eid:/eid/i,sem:/semester|term|^sem/i,role:/^(role|type|position)$/i});
+    if(ix.eid==null){res.sheets.push(sh.name+': no EID column found, skipped');return}
+    let n=0;
+    body.forEach(r=>{const g=k=>ix[k]!=null?String(r[ix[k]]==null?'':r[ix[k]]).replace(/ /g,' ').trim():'';
+      const e=normEid(g('eid'));if(!g('eid')&&!g('first')&&!g('last'))return;res.read++;n++;
+      if(!EID_RE.test(e)){res.noEid++;return}
+      const sem=normSem(g('sem'));if(!sem)res.noSem++;
+      const rl=/ugca|proctor|undergrad/i.test(g('role'))?'UGCA':/^ai\b|assistant instructor/i.test(g('role'))?'AI':/^ta\b|teaching/i.test(g('role'))?'TA':role;
+      const nmP=g('name').split(/\s+/);const first=g('first')||nmP[0]||'',last=g('last')||nmP.slice(1).join(' ');
+      const k=e+'|'+sem+'|'+rl;if(seen.has(k)){res.dupes++;return}seen.add(k);
+      add.push({first,last,eid:e,sem,role:rl,src:src||'import'});if(sem)res.sems[sem]=(res.sems[sem]||0)+1;
+    });
+    res.sheets.push(sh.name+': '+n+' rows');
+  });
+  S.arch.rows=S.arch.rows.concat(add);res.added=add.length;res.people=new Set(add.map(r=>r.eid)).size;archIndex();S.arch.last=res;S.arch.at=nowIso();
+  log('history imported','archive',src||'import',res.added+' rows ('+res.people+' people), '+res.dupes+' already there, '+res.noEid+' without a usable EID');
+  return res;
+}
+function importGrad(sheets){
+  const res={read:0,added:0,noEid:0,sheets:[]};
+  sheets.forEach(sh=>{
+    const {ix,body}=sheetCols(sh.rows,{eid:/eid/i,name:/^(name|full name|student)$/i,first:/first/i,last:/last/i,gender:/gender|^sex$/i,intl:/international|citizen|visa|residen/i,program:/program|degree|plan|major/i});
+    if(ix.eid==null){res.sheets.push(sh.name+': no EID column found, skipped');return}
+    body.forEach(r=>{const g=k=>ix[k]!=null?String(r[ix[k]]==null?'':r[ix[k]]).trim():'';const e=normEid(g('eid'));if(!g('eid'))return;res.read++;
+      if(!EID_RE.test(e)){res.noEid++;return}
+      const iv=g('intl'),intl=!iv?'':/^(y|yes|true|1)$/i.test(iv)||/international|f-?1|j-?1|non-?resident|visa/i.test(iv)?'Yes':'No';
+      const gv=g('gender'),gender=/^f/i.test(gv)?'F':/^m/i.test(gv)?'M':gv;
+      S.grad.rows[e]={name:g('name')||(g('first')+' '+g('last')).trim(),gender,intl,program:g('program')};res.added++});
+    res.sheets.push(sh.name);
+  });
+  S.grad.src='import';S.grad.at=nowIso();S.grad.last=res;log('graduate records imported','grad','import',res.added+' students');return res;
+}
+function archiveTerm(){
+  const p=latestPub();if(!p)return 0;const sem=TERM.name;let n=0;const have=new Set(S.arch.rows.map(r=>r.eid+'|'+r.sem+'|'+r.role));
+  p.rows.forEach(r=>{if(respOf(p,r).status==='declined')return;const e=eidOf(r.app);if(!e)return;const k=e+'|'+sem+'|'+r.role;if(have.has(k))return;have.add(k);
+    const l=FL(r.app),parts=nm(r.app).split(' ');S.arch.rows.push({first:l.first||parts[0],last:l.last||parts.slice(1).join(' '),eid:e,sem,role:r.role,src:'TA Studio',course:COURSE[r.course].catalog_number});n++});
+  archIndex();log('term added to history','archive',sem,n+' people from published version '+p.version);return n;
+}
+
 /* ---------- state ---------- */
 let S=null, FID=null, toastT=null;
-
-function initState(){
+/* Two demo scenarios. "mid": Fall 2026 halfway through (conflicts to fix, version 1 published). "fresh": Spring 2027 from the
+   very start, for the start-to-finish walkthrough Doug asked for (Nov 3). Both use the same small applicant set. */
+let SCN='mid';
+const EXT_COURSES_BASE=clone(EXT.courses);
+const FRESH_SLOTS={crs_f26_001:{TA:0.5,AI:0,UGCAh:30}};
+function initState(scn){
+  if(scn)SCN=scn;if(LIVE)SCN='mid';const FRESH=SCN==='fresh';
   S=null;removeAdded();undoImport();DEMO_LG=clone(DEMO_LG_BASE);applyCommit();
+  TERM=SEED.terms[0];
+  if(!LIVE){Object.keys(EXT.courses).forEach(k=>delete EXT.courses[k]);Object.assign(EXT.courses,clone(EXT_COURSES_BASE));if(FRESH){TERM={...TERM,term_id:'term_spring_2027',name:'Spring 2027',faculty_ranking_deadline:''};Object.keys(FRESH_SLOTS).forEach(k=>{EXT.courses[k].slots=clone(FRESH_SLOTS[k])})}}
   const s={user:{type:'admin'},tab:'dashboard',selCourse:LIVE?((SEED.courses.find(c=>(SEED.course_preferences.some(p=>p.course_id===c.course_id)))||SEED.courses[0]||{}).course_id||null):'crs_f26_002',facCourse:null,drawer:null,drawerNew:false,
     f:{dash:{prof:'',status:'',staffed:''},fac:{tier:'',ret:'',avail:'',elig:''},app:{tier:'',type:''}},
     facErrors:{},rank:{},overrides:{},concernNotes:{},emailFor:null,confirmClone:null,selPub:null,
     gra:new Set(),graText:LIVE?'':'ce4103\nzp9001',graResult:null,resume:{},compose:null,facBrowse:{on:true,off:{}},facSearch:'',importRes:null,stuInbox:[],replyBy:isoOf(new Date(Date.now()+14*864e5)).slice(0,10),typeView:'both',tierOv:{},tx:{},graBack:new Set(),addedOut:{},ext:{},mailAddrNote:'',hrSel:null,
-    sync:{cursor:0,at:'2026-10-05T08:00:00-05:00',newApps:[],declined:[]}};
+    sync:{cursor:0,at:FRESH?'2026-11-02T08:00:00-06:00':'2026-10-05T08:00:00-05:00',newApps:[],declined:[]},
+    scn:SCN,arch:{rows:LIVE?[]:clone(DEMO_ARCH),src:LIVE?'':'demo',at:''},grad:{rows:LIVE?{}:clone(DEMO_GRAD),src:LIVE?'':'demo'},
+    rates:{vals:{...RATE_DEMO},prev:{PhD:4850,'Masters 1 (returning)':4560,'Masters 2':4270,AI:5240,UGCA:17.5},prevTerm:FRESH?'Fall 2026':'Spring 2026',demo:true,setAt:''},
+    training:{},removed:{},hrCols:LIVE?HR_COLS.map(c=>c[0]).filter(k=>HR_DEFAULT.includes(k)||k==='degree'||k==='gpa'):HR_DEFAULT.slice(),autoHr:true,addLevel:null,addQ:'',rosterF:'',tips:true,guide:null,student:null,facNoteDraft:{}};
   s.course={};SEED.courses.forEach(c=>{const x=clone(EXT.courses[c.course_id]);x.slots=normSlots(x.slots);s.course[c.course_id]=x;COURSE[c.course_id].ta_slots_required=needLoad(x.slots)});
   SEED.courses.forEach(c=>{
-    const wf=SEED.ranking_workflow.find(w=>w.course_id===c.course_id);
-    s.rank[c.course_id]={status:wf.ranking_status,savedAt:wf.last_saved_at,submittedAt:wf.submitted_at,entries:{}};
+    const wf=SEED.ranking_workflow.find(w=>w.course_id===c.course_id)||{ranking_status:'not_started',last_saved_at:'',submitted_at:''};
+    s.rank[c.course_id]=FRESH?{status:'not_started',savedAt:'',submittedAt:'',entries:{},note:''}:{status:wf.ranking_status,savedAt:wf.last_saved_at,submittedAt:wf.submitted_at,entries:{},note:''};
   });
-  SEED.faculty_rankings.forEach(r=>{s.rank[r.course_id].entries[r.application_id]={rank:r.rank,rec:r.recommendation,comment:r.faculty_comment}});
-  s.draft={id:SEED.assignment_drafts[0].draft_id,name:SEED.assignment_drafts[0].name,rows:SEED.draft_assignments.map(d=>normRow({id:d.draft_assignment_id,course:d.course_id,app:d.application_id,fte:d.allocation_fte,role:defaultRole(d.application_id),decision:d.admin_decision_status,published:d.publication_status==='published',note:d.admin_note}))};
+  if(!FRESH)SEED.faculty_rankings.forEach(r=>{s.rank[r.course_id].entries[r.application_id]={rank:r.rank,rec:r.recommendation,comment:r.faculty_comment}});
+  s.draft=FRESH?{id:'draft_s27_01',name:'Spring 2027 working draft',rows:[]}:{id:SEED.assignment_drafts[0].draft_id,name:SEED.assignment_drafts[0].name,rows:SEED.draft_assignments.map(d=>normRow({id:d.draft_assignment_id,course:d.course_id,app:d.application_id,fte:d.allocation_fte,role:defaultRole(d.application_id),decision:d.admin_decision_status,published:d.publication_status==='published',note:d.admin_note}))};
   s.newRow=100;
-  if(!LIVE)s.overrides['pending:draft_01_005']='Admin acknowledged pending eligibility review before publication.';
-  s.pubs=SEED.publication_batches.map(p=>({id:p.publication_id,version:p.version,at:p.published_at,by:ADMIN,
+  if(!LIVE&&!FRESH)s.overrides['pending:draft_01_005']='Admin acknowledged pending eligibility review before publication.';
+  s.pubs=FRESH?[]:SEED.publication_batches.map(p=>({id:p.publication_id,version:p.version,at:p.published_at,by:ADMIN,
     rows:SEED.published_assignments.filter(r=>r.publication_id===p.publication_id).map(r=>normRow({id:r.published_assignment_id,course:r.course_id,app:r.application_id,fte:r.allocation_fte,role:defaultRole(r.application_id),note:r.override_note})),
     gaps:{},notifiedAt:'2026-09-17T09:00:00-05:00',replyBy:'2026-09-24',responses:{},respOpen:true}));
   // Synthetic extension (not in the original dataset): student replies logged for v1.
-  if(!LIVE){s.pubs[0].responses['crs_f26_001|app_f26_0001']={status:'confirmed',at:'2026-09-19'};
+  if(!LIVE&&!FRESH){s.pubs[0].responses['crs_f26_001|app_f26_0001']={status:'confirmed',at:'2026-09-19'};
   s.pubs[0].responses['crs_f26_005|app_f26_0004']={status:'declined',at:'2026-09-22'};}
-  s.concerns=SEED.faculty_concerns.map(c=>({...c,adjust:c.status==='resolved_adjustment'}));
+  s.concerns=FRESH?[]:SEED.faculty_concerns.map(c=>({...c,adjust:c.status==='resolved_adjustment'}));
   s.audit=[];
   const A=(ts,actor,action,entity,id,summary)=>s.audit.push({ts,actor,action,entity,id,summary});
-  SEED.ranking_workflow.forEach(w=>{
+  if(FRESH)A('2026-11-02T08:00:00-06:00',ADMIN,'term started','term','term_spring_2027','Spring 2027: applications read from the legacy app, nothing opened yet');
+  if(!FRESH)SEED.ranking_workflow.forEach(w=>{
     const fac=prof(w.course_id);
     if(w.submitted_at)A(w.submitted_at,fac,'staffing request submitted','ranking',w.course_id,cname(w.course_id)+' ranking submitted');
     else if(w.last_saved_at)A(w.last_saved_at,fac,'ranking draft saved','ranking',w.course_id,cname(w.course_id)+' draft saved');
@@ -470,24 +620,24 @@ function initState(){
     if(rk.status==='submitted')s.notifs.push({id:'n'+(s.nid++),to:'admin',at:rk.submittedAt,text:FAC[fid].display_name+' submitted the '+cname(c.course_id)+' ranking.',go:{tab:'windows'},read:false});
   });
   // Synthetic: HR draft 15 was sent on Sep 16 and matches published version 1.
-  s.hr=LIVE?{drafts:(HRBASE&&HRBASE.rows.length)?[{n:HRBASE.n,at:FEEDMETA.syncedAt,by:'Legacy app (read from its draft page)',baseline:true,rows:HRBASE.rows.map(r=>normRow({course:r.course,app:r.app,fte:r.fte,role:defaultRole(r.app),tier:'',cit:'',note:''}))}]:[]}
+  s.hr=FRESH?{drafts:[]}:LIVE?{drafts:(HRBASE&&HRBASE.rows.length)?[{n:HRBASE.n,at:FEEDMETA.syncedAt,by:'Legacy app (read from its draft page)',baseline:true,rows:HRBASE.rows.map(r=>normRow({course:r.course,app:r.app,fte:r.fte,role:defaultRole(r.app),tier:'',cit:'',note:''}))}]:[]}
    :{drafts:[{n:15,at:'2026-09-16T10:00:00-05:00',by:ADMIN,rows:s.pubs[0].rows.map(r=>normRow({course:r.course,app:r.app,fte:r.fte,hrs:r.hrs,role:r.role,tier:'',cit:'',note:r.note||''}))}]};
-  S=s;
-  s.hr.drafts.forEach(d=>d.rows.forEach(r=>{r.tier=tierOf(r.app).code;r.cit=ex(r.app).cit||'';Object.assign(r,acct(r.app))}));
+  S=s;archIndex();
+  s.hr.drafts.forEach(d=>d.rows.forEach(hrFill));
   s.hrSel=s.hr.drafts.length?s.hr.drafts[s.hr.drafts.length-1].n:null;
   const sentEarlier=(at,kind,aud,to,address,body)=>s.outbox.push({id:'m'+(s.mid++),at,kind,audience:aud,fid:'',to,address,subject:body.split('\n')[0].replace(/^Subject: /,''),body,status:'Sent earlier'});
-  if(!LIVE){s.pubs[0].rows.forEach(r=>sentEarlier(s.pubs[0].notifiedAt,'Assignment notice','Student',nm(r.app),stuAddr(r.app),emailFor(s.pubs[0],r)));
+  if(!LIVE&&!FRESH){s.pubs[0].rows.forEach(r=>sentEarlier(s.pubs[0].notifiedAt,'Assignment notice','Student',nm(r.app),stuAddr(r.app),emailFor(s.pubs[0],r)));
   sentEarlier(s.hr.drafts[0].at,'HR draft','HR','HR office','HR contact to be confirmed',hrEmail(15));}
   applyGra(S.graText,true);
   return s;
 }
 
-const actor=()=>S.user.type==='admin'?ADMIN:FAC[S.user.fid].display_name;
+const actor=()=>S.user.type==='admin'?ADMIN:S.user.type==='student'?nm(S.user.app)+' (student)':FAC[S.user.fid].display_name;
 function log(action,entity,id,summary){S.audit.unshift({ts:nowIso(),actor:actor(),action,entity,id,summary})}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
 
 /* ---------- faculty windows, notifications, tracker ---------- */
-const me=()=>S.user.type==='admin'?'admin':'fac:'+S.user.fid;
+const me=()=>S.user.type==='admin'?'admin':S.user.type==='student'?'stu:'+S.user.app:'fac:'+S.user.fid;
 function notify(to,text,go){S.notifs.push({id:'n'+(S.nid++),to,at:nowIso(),text,go,read:false})}
 const winOpen=fid=>S.win[fid].state==='open';
 const canEdit=cid=>winOpen(COURSE[cid].faculty_id)&&S.rank[cid].status!=='submitted';
@@ -543,26 +693,39 @@ function trackCsv(){
 
 /* ---------- HR drafts ---------- */
 const hrLatest=()=>S.hr.drafts[S.hr.drafts.length-1]||{n:0,at:'',by:'',rows:[]};
-function hrRows(){return live().filter(r=>r.decision==='accepted').map(r=>normRow({course:r.course,app:r.app,fte:r.fte,hrs:r.hrs,role:r.role,tier:tierOf(r.app).code,cit:ex(r.app).cit||'',note:r.note||'',...acct(r.app)}))}
+/* One HR row per accepted assignment. Tier, rate and pay are snapshotted when the draft is made; confirmation and training are read live. */
+function hrFill(r){const t=rowTier(r);r.tier=t;r.rate=rateOf(t);r.pay=Math.round(payOf(r)*100)/100;r.nr=nrTxt(r.app).replace(/ \(.*/,'');r.times=isUG(r.app)?timesBefore(r.app,['UGCA']):gradTimes(r.app);r.intl=isGrad(r.app)?intlOf(r.app):'';r.gender=isGrad(r.app)?genderOf(r.app):'';r.cit=ex(r.app).cit||'';Object.assign(r,acct(r.app));return r}
+function hrRows(){return live().filter(r=>r.decision==='accepted').map(r=>hrFill(normRow({course:r.course,app:r.app,fte:r.fte,hrs:r.hrs,role:r.role,note:r.note||''})))}
+const nameParts=a=>{const l=FL(a);if(l.first||l.last)return[l.first||'',l.last||''];const p=nm(a).split(' ');return[p[0],p.slice(1).join(' ')]};
+const confTxt=r=>{const p=latestPub();if(!p||!p.rows.some(x=>key(x)===key(r)))return 'Not published';const st=respOf(p,r).status;return st==='confirmed'?'Y':st==='declined'?'Declined':st==='awaiting'?'Waiting':'Not notified'};
+const trainTxt=r=>r.role!=='UGCA'?'':!needsTraining(r.app)?'Not needed (returning)':trained(r.app)?'Complete':'Needed';
+const HR_COLS=[
+ ['change','Change',r=>r.ch||''],['first','First name',r=>nameParts(r.app)[0]],['last','Last name',r=>nameParts(r.app)[1]],['eid','UT EID',r=>FL(r.app).eid||''],['email','Email',r=>LIVE?(LG[r.app]||{}).email||'':''],
+ ['course','Course',r=>COURSE[r.course].catalog_number],['section','Section',r=>COURSE[r.course].section_label],['title','Course title',r=>COURSE[r.course].title],['instructor','Instructor',r=>prof(r.course)],
+ ['appt','Appointment',r=>r.role==='AI'?'AI':r.role],['size','Size',r=>sizeTxt(r)],['hours','Hours per week',r=>r.role==='UGCA'?fh(r.hrs):''],['fte','FTE',r=>r.role==='UGCA'?'':f(r.fte)],
+ ['tier','HR tier',r=>r.tier||''],['rate','Rate',r=>r.rate?(r.tier==='UGCA'?money(r.rate)+'/h':money(r.rate)+'/mo'):''],['pay','Pay',r=>r.pay?(r.tier==='UGCA'?money(r.pay)+'/wk':money(r.pay)+'/mo'):''],
+ ['nr','New / return',r=>r.nr||''],['times','Terms before',r=>r.times==null?'':r.times],['intl','International',r=>r.intl||''],['gender','Gender',r=>r.gender||''],['cit','Citizenship',r=>r.cit||''],
+ ['confirmed','Confirmed',r=>confTxt(r)],['training','UGCA training',r=>trainTxt(r)],['degree','Degree (legacy)',r=>r.degree||''],['gpa','GPA (legacy)',r=>r.gpa||''],['note','Note',r=>r.note||'']];
+const HR_BY=Object.fromEntries(HR_COLS.map(c=>[c[0],c]));
+const HR_DEFAULT=['change','first','last','eid','email','course','section','instructor','appt','size','tier','rate','pay','nr','intl','gender','confirmed','note'];
 function hrDiff(cur,prev){
   const pk=Object.fromEntries((prev||[]).map(r=>[key(r),r])),ck=Object.fromEntries(cur.map(r=>[key(r),r]));
-  const out=cur.map(r=>{const o=pk[key(r)];return{...r,ch:prev?(o?((o.fte!==r.fte||o.role!==r.role||o.tier!==r.tier||(o.hrs||0)!==(r.hrs||0))?'changed':''):'added'):'',was:o}});
+  const out=cur.map(r=>{const o=pk[key(r)];return{...r,ch:prev?(o?((o.fte!==r.fte||o.role!==r.role||o.tier!==r.tier||(o.hrs||0)!==(r.hrs||0)||(o.rate!=null&&r.rate!=null&&o.rate!==r.rate))?'changed':''):'added'):'',was:o}});
   (prev||[]).filter(r=>!ck[key(r)]).forEach(r=>out.push({...r,ch:'removed'}));
   return out.sort((x,y)=>cname(x.course).localeCompare(cname(y.course))||nm(x.app).localeCompare(nm(y.app)));
 }
 const hrChanged=()=>hrDiff(hrRows(),hrLatest().rows).some(r=>r.ch);
 function hrPrev(n){const i=S.hr.drafts.findIndex(d=>d.n===n);return i>0?S.hr.drafts[i-1]:null}
-function hrCsv(n){
-  const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  const d=S.hr.drafts.find(x=>x.n===n),pv=hrPrev(n),rows=hrDiff(d.rows,pv&&pv.rows);
-  const head=['draft','change','course','section','course_title','instructor',LIVE?'name':'assignee_alias'].concat(LIVE?['eid','email']:[],['appointment','size','hours_per_week','fte','hr_tier','citizenship'],LIVE?['new_return','degree','ai','gpa']:[],['note']);
-  return [head.join(',')].concat(rows.map(r=>{const l=LG[r.app]||{};return [n,r.ch,COURSE[r.course].catalog_number,COURSE[r.course].section_label,COURSE[r.course].title,prof(r.course),nm(r.app)].concat(LIVE?[l.eid||'',l.email||'']:[],[r.role,sizeTxt(r),r.role==='UGCA'?fh(r.hrs):'',r.role==='UGCA'?'':f(r.fte),r.tier,r.cit],LIVE?[r.nr||'',r.degree||'',r.ai||'',r.gpa||'']:[],[r.note]).map(q).join(',')})).join('\n');
+function hrCsv(n,sep){
+  const q=v=>{v=String(v==null?'':v);return sep==='\t'?v.replace(/[\t\n]+/g,' '):/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const d=S.hr.drafts.find(x=>x.n===n);if(!d)return '';const pv=hrPrev(n),rows=hrDiff(d.rows,pv&&pv.rows),cols=(S.hrCols||HR_DEFAULT).map(k=>HR_BY[k]).filter(Boolean);
+  return [['Draft'].concat(cols.map(c=>c[1])).map(q).join(sep||',')].concat(rows.map(r=>[n].concat(cols.map(c=>c[2](r))).map(q).join(sep||','))).join('\n');
 }
 function hrEmail(n){
   const d=S.hr.drafts.find(x=>x.n===n),pv=hrPrev(n),rows=hrDiff(d.rows,pv&&pv.rows);
-  const L=k=>rows.filter(r=>r.ch===k).map(r=>'  - '+nm(r.app)+', '+cname(r.course)+', '+r.role+', '+sizeTxt(r).toLowerCase()+', '+r.tier+(k==='changed'&&r.was?' (was '+sizeTxt(r.was).toLowerCase()+', '+r.was.role+', '+r.was.tier+')':''));
+  const L=k=>rows.filter(r=>r.ch===k).map(r=>'  - '+nm(r.app)+(FL(r.app).eid?' ('+FL(r.app).eid+')':'')+', '+cname(r.course)+', '+r.role+', '+sizeTxt(r).toLowerCase()+', '+r.tier+(r.rate?', '+(r.tier==='UGCA'?money(r.rate)+'/h':money(r.pay)+'/mo'):'')+(r.intl==='Yes'?', international':'')+(r.gender?', '+r.gender:'')+(r.nr?', '+r.nr.toLowerCase():'')+(k==='changed'&&r.was?' (was '+sizeTxt(r.was).toLowerCase()+', '+r.was.role+', '+r.was.tier+')':''));
   const a=L('added'),m=L('removed'),c=L('changed');
-  return 'Subject: '+TERM.name+' TA and UGCA assignments, draft '+n+(pv?' ('+a.length+' added, '+m.length+' removed, '+c.length+' changed)':'')+'\n\nHello HR team,\n\nDraft '+n+' of the '+TERM.name+' assignments is ready. The full list is in the attached spreadsheet. UGCA appointments are listed in hours per week; TA and AI appointments are full-time or half-time.\n\n'+(pv?'Changes since draft '+pv.n+':\n\nAdded:\n'+(a.join('\n')||'  none')+'\n\nRemoved:\n'+(m.join('\n')||'  none')+'\n\nChanged:\n'+(c.join('\n')||'  none'):'This is the first draft.')+'\n\nThank you,\nCS Graduate Office';
+  return 'Subject: '+TERM.name+' TA and UGCA assignments, draft '+n+(pv?' ('+a.length+' added, '+m.length+' removed, '+c.length+' changed)':'')+'\n\nHello HR team,\n\nDraft '+n+' of the '+TERM.name+' assignments is ready. The full list is in the attached spreadsheet. UGCA appointments are listed in hours per week; TA and AI appointments are full-time or half-time. Rates are the '+TERM.name+' rates. International status and gender are listed for graduate students.\n\n'+(pv?'Changes since draft '+pv.n+':\n\nAdded:\n'+(a.join('\n')||'  none')+'\n\nRemoved:\n'+(m.join('\n')||'  none')+'\n\nChanged:\n'+(c.join('\n')||'  none'):'This is the first draft.')+'\n\nThank you,\nCS Graduate Office';
 }
 
 /* ---------- domain ---------- */
@@ -625,7 +788,8 @@ function computeIssues(){
     if(hs>UG_MAX)out.push({sev:'block',key:'over:'+a,code:'Over capacity',courses:cs,app:a,msg:nm(a)+' is assigned '+fh(hs)+' hours a week across '+cs.map(cname).join(' and ')+'. A UGCA can work at most '+UG_MAX+' hours.'});
     if(gt>mx)out.push({sev:'block',key:'over:'+a,code:'Over capacity',courses:cs,app:a,msg:nm(a)+' is assigned '+f(gt)+' FTE across '+cs.map(cname).join(' and ')+'. The maximum is '+(mx===1?'one full-time appointment':mx===0.5?'one half-time appointment':f(mx)+' FTE')+'.'});
     if(S.gra.has(a))out.push({sev:'block',key:'gra:'+a,code:'On GRA list',courses:cs,app:a,msg:nm(a)+(FL(a).color==='other_support'?' has a GRA (blue in the legacy app) and cannot hold a TA position.':' is on the grant-admin GRA list and cannot hold a TA position.')});
-    if(FL(a).color==='declined')out.push({sev:'block',key:'inel:'+a,code:'Declined offer',courses:cs,app:a,msg:nm(a)+' declined (red in the legacy app). Remove the assignment and pick a backup.'});
+    if(removedOf(a))out.push({sev:'block',key:'inel:'+a,code:'Removed from pool',courses:cs,app:a,msg:nm(a)+' was removed from the pool by the office ('+(REMOVE_WHY.find(x=>x[0]===removedOf(a).why)||['','other'])[1].replace(/ \(.*\)/,'').toLowerCase()+(removedOf(a).note?': '+removedOf(a).note:'')+').'});
+    else if(FL(a).color==='declined')out.push({sev:'block',key:'inel:'+a,code:'Declined offer',courses:cs,app:a,msg:nm(a)+' declined (red in the legacy app). Remove the assignment and pick a backup.'});
     else if(elig(a)==='ineligible')out.push({sev:'block',key:'inel:'+a,code:'Ineligible',courses:cs,app:a,msg:nm(a)+(isRed(a)?' is red in the legacy app (graduated or other) and cannot be placed.':' is not eligible for employment.')});
   });
   rows.forEach((r,i)=>{
@@ -696,7 +860,7 @@ function compact(cid){
 function touch(cid){const rk=S.rank[cid];rk.savedAt=nowIso();if(rk.status==='not_started')rk.status='in_progress'}
 function emailFor(pub,r){
   const c=COURSE[r.course];
-  return 'Subject: Your '+TERM.name+' assistantship for '+c.catalog_number+' ('+c.section_label+')\n\nHello '+nm(r.app)+',\n\nYou have been assigned as '+(r.role==='AI'?'an AI (assistant instructor)':r.role==='UGCA'?'a UGCA':'a TA')+' for '+c.catalog_number+' '+c.title+', section '+c.section_label+', with '+prof(r.course)+', '+(r.role==='UGCA'?'for '+sizeTxt(r)+' a week':'as a '+sizeTxt(r).toLowerCase()+' appointment')+'.\n\nPlease reply by '+day(pub.replyBy||S.replyBy)+' to accept or decline. If you accept, HR will contact you about employment paperwork and training.\n\nThank you,\nCS Graduate Office';
+  return 'Subject: Your '+TERM.name+' assistantship for '+c.catalog_number+' ('+c.section_label+')\n\nHello '+nm(r.app)+',\n\nYou have been assigned as '+(r.role==='AI'?'an AI (assistant instructor)':r.role==='UGCA'?'a UGCA':'a TA')+' for '+c.catalog_number+' '+c.title+', section '+c.section_label+', with '+prof(r.course)+', '+(r.role==='UGCA'?'for '+sizeTxt(r)+' a week':'as a '+sizeTxt(r).toLowerCase()+' appointment')+'.\n\nPay: '+payTxt(r)+'.\n\nPlease accept or decline by '+day(pub.replyBy||S.replyBy)+' here: [link to your TA Studio offer page]. Your offer letter is attached.'+(r.role==='UGCA'&&needsTraining(r.app)?' As a first-time UGCA you will also need to complete UGCA training; we will send the details.':'')+' If you accept, HR will contact you about employment paperwork.\n\nThank you,\nCS Graduate Office';
 }
 
 /* ---------- small renderers ---------- */
@@ -730,30 +894,50 @@ function bell(){
 }
 function header(){
   const sel=S.user.type==='admin'?'admin':'fac:'+S.user.fid;
-  return '<header class="top"><div class="brand">UTCS TA/UGCA '+(S.user.type==='admin'?'Studio':'Faculty')+' - '+esc(TERM.name)+'<small>TA Studio demo v5</small></div>'+
+  return '<header class="top"><div class="brand">UTCS TA/UGCA '+(S.user.type==='admin'?'Studio':S.user.type==='student'?'Offer':'Faculty')+' - '+esc(TERM.name)+'<small>TA Studio demo v6</small></div>'+
     '<div class="who">'+askBox()+bell()+'</div></header>';
 }
 /* The burnt-orange band from the legacy app. It carries the data source, the "View as" switch and Reset (where the legacy app has Logout). */
 function band(){
-  const sel=S.user.type==='admin'?'admin':'fac:'+S.user.fid;
-  return '<div class="uband"><div class="in gut"><span class="src">'+(LIVE?'From the legacy app · read only':'Synthetic demo data')+'</span>'+
-    '<label for="roleSel">View as <select data-chg="role" id="roleSel">'+opt('admin',ADMIN+' (admin)',sel)+SEED.faculty.map(x=>opt('fac:'+x.faculty_id,x.display_name+' (faculty)',sel)).join('')+'</select></label>'+
+  const sel=me(),lp=latestPub(),stus=lp?[...new Set(lp.rows.map(r=>r.app))]:[];
+  return '<div class="uband"><div class="in gut">'+(LIVE?'':'<button class="bandbtn strong" data-act="guideOpen">'+(S.guide?'Guided demo: step '+(S.guide.step+1)+' of '+GUIDE.length:'Start the guided demo')+'</button><label for="scnSel">Scenario <select data-chg="scenario" id="scnSel">'+opt('fresh','Spring 2027 from the start',SCN)+opt('mid','Fall 2026 in progress',SCN)+'</select></label>')+'<span class="src">'+(LIVE?'From the legacy app · read only':'Synthetic demo data')+'</span>'+
+    '<label for="roleSel">View as <select data-chg="role" id="roleSel"><optgroup label="Office">'+opt('admin',ADMIN+' (admin)',sel)+'</optgroup><optgroup label="Professors">'+SEED.faculty.map(x=>opt('fac:'+x.faculty_id,x.display_name,sel)).join('')+'</optgroup>'+(stus.length?'<optgroup label="Students with a published offer">'+stus.map(a=>opt('stu:'+a,nm(a),sel)).join('')+'</optgroup>':'')+'</select></label>'+
     '<button class="bandbtn" data-act="reset">'+(LIVE?'Reset my changes':'Reset demo')+'</button></div></div>';
 }
 const LEGEND='<div class="legend"><span><i class="y"></i>Yellow = Commitment student</span><span><i class="b"></i>Blue = Other support (GRA)</span><span><i class="r"></i>Red = Declined offer, graduated, or other</span></div>';
 const rowCls=a=>isRed(a)?'lg-red':(S.gra.has(a)||FL(a).color==='other_support')?'lg-gra':isCommit(a)?'lg-commitment':'';
+/* Oct 27: the tabs were overwhelming. They now run in the order the work happens (numbered), with the reference pages set apart. */
 function tabsFor(){
   const g=gate(),open=S.concerns.filter(c=>c.status==='open'||c.status==='under_review').length;
   if(S.user.type==='admin'){
     const lp=latestPub(),declined=lp?lp.rows.filter(r=>respOf(lp,r).status==='declined').length:0;
     const wt=trackRows().filter(r=>r.st==='Waiting'||r.st==='Overdue'||r.st==='Replied by email').length;
-    return[['dashboard','Dashboard',''],['windows','Faculty windows',wt?'<span class="badge warn">'+wt+'</span>':''],['assign','Assignments',g.blocks.length?'<span class="badge bad">'+g.blocks.length+'</span>':''],['applicants','Applicants',S.sync.newApps.length?'<span class="badge warn">'+S.sync.newApps.length+' new</span>':''],['publish','Publish',''],['hr','HR drafts',hrChanged()?'<span class="badge warn">changes</span>':''],['students','Students',declined?'<span class="badge warn">'+declined+'</span>':''],['concerns','Concerns',open?'<span class="badge warn">'+open+'</span>':''],['mail','Mail',''],['setup','Setup',''],['audit','Audit log','']];
+    const tr=[...new Set(ugcaRows().map(x=>x.r.app))].filter(a=>needsTraining(a)&&!trained(a)).length;
+    return[['dashboard','Dashboard','',''],['setup','Setup','','1'],['applicants','Applicants',S.sync.newApps.length?'<span class="badge warn">'+S.sync.newApps.length+' new</span>':'','2'],['windows','Faculty windows',wt?'<span class="badge warn">'+wt+'</span>':'','3'],['assign','Assignments',g.blocks.length?'<span class="badge bad">'+g.blocks.length+'</span>':'','4'],['publish','Publish','','5'],['students','Students',declined?'<span class="badge warn">'+declined+'</span>':'','6'],['hr','HR drafts',hrChanged()?'<span class="badge warn">changes</span>':'','7'],['ugca','UGCAs',tr?'<span class="badge warn">'+tr+' training</span>':'','8'],
+      ['history','History','','more'],['mail','Mail','','more'],['concerns','Concerns',open?'<span class="badge warn">'+open+'</span>':'','more'],['audit','Audit log','','more']];
   }
-  return[['courses','My course',''],['published','Published plan','']];
+  if(S.user.type==='student')return[['offer','My offer','','']];
+  return[['courses','My course','',''],['published','Published plan','','']];
 }
 function nav(){
-  return '<nav class="tabs" role="tablist">'+tabsFor().map(t=>'<button class="tab" role="tab" aria-selected="'+(S.tab===t[0])+'" data-act="tab" data-a="'+t[0]+'">'+t[1]+t[2]+'</button>').join('')+'</nav>';
+  const t=tabsFor(),b=x=>'<button class="tab'+(x[3]==='more'?' more':'')+'" role="tab" aria-selected="'+(S.tab===x[0])+'" data-act="tab" data-a="'+x[0]+'">'+(x[3]&&x[3]!=='more'?'<span class="stepn">'+x[3]+'</span>':'')+x[1]+x[2]+'</button>';
+  return '<nav class="tabs" role="tablist">'+t.filter(x=>x[3]!=='more').map(b).join('')+(t.some(x=>x[3]==='more')?'<span class="tabgap" aria-hidden="true"></span>'+t.filter(x=>x[3]==='more').map(b).join(''):'')+'</nav>';
 }
+const TIPS={
+ dashboard:'Where things stand: what stops publishing, who still needs a position, and which professors are behind. Work through the numbered tabs from left to right.',
+ setup:'Step 1. Set this term\'s pay rates, and how many TAs, AIs and UGCA hours each class needs. Classes and who can apply come from the legacy app.',
+ applicants:'Step 2. Everyone who applied in the legacy app. Click a name for the whole application. Run the GRA check, ask for résumés, or remove someone from the pool with a reason.',
+ windows:'Step 3. A professor can rank only after you open their window. Not opened: you have not opened it yet. Waiting: open, nothing submitted. Overdue: past the due date. Responded: submitted.',
+ assign:'Step 4. Pick a class on the left. Each student shows the professor\'s rank and what they asked for (full-time, half-time or hours). Accept, change it, or add someone who did not apply.',
+ publish:'Step 5. Publishing sends the accepted list to professors as a numbered version. Fix blocking issues first and write a note for each warning.',
+ students:'Step 6. Open the reply window, send the offers, and watch accepts and declines come in. A decline shows the professor\'s next backup.',
+ hr:'Step 7. The spreadsheet and email for HR: who, where, appointment, tier and pay, new or returning, international and gender. Pick the columns HR wants.',
+ ugca:'Step 8. The UGCA roster that replaces your spreadsheet: assigned to whom, offer sent, confirmed, new or returning, and training.',
+ history:'Past UGCAs and TAs by semester. Matched by EID, it tells who is new (needs training) and who is returning (pay tier). The graduate records for HR are here too.',
+ mail:'Every email the tool would send, and the replies that came back. Nothing is sent from the demo.',
+ concerns:'What professors raised about the published plan, and how it was resolved.',
+ audit:'Every change, who made it and when.'};
+function tip(){const t=S.user.type==='admin'&&TIPS[S.tab];return t&&S.tips?'<div class="tip" role="note"><span>'+esc(t)+'</span><button class="link small" data-act="tipsOff">Hide tips</button></div>':''}
 
 /* ---------- live data summary ---------- */
 function liveSummary(){
@@ -780,8 +964,8 @@ function vDashboard(){
     return '<tr><td><b>'+esc(cname(id))+'</b><div class="small muted">'+esc(c.title)+'</div></td><td>'+esc(prof(id))+'</td><td>'+(candidates(id).length?rkChip(rk.status):chip('No applicants'))+'</td><td class="num">'+candidates(id).length+'</td><td class="num">'+rankedCount(id)+'</td><td class="num">'+mixTxt(needMix(id))+'</td><td class="num">'+mixTxt(courseMix(id))+'</td><td class="num">'+mixTxt(courseMix(id,true))+'</td><td>'+(n?chip(n+' open','warn'):chip('Clear','ok'))+'</td><td class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn sm" data-act="goCourse" data-a="'+id+'">Open</button>'+(rk.status==='submitted'?'<button class="btn sm" data-act="reopen" data-a="'+id+'">Reopen ranking</button>':'')+'</td></tr>';
   }).join('')||'<tr><td colspan="10" class="muted">No courses match these filters.</td></tr>';
   return '<div class="stack">'+
-  '<div class="stats">'+[['Courses',cs.length],['TA and AI need (FTE)',f(needT.g)],['UGCA need (hours)',fh(needT.h)],['Accepted TA and AI',f(conf.g)],['Accepted UGCA hours',fh(conf.h)],['Still open',mixTxt(open_)],['Published v'+(lp?lp.version:'—'),lp?lp.rows.length+' people':'0']].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
-  (LIVE?liveSummary():'<details class="card guide" open><summary>Try this: a short walkthrough (v5)</summary><div class="small muted" style="margin-top:4px">Items marked New come from the Oct 14 walkthrough with Doug.</div><ol>'+
+  '<div class="stats">'+[['Courses',cs.length],['TA and AI need (FTE)',f(needT.g)],['UGCA need (hours)',fh(needT.h)],['Accepted TA and AI',f(conf.g)],['Accepted UGCA hours',fh(conf.h)],['Still open',mixTxt(open_)],[lp?'Published v'+lp.version:'Published',lp?lp.rows.length+' people':'not yet']].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
+  (LIVE?liveSummary():guideCard()+(SCN!=='mid'?'':'<details class="card guide"><summary>Fall 2026 checklist (the Oct 14 walkthrough)</summary><div class="small muted" style="margin-top:4px">Items marked New come from the Oct 14 walkthrough with Doug.</div><ol>'+
    '<li><b>Ask box</b> (top right, or press /): type what you want to do, like "add a class" or "change the application deadline". It takes you there, points to the legacy app page, or tells Tejas if neither does it. '+chip('New','acc')+'</li>'+
    '<li><button class="link" data-act="goCourse" data-a="crs_f26_002">Open 303E · 002</button>: Atlas, a UGCA, is double-booked at 30 hours and a UGCA can work 20 at most. Set Atlas to 0 hours, give Ember a full-time TA appointment, and accept it. '+chip('New: hours for UGCAs, full-time or half-time for TAs','acc')+'</li>'+
    '<li><button class="link" data-act="go" data-a="admin" data-b="applicants">Applicants</button>: the GRA check now matches on EID. The list starts with Cedar\'s EID and one EID nobody has. Add a name on its own line and run it again: the name still matches, but it is listed as "name only" for a second look. '+chip('New','acc')+'</li>'+
@@ -794,18 +978,18 @@ function vDashboard(){
    '<li><button class="link" data-act="go" data-a="admin" data-b="setup">Refresh from the legacy app</button> three times: Maple applies, Nettle applies, then Juniper turns red (declined), which blocks 311 until you pick a backup. '+chip('New: declines found on refresh','acc')+'</li>'+
    '<li><button class="link" data-act="go" data-a="admin" data-b="publish">Publish</button>: add the notes, then publish version 2. <button class="link" data-act="go" data-a="admin" data-b="students">Students</button>: open the response window before notifying, and pick a backup for Delta, who declined 311H.</li>'+
    '<li><button class="link" data-act="go" data-a="admin" data-b="hr">HR drafts</button>: create the next draft. UGCAs show hours per week and TAs show full-time or half-time, ready for Workday.</li>'+
-   '<li><button class="link" data-act="go" data-a="admin" data-b="setup">Setup</button>: each course needs TA and AI appointments (FTE) and UGCA hours. Import a course list from a CSV with no ID column, and re-import it after adding a class. '+chip('New','acc')+'</li></ol></details>')+
+   '<li><button class="link" data-act="go" data-a="admin" data-b="setup">Setup</button>: each course needs TA and AI appointments (FTE) and UGCA hours. Import a course list from a CSV with no ID column, and re-import it after adding a class. '+chip('New','acc')+'</li></ol></details>'))+
   '<div class="grid2">'+
    '<div class="card"><h3>Needs attention</h3>'+
     (g.blocks.length?g.blocks.map(i=>issueRow(i)).join(''):'<div class="issue"><div>'+chip('No blocking issues','ok')+'</div></div>')+
-    (g.missing.length?'<div class="issue"><div>'+chip(g.missing.length+' notes needed','warn')+'<div>Warnings need an admin note before publishing.</div></div><button class="btn sm" data-act="go" data-a="admin" data-b="publish">Publish</button></div>':'')+
+    (g.missing.length&&g.accepted.length?'<div class="issue"><div>'+chip(g.missing.length+' notes needed','warn')+'<div>Warnings need an admin note before publishing.</div></div><button class="btn sm" data-act="go" data-a="admin" data-b="publish">Publish</button></div>':'')+
     (home.length?'<div class="issue"><div>'+chip('Commitment students and PhDs to place first','warn')+'<div>'+home.map(a=>esc(short(a))).join(', ')+' still need a position.</div></div></div>':'')+
    '</div>'+
    '<div class="card"><h3>Faculty and students</h3>'+
     '<div class="issue"><div><b>Rankings:</b> '+['submitted','in_progress','reopened','not_started'].map(s=>chip(withCands.filter(c=>S.rank[c.course_id].status===s).length+' '+s.replace('_',' '),s==='submitted'?'ok':s==='not_started'?'':'warn')).join(' ')+'<div class="small muted">'+(zero.length?zero.map(c=>cname(c.course_id)).join(', ')+' has no applicants (not counted as behind).':'')+'</div></div></div>'+
     '<div class="issue"><div><b>Behind:</b> '+(behind.length?behind.slice(0,8).map(c=>esc(prof(c.course_id))+' ('+esc(cname(c.course_id))+')').join(', ')+(behind.length>8?' and '+(behind.length-8)+' more':''):'None')+'</div></div>'+
     '<div class="issue"><div><b>Ranking windows:</b> '+chip(tk.filter(r=>r.st==='Responded').length+' responded','ok')+' '+chip(tk.filter(r=>r.st==='Waiting'||r.st==='Overdue').length+' waiting',tk.some(r=>r.st==='Overdue')?'bad':'')+' '+chip(tk.filter(r=>r.st==='Not opened').length+' not opened',tk.some(r=>r.st==='Not opened')?'warn':'')+'</div><button class="btn sm" data-act="go" data-a="admin" data-b="windows">Track</button></div>'+
-    '<div class="issue"><div><b>Student replies, v'+(lp?lp.version:'—')+':</b> '+chip(resp.filter(x=>x==='confirmed').length+' confirmed','ok')+' '+chip(resp.filter(x=>x==='awaiting').length+' waiting')+' '+chip(resp.filter(x=>x==='declined').length+' declined',resp.includes('declined')?'bad':'')+'</div></div>'+
+    '<div class="issue"><div><b>Student replies'+(lp?', v'+lp.version:' (nothing published yet)')+':</b> '+chip(resp.filter(x=>x==='confirmed').length+' confirmed','ok')+' '+chip(resp.filter(x=>x==='awaiting').length+' waiting')+' '+chip(resp.filter(x=>x==='declined').length+' declined',resp.includes('declined')?'bad':'')+'</div></div>'+
     '<div class="issue"><div><b>Concerns:</b> '+(openC.length?chip(openC.length+' open or in review','warn'):chip('None open','ok'))+'</div><button class="btn sm" data-act="go" data-a="admin" data-b="concerns">Review</button></div>'+
    '</div></div>'+
   '<div><div class="filters"><h3 style="margin-right:auto">Courses</h3>'+
@@ -817,7 +1001,9 @@ function vDashboard(){
 
 /* ---------- views: v3 additions ---------- */
 const drift=cid=>JSON.stringify(S.course[cid])!==JSON.stringify(EXT.courses[cid]);
-const graBtn=a=>'<button class="btn sm" data-act="'+(S.gra.has(a)?'graBack':'toggleGra')+'" data-a="'+a+'">'+(S.gra.has(a)?'Add back to pool':'Flag as GRA')+'</button>';
+const graBtn=a=>S.gra.has(a)?'<button class="btn sm" data-act="graBack" data-a="'+a+'">Add back to pool</button>':removedOf(a)?'<button class="btn sm" data-act="unremove" data-a="'+a+'">Add back to pool</button>':
+  S.rmPick===a?'<div class="row" style="gap:4px;flex-wrap:nowrap"><select id="rmWhy" aria-label="Reason for removing '+esc(nm(a))+'">'+REMOVE_WHY.map(x=>opt(x[0],x[1],'')).join('')+'</select><button class="btn sm primary" data-act="removeDo" data-a="'+a+'">Remove</button><button class="btn sm" data-act="removeCancel">Cancel</button></div>':
+  '<button class="btn sm" data-act="removeAsk" data-a="'+a+'">Remove from pool…</button>';
 function issueRow(i,except){
   const bs=i.courses.filter(c=>c!==except);
   return '<div class="issue"><div>'+chip(i.code,i.sev==='block'?'bad':'warn')+' '+esc(i.msg)+'</div>'+(bs.length?'<div class="row" style="gap:4px">'+bs.map(c=>'<button class="btn sm" data-act="goCourse" data-a="'+c+'">'+esc(cname(c))+'</button>').join('')+'</div>':'')+'</div>';
@@ -827,20 +1013,26 @@ function typeToggle(){
 }
 function hrTable(rows){
   const cls={added:'add',removed:'rem',changed:'chg'},ck={added:'ok',removed:'bad',changed:'warn'};
-  return '<div class="tbl"><table><thead><tr><th>Change</th><th>Course</th><th>Student</th><th>Appointment</th><th>Size</th><th>HR tier</th><th>Citizenship</th></tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr class="'+(cls[r.ch]||'')+'"><td>'+(r.ch?chip(r.ch[0].toUpperCase()+r.ch.slice(1),ck[r.ch]):'')+'</td><td>'+esc(cname(r.course))+'</td><td>'+esc(nm(r.app))+'</td><td>'+esc(r.role)+'</td><td>'+esc(sizeTxt(r))+'</td><td>'+esc(r.tier)+'</td><td>'+esc(r.cit)+'</td></tr>').join(''):'<tr><td colspan="7" class="muted">No accepted assignments yet.</td></tr>')+'</tbody></table></div>';
+  return '<div class="tbl"><table><thead><tr><th>Change</th><th>Course</th><th>Student</th><th>Appointment</th><th>Size</th><th>HR tier</th><th>Pay</th><th>New / return</th><th>International</th><th>Gender</th></tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr class="'+(cls[r.ch]||'')+'"><td>'+(r.ch?chip(r.ch[0].toUpperCase()+r.ch.slice(1),ck[r.ch]):'')+'</td><td>'+esc(cname(r.course))+'</td><td>'+esc(nm(r.app))+(FL(r.app).eid?'<div class="small muted mono">'+esc(FL(r.app).eid)+'</div>':'')+'</td><td>'+esc(r.role)+'</td><td>'+esc(sizeTxt(r))+'</td><td>'+esc(r.tier||'')+'</td><td class="small">'+(r.rate?esc(r.tier==='UGCA'?money(r.rate)+'/h':money(r.pay)+'/mo'):'<span class="muted">—</span>')+'</td><td>'+esc(r.nr||'')+'</td><td>'+esc(r.intl||'')+'</td><td>'+esc(r.gender||'')+'</td></tr>').join(''):'<tr><td colspan="10" class="muted">No accepted assignments yet.</td></tr>')+'</tbody></table></div>';
+}
+function hrColsCard(){
+  const on=new Set(S.hrCols);
+  return '<details class="card" id="hrColsCard"'+(S.hrColsOpen?' open':'')+'><summary style="cursor:pointer"><b>Columns in the HR spreadsheet</b> <span class="small muted">'+S.hrCols.length+' of '+HR_COLS.length+' · pick the ones HR wants, in their order</span></summary><div class="chips" style="margin-top:10px;gap:8px">'+HR_COLS.map(c=>'<label class="chip" style="cursor:pointer;font-weight:normal;font-size:13px;padding:3px 8px"><input type="checkbox" data-chg="hrCol" data-a="'+c[0]+'"'+(on.has(c[0])?' checked':'')+'> '+esc(c[1])+'</label>').join('')+'</div><div class="row" style="margin-top:8px"><button class="btn sm" data-act="hrColsDefault">Reset to the default columns</button><span class="small muted">International, gender and EID are office-only and never shown to professors.</span></div></details>';
 }
 function vHR(){
   const pm=d=>S.pubs.find(p=>snapSig(p.rows)===snapSig(d.rows));
-  const last=hrLatest(),pre=hrDiff(hrRows(),last.rows),n=(k)=>pre.filter(r=>r.ch===k).length,chg=pre.some(r=>r.ch),g=gate();
-  const sel=S.hr.drafts.find(d=>d.n===S.hrSel)||last,pv=hrPrev(sel.n),rows=hrDiff(sel.rows,pv&&pv.rows);
-  return '<div class="stack"><div class="note"><b>Nothing is sent to HR from this demo.</b> A draft saves a numbered snapshot of the accepted assignments. It shows what changed since the last draft and prepares the spreadsheet and the email text.</div>'+
-   '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Next draft: '+(last.n+1)+'</h3><div class="small muted">Compared with draft '+last.n+', created '+when(last.at)+'. Only accepted assignments go to HR.</div></div><button class="btn primary" data-act="createHr"'+(chg?'':' disabled')+'>Create draft '+(last.n+1)+'</button></div>'+
-   '<div class="chips" style="margin:10px 0">'+chip(n('added')+' added','ok')+chip(n('removed')+' removed',n('removed')?'bad':'')+chip(n('changed')+' changed',n('changed')?'warn':'')+(g.blocks.length?chip(g.blocks.length+' blocking issue'+(g.blocks.length>1?'s':'')+' still open in Assignments','warn'):'')+'</div>'+
-   (chg?hrTable(pre.filter(r=>r.ch)):'<div class="muted">Nothing has changed since draft '+last.n+'.</div>')+'</div>'+
-   '<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">HR drafts</div>'+S.hr.drafts.slice().reverse().map(d=>'<button class="course-btn" data-act="selHr" data-a="'+d.n+'" aria-pressed="'+(d.n===sel.n)+'"><b>Draft '+d.n+'</b>'+(d.n===last.n?' '+chip('Latest','acc'):'')+(pm(d)?' '+chip('Same as published v'+pm(d).version):'')+'<div class="small muted">'+when(d.at)+' · '+esc(d.by)+'</div><div class="small mono">'+d.rows.length+' assignments</div></button>').join('')+'</div>'+
-   '<div class="stack"><div class="card"><h3>Draft '+sel.n+'</h3><div class="small muted" style="margin-bottom:8px">'+(pv?'Green rows were added since draft '+pv.n+'. Red rows were removed. Yellow rows changed.':'First draft, so nothing to compare.')+' Tier is estimated from degree and TA history. The rule is an assumption to confirm with Doug.</div>'+hrTable(rows)+'<div class="small muted" style="margin-top:6px">Citizenship is shown because Doug needs it in the HR output. Open question: who is allowed to see it.</div></div>'+
-   '<div class="card"><h3>Spreadsheet for HR</h3><textarea id="hrCsv" class="csv" rows="'+Math.min(10,rows.length+2)+'" readonly>'+esc(hrCsv(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyHrCsv">Copy CSV</button><span class="small muted">Downloads are blocked in this viewer, so copy it into a spreadsheet.</span></div></div>'+
-   '<div class="card"><h3>Email to HR</h3><textarea id="hrMail" rows="12" readonly>'+esc(hrEmail(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyHrMail">Copy email text</button></div></div></div></div></div>';
+  const last=hrLatest(),pre=hrDiff(hrRows(),last.n?last.rows:null),n=(k)=>pre.filter(r=>r.ch===k).length,chg=last.n?pre.some(r=>r.ch):pre.length>0,g=gate();
+  const nx=last.n?last.n+1:1,first=!S.hr.drafts.length;
+  const sel=S.hr.drafts.find(d=>d.n===S.hrSel)||S.hr.drafts[S.hr.drafts.length-1],pv=sel&&hrPrev(sel.n),rows=sel?hrDiff(sel.rows,pv&&pv.rows):[];
+  return '<div class="stack"><div class="note"><b>Nothing is sent to HR from this demo.</b> A draft saves a numbered snapshot of the accepted assignments, shows what changed since the last one, and prepares the spreadsheet and the email.</div>'+
+   '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>Next draft: '+nx+'</h3><div class="small muted">'+(first?'No draft yet this term.':'Compared with draft '+last.n+', created '+when(last.at)+'.')+' Only accepted assignments go to HR. Tier, rate and pay come from <button class="link" data-act="tab" data-a="setup">the pay rates in Setup</button>; international and gender from <button class="link" data-act="tab" data-a="history">the graduate records</button>.</div></div><button class="btn primary" data-act="createHr"'+(chg?'':' disabled')+'>Create draft '+nx+'</button></div>'+
+   '<label class="row small" style="gap:6px;margin-top:8px"><input type="checkbox" data-chg="autoHr"'+(S.autoHr?' checked':'')+'> Create the HR draft and queue the email to HR automatically each time I publish</label>'+
+   (first?'':'<div class="chips" style="margin:10px 0">'+chip(n('added')+' added','ok')+chip(n('removed')+' removed',n('removed')?'bad':'')+chip(n('changed')+' changed',n('changed')?'warn':'')+(g.blocks.length?chip(g.blocks.length+' blocking issue'+(g.blocks.length>1?'s':'')+' still open in Assignments','warn'):'')+'</div>')+
+   (chg?hrTable(first?pre:pre.filter(r=>r.ch)):'<div class="muted" style="margin-top:8px">'+(first?'Accept assignments first.':'Nothing has changed since draft '+last.n+'.')+'</div>')+'</div>'+hrColsCard()+
+   (sel?'<div class="split"><div><div class="eyebrow" style="margin-bottom:8px">HR drafts</div>'+S.hr.drafts.slice().reverse().map(d=>'<button class="course-btn" data-act="selHr" data-a="'+d.n+'" aria-pressed="'+(d.n===sel.n)+'"><b>Draft '+d.n+'</b>'+(d.n===last.n?' '+chip('Latest','acc'):'')+(pm(d)?' '+chip('Same as published v'+pm(d).version):'')+'<div class="small muted">'+when(d.at)+' · '+esc(d.by)+'</div><div class="small mono">'+d.rows.length+' assignments</div></button>').join('')+'</div>'+
+   '<div class="stack"><div class="card"><h3>Draft '+sel.n+'</h3><div class="small muted" style="margin-bottom:8px">'+(pv?'Green rows were added since draft '+pv.n+'. Red rows were removed. Yellow rows changed.':'First draft, so nothing to compare.')+'</div>'+hrTable(rows)+'</div>'+
+   '<div class="card"><h3>Spreadsheet for HR</h3><textarea id="hrCsv" class="csv" rows="'+Math.min(10,rows.length+2)+'" readonly>'+esc(hrCsv(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn primary" data-act="copyHrTsv">Copy for Excel</button><button class="btn" data-act="copyHrCsv">Copy CSV</button><span class="small muted">Copy for Excel pastes straight into the HR sheet in Box.</span></div></div>'+
+   '<div class="card"><h3>Email to HR</h3><textarea id="hrMail" rows="12" readonly>'+esc(hrEmail(sel.n))+'</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copyHrMail">Copy email text</button></div></div></div></div>':'')+'</div>';
 }
 function feedLoader(){
   return '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><div class="eyebrow">'+(LIVE?'Load a newer sync file (keeps your work)':'Load a sync file from the legacy app')+'</div><div class="small muted" style="margin:4px 0 8px">Run <span class="mono">node scraper/sync.js</span> on a computer that can reach the legacy app. It writes <span class="mono">sync/payload.json</span>. Choose that file here. The file holds real student data, so it never leaves your computer.'+(LIVE?'':' Loading it replaces the demo data.')+'</div><input type="file" id="feedFile" accept=".json,application/json" aria-label="Sync file">'+(S.feedMsg?'<div class="small" style="margin-top:6px">'+esc(S.feedMsg)+'</div>':'')+'</div>';
@@ -848,10 +1040,12 @@ function feedLoader(){
 function liveSource(){
   const m=FEEDMETA,c=m.counts;
   const rev=m.facultyReview.length?'<h3 style="margin-top:14px">Professors to check ('+m.facultyReview.length+')</h3><div class="small muted" style="margin-bottom:6px">The legacy app only has a name like "LAST, F". These did not match one person with an email in the CS directory, so check them by hand before any email is sent.</div><div class="tbl"><table><thead><tr><th>Legacy name</th><th>Match</th><th>Email</th><th>Possible people</th></tr></thead><tbody>'+m.facultyReview.map(r=>'<tr><td>'+esc(r.legacy)+'</td><td>'+chip(r.status,r.status==='matched'?'ok':'warn')+'</td><td>'+esc(r.email)+'</td><td>'+esc(r.candidates.join(', '))+'</td></tr>').join('')+'</tbody></table></div>':'';
+  const lk=m.linkage,pct=x=>x.total?Math.round(x.linked/x.total*100):100;
+  const link=lk?'<h3 style="margin-top:14px">Applicants linked to the courses they chose</h3><div class="chips">'+chip(lk.ta.linked+' of '+lk.ta.total+' TA applicants ('+pct(lk.ta)+'%)',pct(lk.ta)>=95?'ok':'warn')+chip(lk.ugca.linked+' of '+lk.ugca.total+' UGCA applicants ('+pct(lk.ugca)+'%)',pct(lk.ugca)>=95?'ok':'warn')+chip(lk.how.loose+' matched loosely, '+lk.how.number+' by course number','acc')+'</div><div class="small muted" style="margin-top:6px">An applicant with no linked course does not show up in any professor\'s list. Requests are matched by the class label, then loosely (ignoring "CS", punctuation and case), then by course number.</div>'+(lk.unmatched.length?'<div class="small" style="margin-top:6px"><b>Requests that matched no class:</b> '+lk.unmatched.slice(0,15).map(x=>'"'+esc(x.label)+'" ×'+x.n).join(', ')+'</div>':''):'<div class="small muted" style="margin-top:10px">This sync file is older and has no linking report. Run the pull again to get one.</div>';
   const w=m.warnings.length?'<h3 style="margin-top:14px">Sync warnings ('+m.warnings.length+')</h3><ul class="plain tight small">'+m.warnings.slice(0,25).map(x=>'<li>'+esc(x)+'</li>').join('')+(m.warnings.length>25?'<li class="muted">and '+(m.warnings.length-25)+' more</li>':'')+'</ul>':'';
   return '<p class="muted" style="margin-bottom:8px">Data came from the legacy TA app (read only). Synced '+when(m.syncedAt)+' with '+m.requests+' page reads and '+m.nonGetRequests+' changes. Rankings, decisions, student replies and all email live in this tool.</p>'+
    '<div class="chips">'+chip(c.taApplicants+' TA applicants')+chip(c.ugcaApplicants+' UGCA applicants')+chip(c.taClasses+' TA classes')+chip(c.proctorClasses+' UGCA classes')+chip(c.assignments+' assignments')+'</div>'+
-   '<h3 style="margin-top:14px">What the legacy row colors mean here</h3><div class="chips">'+Object.values(COLOR_MEANING).map(x=>chip(x[0],x[1])).join('')+'</div><div class="small muted" style="margin-top:6px">Yellow commitment students are listed first and raise a "Must place" warning until placed. A commitment student who applied as a master\'s student is treated as a PhD. Blue rows are excluded like the GRA list. Red rows are treated as ineligible, and a refresh reports anyone who turned red. The legacy app calls UGCA classes "proctor classes"; that is the old name.</div>'+rev+w;
+   '<h3 style="margin-top:14px">What the legacy row colors mean here</h3><div class="chips">'+Object.values(COLOR_MEANING).map(x=>chip(x[0],x[1])).join('')+'</div><div class="small muted" style="margin-top:6px">Yellow commitment students are listed first and raise a "Must place" warning until placed. A commitment student who applied as a master\'s student is treated as a PhD. Blue rows are excluded like the GRA list. Red rows are treated as ineligible, and a refresh reports anyone who turned red. The legacy app calls UGCA classes "proctor classes"; that is the old name.</div>'+link+rev+w;
 }
 function vSetup(){
   const audL={both:'Graduate and undergraduate',grad:'Graduate students only',undergrad:'Undergraduates only'};
@@ -862,7 +1056,7 @@ function vSetup(){
       [['TA','0.5','100'],['AI','0.5','100'],['UGCAh','1','2000']].map(([r,st,mx])=>'<td><input type="number" min="0" max="'+mx+'" step="'+st+'" value="'+cs.slots[r]+'" data-chg="setSlot" data-a="'+id+'" data-b="'+r+'" aria-label="'+(r==='UGCAh'?'UGCA hours':r+' FTE')+' for '+esc(cname(id))+'" style="width:76px"></td>').join('')+'<td class="num"><b>'+mixTxt(needMix(id))+'</b>'+(COURSE[id].imported?'<div>'+chip('From import','acc')+'</div>':'')+'</td></tr>';
   }).join('');
   const li=a=>'<ul class="plain tight">'+a.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
-  return '<div class="stack"><div class="card"><h3>Courses: who can apply and how many assistants</h3><p class="muted" style="margin-bottom:10px">These values mirror the edit-class screen in the legacy app, which also decides which courses applicants see on the application form. Changing a row here updates the pools, needs and checks in this tool, so you can plan. It does not change the form. The real change has to be made in the legacy app, so changed rows are marked. A hidden applicant stays hidden here, and an existing assignment for one blocks publishing.</p>'+
+  return '<div class="stack">'+ratesCard()+'<div class="card"><h3>Courses: who can apply and how many assistants</h3><p class="muted" style="margin-bottom:10px">These values mirror the edit-class screen in the legacy app, which also decides which courses applicants see on the application form. Changing a row here updates the pools, needs and checks in this tool, so you can plan. It does not change the form. The real change has to be made in the legacy app, so changed rows are marked. A hidden applicant stays hidden here, and an existing assignment for one blocks publishing.</p>'+
    '<p class="small muted" style="margin-bottom:10px">TA and AI need is in appointments: 1 = one full-time, 0.5 = one half-time. UGCA need is in hours per week (a full UGCA is usually '+UG_FULL+' hours, at most '+UG_MAX+'). AI is a graduate student teaching the class, set up like a TA.</p>'+
    '<div class="tbl"><table><thead><tr><th>Course</th><th>Professor</th><th>Who can apply</th><th>TA (FTE)</th><th>AI (FTE)</th><th>UGCA (hours)</th><th class="num">Total need</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+importCard()+
    '<div class="card"><h3>Who owns what</h3><p class="muted" style="margin-bottom:10px">Applicants apply on the forms in the legacy TA app. This tool reads those applications and never edits them. Professors rank, the office decides, students reply and every email goes out from here.</p><div class="grid2">'+
@@ -1038,12 +1232,21 @@ function vAssign(){
     (graList.length?'<div style="margin-top:12px"><div class="eyebrow">Excluded: on GRA list</div>'+graList.map(a=>'<div>'+nameBtn(a,sel)+'</div>').join('')+'<div class="small muted" style="margin-top:4px">Add back from the course row, or on <button class="link" data-act="tab" data-a="applicants">Applicants</button>.</div></div>':'')+'</div></div>'+
     '<div class="stack">'+vWorkspace(sel,g)+'</div></div>';
 }
+/* Nov 3: one long list was hard to use. Doug picks graduate or undergraduate first, then the person (search narrows it). */
 function addBox(cid){
   const have=new Set(candidates(cid).map(x=>x.app));
-  const apps=SEED.applications.filter(a=>a.application_status==='submitted'&&!have.has(a.application_id)).sort((x,y)=>nm(x.application_id).localeCompare(nm(y.application_id)));
-  const lab=a=>nm(a)+' · '+TIER[APP[a].degree_level]+' · '+APP[a].assistant_type+(S.gra.has(a)?' · GRA':'')+(isCommit(a)?' · must place':'')+(appAlloc(a)>0?' · '+appLoadTxt(a)+' already':'');
+  const all=SEED.applications.filter(a=>a.application_status==='submitted'&&!have.has(a.application_id)).map(a=>a.application_id);
+  const sl=S.course[cid].slots,lvl=S.addLevel||(sl.UGCAh>0&&!(sl.TA||sl.AI)?'ug':'grad');
+  const grads=all.filter(isGrad),ugs=all.filter(a=>!isGrad(a)),q=(S.addQ||'').trim().toLowerCase();
+  const pool=(lvl==='ug'?ugs:grads).filter(a=>!q||(nm(a)+' '+(FL(a).eid||'')+' '+APP[a].program).toLowerCase().includes(q)).sort((x,y)=>nm(x).localeCompare(nm(y)));
+  const lab=a=>nm(a)+(FL(a).eid?' ('+FL(a).eid+')':'')+' · '+(isGrad(a)?TIER[APP[a].degree_level]:'UGCA')+' · '+(isReturner(a)?'returning':'new')+(S.gra.has(a)?' · GRA':'')+(isRed(a)?' · removed / red':'')+(isCommit(a)?' · must place':'')+(appAlloc(a)>0?' · '+appLoadTxt(a)+' already':'');
+  const grp=(t,xs)=>xs.length?'<optgroup label="'+esc(t)+'">'+xs.map(a=>'<option value="'+a+'">'+esc(lab(a))+'</option>').join('')+'</optgroup>':'';
+  const opts=lvl==='ug'?grp('Undergraduates (UGCA)',pool):grp('PhD',pool.filter(a=>APP[a].degree_level==='PhD'))+grp("Master's",pool.filter(a=>APP[a].degree_level==='Masters'));
   const un=Object.keys(S.addedOut).filter(k=>k.split('|')[0]===cid&&!S.draft.rows.some(r=>r.course===cid&&r.app===k.split('|')[1]&&r.decision!=='declined'));
-  return '<div class="card" id="addBox"><h3>Assign someone who did not apply</h3><div class="small muted" style="margin-bottom:8px">Any TA or UGCA can be added, as in the legacy app. They are marked "Added", raise a "Did not apply" warning that needs a note before publishing, and still go through the GRA, eligibility and hours checks. Professors can also pick people who did not apply, from Browse all applicants; those are labeled with the professor\'s name.</div><div class="row" style="align-items:flex-end;gap:10px"><label class="f">Person<select id="outsidePick" aria-label="Person to add">'+apps.map(a=>'<option value="'+a.application_id+'">'+esc(lab(a.application_id))+'</option>').join('')+'</select></label><button class="btn primary" data-act="addOutside" data-a="'+cid+'">Add to this course</button></div>'+(un.length?'<div class="small muted" style="margin-top:8px">Added but not allocated: '+un.map(k=>esc(nm(k.split('|')[1]))+' <button class="btn sm" data-act="dropOutside" data-a="'+cid+'" data-b="'+k.split('|')[1]+'">Remove</button>').join(', ')+'</div>':'')+'</div>';
+  return '<div class="card" id="addBox"><h3>Assign someone who did not apply</h3><div class="small muted" style="margin-bottom:8px">Pick graduate or undergraduate first, then the person. They are marked "Added", raise a "Did not apply" warning that needs a note before publishing, and still go through the GRA, eligibility and hours checks.</div>'+
+   '<div class="row" style="align-items:flex-end;gap:10px"><div class="seg" role="group" aria-label="Which list">'+[['grad','Graduate ('+grads.length+')'],['ug','Undergraduate ('+ugs.length+')']].map(x=>'<button class="btn sm" aria-pressed="'+(lvl===x[0])+'" data-act="addLevel" data-a="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'+
+   '<label class="f">Search<input id="addQ" data-chg="addQ" data-fid="addQ" value="'+esc(S.addQ||'')+'" placeholder="Name or EID" style="width:160px"></label>'+
+   '<label class="f">Person<select id="outsidePick" aria-label="Person to add">'+(opts||'<option value="">Nobody matches</option>')+'</select></label><button class="btn primary" data-act="addOutside" data-a="'+cid+'"'+(pool.length?'':' disabled')+'>Add to this course</button></div>'+(un.length?'<div class="small muted" style="margin-top:8px">Added but not allocated: '+un.map(k=>esc(nm(k.split('|')[1]))+' <button class="btn sm" data-act="dropOutside" data-a="'+cid+'" data-b="'+k.split('|')[1]+'">Remove</button>').join(', ')+'</div>':'')+'</div>';
 }
 function vWorkspace(cid,g){
   const c=COURSE[cid],rq=REQ[cid],rk=S.rank[cid],cands=candidates(cid),need=c.ta_slots_required;
@@ -1052,6 +1255,7 @@ function vWorkspace(cid,g){
     '<div class="small muted" style="margin-top:8px">'+((rq.required_skills||rq.faculty_notes||rq.experience_required)?'Requirements: '+(rq.experience_required?'prior experience required · ':'')+'skill '+esc(rq.required_skills)+' · '+esc(rq.faculty_notes):'No requirements recorded in the legacy app')+'</div><div class="small muted">Who can apply: '+({both:'graduate and undergraduate students',grad:'graduate students only',undergrad:'undergraduates only'}[S.course[cid].aud])+(SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length?' · '+SEED.course_preferences.filter(p=>p.course_id===cid&&!audOk(p.application_id,cid)).length+' hidden by this rule':'')+'</div></div>';
   const iss=issues.length?'<div class="card"><h3>Issues for this course</h3>'+issues.map(i=>issueRow(i,cid)).join('')+'</div>':'';
   if(!cands.length)return head+iss+'<div class="note">No applicants selected this course. That is zero demand from students, not unfinished faculty work.</div>'+addBox(cid);
+  const pnote=rk.note?'<div class="note"><b>'+esc(prof(cid))+'\'s note to the office:</b> '+esc(rk.note)+'</div>':'';
   const info=rk.status!=='submitted'?'<div class="note warn"><b>'+esc(prof(cid))+' has not submitted a ranking</b> (status: '+rk.status.replace('_',' ')+'). Below is everyone who applied for this course, with facts only and no match score. <button class="btn sm" data-act="copyPool" data-a="'+cid+'" style="margin-left:6px">Copy list for the professor</button></div>':'';
   const shown=cands.filter(x=>typeOk(x.app));
   const rows=shown.map(x=>{
@@ -1067,14 +1271,14 @@ function vWorkspace(cid,g){
     const itaw=ex(a).ita==='ITA workshop needed'||ex(a).ita==='English test pending';
     return '<tr class="'+rowCls(a)+(S.gra.has(a)?' dim':'')+'"><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+lgChips(a)+(S.gra.has(a)?chip('GRA','bad'):'')+eligChipAdm(a)+(itaw?chip(ex(a).ita,'warn'):'')+(S.tx[a]&&S.tx[a].checked?chip('Transcript checked','ok'):chip('Transcript not checked'))+'</div></td>'+
       '<td>'+choiceCell(x,a,cid)+'</td>'+
-      '<td>'+(e.rank!=null?'<b class="mono">#'+e.rank+'</b> '+chip(e.rec.replace('_',' '),e.rec==='strong_yes'?'ok':'')+(e.comment?'<div class="small muted">'+esc(e.comment)+'</div>':''):(e.rec==='do_not_rank'?chip('Do not rank','bad'):'<span class="muted">Not ranked</span>'))+'</td>'+
+      '<td>'+(e.rank!=null?'<b class="mono">#'+e.rank+'</b> '+chip(e.rec.replace('_',' '),e.rec==='strong_yes'?'ok':'')+'<div class="small">Asked for: <b>'+esc(askTxt(cid,a))+'</b></div>'+(e.comment?'<div class="small muted">'+esc(e.comment)+'</div>':''):(e.rec==='do_not_rank'?chip('Do not rank','bad'):'<span class="muted">Not ranked</span>'))+'</td>'+
       '<td><div class="chips">'+factsFor(a,cid)+'</div>'+(else_.length?'<div class="small muted" style="margin-top:4px">'+else_.map(esc).join('<br>')+'</div>':'')+'</td>'+
       '<td class="num">'+appLoadTxt(a)+'</td>'+
       '<td>'+sizeCtl+
         (row&&row.decision!=='declined'?'<div style="margin-top:4px"><select data-chg="setDecision" data-a="'+row.id+'" aria-label="Decision">'+opt('requested','Requested',row.decision)+opt('accepted','Accepted',row.decision)+opt('declined','Declined',row.decision)+'</select></div><div style="margin-top:4px"><select data-chg="setRole" data-a="'+row.id+'" aria-label="Appointment type">'+(isGrad(a)?opt('TA','TA',row.role)+opt('AI','AI (assistant instructor)',row.role):opt('UGCA','UGCA',row.role))+'</select></div>':'')+'</td>'+
       '<td>'+(S.gra.has(a)?'<div class="small" style="margin-bottom:4px">On the GRA list. '+graBtn(a)+'</div>':'')+(row&&row.decision!=='declined'?'<input data-inp="setNote" data-a="'+row.id+'" value="'+esc(row.note)+'" placeholder="Admin note" aria-label="Admin note" style="width:150px">':'')+(mine.length?'<div class="chips" style="margin-top:4px">'+mine.map(i=>chip(i.code,i.sev==='block'?'bad':'warn')).join('')+'</div>':'')+'</td></tr>';
   }).join('');
-  return head+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th title="Where the applicant ranked this course among their own choices (#1 = first choice)">Student\'s choice</th><th>Professor\'s rank</th><th>Facts and other requests</th><th class="num">Assigned / max</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><div style="margin:8px 0">'+LEGEND+'</div><datalist id="ugHours"><option value="5"><option value="10"><option value="12"><option value="13"><option value="15"><option value="20"></datalist><div class="small muted">Student\'s choice is where the applicant ranked this course among the courses they applied for (#1 of 4 = their first of four). Professor\'s rank is the professor\'s order. Nothing here is scored. UGCAs are set in hours per week (up to '+UG_MAX+'); TAs and AIs are full-time or half-time.</div>'+addBox(cid);
+  return head+pnote+info+iss+'<div class="tbl"><table><thead><tr><th>Candidate</th><th title="Where the applicant ranked this course among their own choices (#1 = first choice)">Student\'s choice</th><th>Professor\'s rank</th><th>Facts and other requests</th><th class="num">Assigned / max</th><th>Your decision</th><th>Note and flags</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="muted">No '+(S.typeView==='both'?'':S.typeView+' ')+'applicants for this course.</td></tr>')+'</tbody></table></div><div style="margin:8px 0">'+LEGEND+'</div><datalist id="ugHours"><option value="5"><option value="10"><option value="12"><option value="13"><option value="15"><option value="20"></datalist><div class="small muted">Student\'s choice is where the applicant ranked this course among the courses they applied for (#1 of 4 = their first of four). Professor\'s rank is the professor\'s order. Nothing here is scored. UGCAs are set in hours per week (up to '+UG_MAX+'); TAs and AIs are full-time or half-time.</div>'+addBox(cid);
 }
 
 /* ---------- views: applicants ---------- */
@@ -1093,6 +1297,7 @@ function queueResume(a){
 function composeTargets(){
   const c=S.compose;if(!c)return[];if(c.one)return[c.one];
   const fl=S.f.app;let xs=SEED.applications.filter(ap=>ap.application_status==='submitted'&&(!fl.tier||ap.degree_level===fl.tier)&&typeOk(ap.application_id)).map(ap=>ap.application_id);
+  if(c.who==='training')return [...new Set(ugcaRows().map(x=>x.r.app))].filter(a=>needsTraining(a)&&!trained(a));
   if(c.who==='needs')xs=xs.filter(a=>appAlloc(a)===0&&!S.gra.has(a)&&elig(a)!=='ineligible');
   else if(c.who==='assigned')xs=xs.filter(a=>appAlloc(a)>0);
   else if(c.who==='noresume')xs=xs.filter(a=>resumeOf(a).st==='none');
@@ -1103,7 +1308,7 @@ function composeCard(){
   const to=composeTargets();
   return '<div class="card" id="composeCard"><div class="row" style="justify-content:space-between"><h3>'+(c.one?'Email '+esc(nm(c.one)):'Email applicants')+'</h3><button class="btn sm" data-act="composeClose">Cancel</button></div>'+
    (c.one?'<div class="small muted" style="margin:4px 0 8px">To '+esc(nm(c.one))+' · '+esc(stuAddr(c.one))+'</div>':
-   '<div class="row" style="align-items:flex-end;gap:10px;margin:6px 0 8px"><label class="f">Who<select data-chg="composeWho">'+opt('all','Everyone in the current filter',c.who)+opt('needs','Still needs a position',c.who)+opt('assigned','Has a position in the draft',c.who)+opt('noresume','No résumé yet',c.who)+'</select></label><span class="small muted">'+to.length+' recipient'+(to.length===1?'':'s')+' · uses the Level filter and the TA / UGCA toggle below'+(to.length?': '+to.slice(0,6).map(a=>esc(short(a))).join(', ')+(to.length>6?' and '+(to.length-6)+' more':''):'')+'</span></div>')+
+   '<div class="row" style="align-items:flex-end;gap:10px;margin:6px 0 8px"><label class="f">Who<select data-chg="composeWho">'+opt('all','Everyone in the current filter',c.who)+opt('needs','Still needs a position',c.who)+opt('assigned','Has a position in the draft',c.who)+opt('noresume','No résumé yet',c.who)+opt('training','New UGCAs who need training',c.who)+'</select></label><span class="small muted">'+to.length+' recipient'+(to.length===1?'':'s')+' · uses the Level filter and the TA / UGCA toggle below'+(to.length?': '+to.slice(0,6).map(a=>esc(short(a))).join(', ')+(to.length>6?' and '+(to.length-6)+' more':''):'')+'</span></div>')+
    '<label class="f" for="composeSubj">Subject</label><input id="composeSubj" data-inp="composeSubj" value="'+esc(c.subject)+'" style="width:100%">'+
    '<label class="f" for="composeBody" style="margin-top:8px">Message. {name} becomes each student\'s name.</label><textarea id="composeBody" rows="7" data-inp="composeBody">'+esc(c.body)+'</textarea>'+
    '<div class="row" style="margin-top:8px"><button class="btn primary" data-act="composeSend"'+(to.length?'':' disabled')+'>Queue '+to.length+' email'+(to.length===1?'':'s')+'</button><button class="btn" data-act="composeResume">Use the résumé request text</button><span class="small muted">Nothing is sent from the demo. Emails go to the Mail tab.</span></div></div>';
@@ -1113,12 +1318,12 @@ function vApplicants(){
   const apps=SEED.applications.filter(a=>(!fl.tier||a.degree_level===fl.tier)&&typeOk(a.application_id)).sort((x,y)=>(isCommit(y.application_id)-isCommit(x.application_id))||TIER_ORDER[x.degree_level]-TIER_ORDER[y.degree_level]||nm(x.application_id).localeCompare(nm(y.application_id)));
   const gr=S.graResult;
   const choiceTxt=id=>{const ps=(PREFS_APP[id]||[]).slice().sort((x,y)=>x.preference_rank-y.preference_rank),seen=new Set(),uniq=ps.filter(p=>{const k=COURSE[p.course_id]?COURSE[p.course_id].catalog_number+'|'+p.preference_rank:p.course_id;if(seen.has(k))return false;seen.add(k);return true});
-    return uniq.length?uniq.slice(0,3).map(p=>'#'+p.preference_rank+' '+esc(COURSE[p.course_id]?COURSE[p.course_id].catalog_number:'?')+(discOf(id,p.course_id)?' (disc.)':'')).join(', ')+(uniq.length>3?' <span class="muted">+'+(uniq.length-3)+'</span>':''):'<span class="muted">None</span>'};
+    return uniq.length?uniq.slice(0,3).map(p=>'#'+p.preference_rank+' '+esc(COURSE[p.course_id]?COURSE[p.course_id].catalog_number:'?')+(discOf(id,p.course_id)?' (disc.)':'')).join(', ')+(uniq.length>3?' <span class="muted">+'+(uniq.length-3)+'</span>':'')+(uniq.length>10?'<div>'+chip('Chose '+uniq.length+' classes','warn')+'</div>':''):'<span class="muted">None</span>'};
   const noRes=apps.filter(a=>a.application_status==='submitted'&&resumeOf(a.application_id).st==='none').length;
   const rows=apps.map(a=>{
     const id=a.application_id,al=appAlloc(id);
-    const state=a.application_status==='draft'?chip('Draft application','warn'):S.gra.has(id)?chip('GRA, excluded','bad'):elig(id)==='ineligible'?chip(FL(id).color==='declined'?'Declined':'Not eligible','bad'):al>0?chip('Assigned '+appLoadTxt(id).split(' / ')[0]+(isUG(id)?' h':' FTE'),'ok'):chip('Needs a position',a.degree_level==='PhD'||isCommit(id)?'warn':'');
-    return '<tr class="'+rowCls(id)+'"><td>'+nameBtn(id,'')+(S.sync.newApps.includes(id)?' '+chip('New from legacy app','warn'):'')+((S.sync.declined||[]).includes(id)?' '+chip('Turned red on refresh','bad'):'')+(lgChips(id)?'<div class="chips" style="margin-top:4px">'+lgChips(id)+'</div>':'')+'</td><td>'+tierChip(id)+'</td><td>'+chip(tierOf(id).code,'acc')+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="small">'+choiceTxt(id)+'</td><td>'+resumeChip(id)+'</td><td class="num">'+appLoadTxt(id)+'</td><td>'+state+'</td><td>'+graBtn(id)+'</td></tr>';
+    const state=a.application_status==='draft'?chip('Draft application','warn'):S.gra.has(id)?chip('GRA, excluded','bad'):removedOf(id)?chip('Removed: '+(REMOVE_WHY.find(x=>x[0]===removedOf(id).why)||['','other'])[1].replace(/ \(.*\)/,''),'bad'):elig(id)==='ineligible'?chip(FL(id).color==='declined'?'Declined':'Not eligible','bad'):al>0?chip('Assigned '+appLoadTxt(id).split(' / ')[0]+(isUG(id)?' h':' FTE'),'ok'):chip('Needs a position',a.degree_level==='PhD'||isCommit(id)?'warn':'');
+    return '<tr class="'+rowCls(id)+'"><td>'+nameBtn(id,'')+(S.sync.newApps.includes(id)?' '+chip('New from legacy app','warn'):'')+((S.sync.declined||[]).includes(id)?' '+chip('Turned red on refresh','bad'):'')+(lgChips(id)?'<div class="chips" style="margin-top:4px">'+lgChips(id)+'</div>':'')+'</td><td>'+tierChip(id)+'</td><td>'+chip(tierOf(id).code,'acc')+'</td><td>'+nrChip(id)+'</td><td>'+esc(a.assistant_type)+'</td><td>'+esc(a.program)+'</td><td>'+(a.application_status==='submitted'?chip('Submitted','ok'):chip('Draft','warn'))+'</td><td>'+eligChipAdm(id)+'</td><td class="small">'+choiceTxt(id)+'</td><td>'+resumeChip(id)+'</td><td class="num">'+appLoadTxt(id)+'</td><td>'+state+'</td><td>'+graBtn(id)+'</td></tr>';
   }).join('');
   const res=gr?'<div class="eyebrow">Result</div><div style="margin-top:6px">'+chip((gr.byEid||[]).length+' matched by EID','ok')+' '+((gr.byName||[]).length?chip(gr.byName.length+' matched by name only','warn')+' ':'')+chip(gr.unmatched.length+' not in the pool',gr.unmatched.length?'warn':'')+'</div>'+
     ((gr.byEid||[]).length?'<div style="margin-top:8px"><b>Flagged by EID:</b> '+gr.byEid.map(a=>esc(nm(a))+' <span class="mono small">'+esc(FL(a).eid||'')+'</span>').join(', ')+'</div>':'')+
@@ -1127,12 +1332,12 @@ function vApplicants(){
     (gr.kept&&gr.kept.length?'<div style="margin-top:4px"><b>Kept in the pool (you added them back):</b> '+gr.kept.map(a=>esc(nm(a))).join(', ')+'</div>':'')+
     (gr.fromLegacy&&gr.fromLegacy.length?'<div style="margin-top:4px"><b>Also excluded because the legacy row is blue:</b> '+gr.fromLegacy.length+' applicants</div>':'')+
     '<div class="small muted" style="margin-top:8px">EIDs are matched exactly. A line without a known EID is tried as a name ("Last, First" or "First Last"); those are listed separately because grant-admin lists often misspell names.'+(LIVE?'':' The demo EIDs are made up.')+'</div>':'';
-  return '<div class="stack"><div class="card"><div class="row" style="justify-content:space-between"><div><h3>Applicant data</h3><div class="small muted">Applicants apply on the legacy TA app forms (graduate and undergraduate). This tool reads them and never edits their answers or writes back. The GRA flag, transcript check, résumé requests and HR tier are office notes kept here only. Last refresh '+when(S.sync.at)+'.</div></div>'+(LIVE?'<button class="btn primary" data-act="go" data-a="admin" data-b="setup">Load a newer sync file</button>':'<button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button>')+'</div></div>'+composeCard()+
+  return '<div class="stack"><div class="card"><div class="row" style="justify-content:space-between"><div><h3>Applicant data</h3><div class="small muted">Applicants apply on the legacy TA app forms (graduate and undergraduate). This tool reads them and never edits their answers or writes back. The GRA flag, removals, transcript check, résumé requests and HR tier are office notes kept here only. New or returning comes from the <button class="link" data-act="tab" data-a="history">History</button> list. Last refresh '+when(S.sync.at)+'.</div></div>'+(LIVE?'<button class="btn primary" data-act="go" data-a="admin" data-b="setup">Load a newer sync file</button>':'<button class="btn primary" data-act="sync">Refresh from legacy app (demo)</button>')+'</div></div>'+composeCard()+
     '<div class="card" id="graCard"><h3>GRA cross-check</h3><p class="muted" style="margin-bottom:10px">The grant admins send a list of students who have research assistantships. Paste their EIDs here, one per line. Anyone on the list is flagged and blocked from TA assignment, so nobody has to compare two spreadsheets by hand. Refreshing from the legacy app also excludes anyone who has turned blue.</p>'+
     '<div class="grid2"><div><label class="f" for="graText">Grant-admin list: EIDs, one per line (a name works as a fallback)</label><textarea id="graText" rows="5" data-inp="graText">'+esc(S.graText)+'</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="applyGra">Run GRA check</button></div></div>'+
     '<div>'+res+'</div></div></div>'+
     '<div><div class="filters"><div style="margin-right:auto;display:flex;flex-direction:column;gap:6px"><h3>Applicant pool</h3>'+LEGEND+'</div><label class="f">Level<select data-chg="appFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label>'+typeToggle()+'<button class="btn" data-act="composeOpen">Email applicants</button><button class="btn" data-act="bulkResume"'+(noRes?'':' disabled')+'>Request résumés ('+noRes+' without one)</button></div>'+
-    '<div class="tbl"><table><thead><tr><th>Candidate</th><th>Level</th><th>HR tier</th><th>Type</th><th>Program</th><th>Application</th><th>Eligibility (admin only)</th><th>Courses chosen, in their order</th><th>Résumé</th><th class="num">Assigned / max</th><th>Placement</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="small muted" style="margin-top:6px">Open a name to see every course they applied for, in their order, and whether they asked for a discussion section.</div></div></div>';
+    '<div class="tbl"><table><thead><tr><th>Candidate</th><th>Level</th><th>HR tier</th><th>New / returning</th><th>Type</th><th>Program</th><th>Application</th><th>Eligibility (admin only)</th><th>Courses chosen, in their order</th><th>Résumé</th><th class="num">Assigned / max</th><th>Placement</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="small muted" style="margin-top:6px">Open a name to see every course they applied for, in their order, and whether they asked for a discussion section.</div></div></div>';
 }
 
 /* ---------- views: publish ---------- */
@@ -1168,12 +1373,12 @@ function vVersion(p){
 /* ---------- views: students ---------- */
 function vStudents(){
   const p=latestPub();
-  if(!p)return '<div class="note">Nothing is published yet.</div>';
+  if(!p)return '<div class="note"><b>Nothing is published yet.</b> After you publish (step 5), open the reply window here and send the offers. Students accept or decline from a link in the email, and each answer shows up on this page and in the UGCA roster.</div>';
   const R=p.rows.filter(r=>typeOk(r.app)).map(r=>({r,s:respOf(p,r)}));
   const cnt=k=>R.filter(x=>x.s.status===k).length;
   const rows=R.map(({r,s})=>{
     const k=key(r);
-    return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td>'+esc(r.role)+'</td><td>'+esc(sizeTxt(r))+'</td><td><select data-chg="setResp" data-a="'+k+'" aria-label="Reply from '+esc(nm(r.app))+'">'+opt('not_notified','Not notified yet',s.status)+opt('awaiting','Waiting for reply',s.status)+opt('confirmed','Confirmed',s.status)+opt('declined','Declined',s.status)+'</select><div class="small muted">'+(s.at?day(s.at):'')+'</div>'+(S.ext[k]?'<div>'+chip('Extended to '+day(S.ext[k].until),'acc')+'</div>':'')+'</td><td><div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="showEmail" data-a="'+k+'">Preview email</button>'+((s.status==='awaiting'||s.status==='not_notified')?'<button class="btn sm" data-act="extend" data-a="'+k+'">Extend</button>':'')+'</div></td></tr>';
+    return '<tr><td>'+esc(nm(r.app))+'</td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td>'+esc(r.role)+'</td><td>'+esc(sizeTxt(r))+'</td><td><select data-chg="setResp" data-a="'+k+'" aria-label="Reply from '+esc(nm(r.app))+'">'+opt('not_notified','Not notified yet',s.status)+opt('awaiting','Waiting for reply',s.status)+opt('confirmed','Confirmed',s.status)+opt('declined','Declined',s.status)+'</select><div class="small muted">'+(s.at?day(s.at):'')+'</div>'+(S.ext[k]?'<div>'+chip('Extended to '+day(S.ext[k].until),'acc')+'</div>':'')+'</td><td><div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="showEmail" data-a="'+k+'">Preview email</button>'+(s.status!=='not_notified'?'<button class="btn sm" data-act="role" data-c="stu:'+r.app+'">Student\'s page</button>':'')+((s.status==='awaiting'||s.status==='not_notified')?'<button class="btn sm" data-act="extend" data-a="'+k+'">Extend</button>':'')+'</div></td></tr>';
   }).join('');
   const declined=R.filter(x=>x.s.status==='declined').map(({r})=>{
     const bs=backupsFor(r.course,r.app,r.fte);
@@ -1203,6 +1408,23 @@ function vConcerns(){
 function vAudit(){
   const a=S.audit.slice().sort((x,y)=>new Date(y.ts)-new Date(x.ts)).slice(0,120);
   return '<div class="tbl"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>What</th></tr></thead><tbody>'+a.map(e=>'<tr><td class="small">'+when(e.ts)+'</td><td>'+esc(e.actor)+'</td><td>'+esc(e.action)+'</td><td>'+esc(e.summary)+'</td></tr>').join('')+'</tbody></table></div><div class="small muted" style="margin-top:8px">Events before today are rebuilt from the dataset timestamps.</div>';
+}
+
+/* Nov 3: professors say how much they want per person (Doug: "I'll give a student a 50% GRA and a half-time TA"), and can
+   ask for undergraduates in the same list instead of emailing. Submitting turns those into requested rows for the office. */
+function askDefault(cid,a,rank){const prim=Math.ceil(COURSE[cid].ta_slots_required);if(rank>prim)return 0;return isUG(a)?UG_FULL:Math.min(1,APP[a].max_assignment_fte)}
+const askOf=(cid,a)=>{const e=S.rank[cid].entries[a]||{};return e.ask!=null?e.ask:(e.rank!=null?askDefault(cid,a,e.rank):0)};
+const askTxt=(cid,a)=>{const v=askOf(cid,a);return !v?'Backup':isUG(a)?fh(v)+' hours a week':v===1?'Full-time':v===0.5?'Half-time':f(v)+' FTE'};
+function askCtl(cid,a,ro){const v=askOf(cid,a);if(ro)return esc(askTxt(cid,a));
+  return isUG(a)?'<label class="f" style="flex-direction:row;align-items:center;gap:4px"><input type="number" min="0" max="'+UG_MAX+'" step="1" value="'+v+'" data-chg="setAsk" data-a="'+cid+'" data-b="'+a+'" data-fid="ask:'+a+'" aria-label="Hours requested for '+esc(nm(a))+'" style="width:56px">h</label><div class="small muted">0 = backup</div>'
+   :'<select data-chg="setAsk" data-a="'+cid+'" data-b="'+a+'" data-fid="ask:'+a+'" aria-label="Appointment requested for '+esc(nm(a))+'">'+[[1,'Full-time'],[0.5,'Half-time'],[0,'Backup only']].filter(x=>x[0]<=APP[a].max_assignment_fte+1e-9||x[0]===v).map(x=>opt(x[0],x[1],v)).join('')+'</select>'}
+function submitRequests(cid){
+  const rk=S.rank[cid];let n=0;
+  Object.entries(rk.entries).filter(([a,e])=>e.rank!=null).sort((x,y)=>x[1].rank-y[1].rank).forEach(([a])=>{
+    const v=askOf(cid,a);if(!v||S.draft.rows.some(r=>r.course===cid&&r.app===a&&r.decision!=='declined'))return;const ug=isUG(a);
+    S.draft.rows.push(normRow({id:'draft_new_'+(S.newRow++),course:cid,app:a,fte:ug?v/UG_FULL:v,hrs:ug?v:null,role:defaultRole(a),decision:'requested',published:false,note:''}));n++;
+  });
+  return n;
 }
 
 /* ---------- views: faculty ---------- */
@@ -1240,13 +1462,14 @@ function vFacCourse(cid){
   const errs=S.facErrors[cid]||[];
   const rRows=ranked.map(x=>{
     const a=x.app,e=rk.entries[a],r=e.rank;
-    return '<tr><td>'+(ro?'<b class="mono">'+r+'</b>':'<input type="number" min="1" value="'+r+'" data-chg="setRank" data-a="'+cid+'" data-b="'+a+'" data-fid="rank:'+a+'" aria-label="Rank for '+esc(nm(a))+'">')+'<div class="small muted">'+(r<=prim?'Primary':'Backup '+(r-prim))+'</div></td>'+
+    return '<tr><td>'+(ro?'<b class="mono">'+r+'</b>':'<input type="number" min="1" value="'+r+'" data-chg="setRank" data-a="'+cid+'" data-b="'+a+'" data-fid="rank:'+a+'" aria-label="Rank for '+esc(nm(a))+'">')+'<div class="small muted">'+(askOf(cid,a)?'Primary':'Backup')+'</div></td>'+
       '<td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+'</div></td>'+
       '<td><div class="chips">'+factsFor(a,cid)+'</div><div class="small muted" style="margin-top:4px">'+facChoice(x)+'</div></td><td>'+eligChipFac(a)+'</td>'+
       '<td>'+(ro?chip(e.rec.replace('_',' ')):'<select data-chg="setRec" data-a="'+cid+'" data-b="'+a+'" aria-label="Recommendation">'+['strong_yes','yes','acceptable','do_not_rank'].map(v=>opt(v,v.replace('_',' '),e.rec)).join('')+'</select>')+'</td>'+
+      '<td>'+askCtl(cid,a,ro)+'</td>'+
       '<td>'+(ro?esc(e.comment):'<input data-chg="setComment" data-a="'+cid+'" data-b="'+a+'" value="'+esc(e.comment)+'" placeholder="Optional comment" aria-label="Comment" style="width:180px">')+'</td>'+
       '<td>'+(ro?'':'<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="move" data-a="'+cid+'" data-b="'+a+'" data-c="-1" aria-label="Move up">↑</button><button class="btn sm" data-act="move" data-a="'+cid+'" data-b="'+a+'" data-c="1" aria-label="Move down">↓</button><button class="btn sm" data-act="unrank" data-a="'+cid+'" data-b="'+a+'">Remove</button></div>')+'</td></tr>';
-  }).join('')||'<tr><td colspan="7" class="muted">No one ranked yet.</td></tr>';
+  }).join('')||'<tr><td colspan="8" class="muted">No one ranked yet.</td></tr>';
   const uRows=unranked.map(x=>{
     const a=x.app,e=rk.entries[a]||{};
     return '<tr><td>'+nameBtn(a,cid)+'<div class="chips" style="margin-top:4px">'+tierChip(a)+chip(APP[a].assistant_type)+'</div></td><td><div class="chips">'+factsFor(a,cid)+'</div><div class="small muted" style="margin-top:4px">'+facChoice(x)+' · '+esc(APP[a].availability_status)+'</div></td><td>'+eligChipFac(a)+'</td><td>'+(e.rec==='do_not_rank'?chip('Do not rank','bad'):'')+'</td><td>'+(ro?'':'<div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm primary" data-act="addRank" data-a="'+cid+'" data-b="'+a+'">Add to ranking</button>'+(x.pref.outside&&x.pref.by==='fac'?'<button class="btn sm" data-act="facDrop" data-a="'+cid+'" data-b="'+a+'">Remove from my list</button>':'<button class="btn sm" data-act="dnr" data-a="'+cid+'" data-b="'+a+'">'+(e.rec==='do_not_rank'?'Undo':'Do not rank')+'</button>')+'</div>')+'</td></tr>';
@@ -1258,7 +1481,8 @@ function vFacCourse(cid){
    (errs.length?'<div class="note bad" role="alert"><b>Fix these before submitting:</b><ul style="margin:4px 0 0;padding-left:18px">'+errs.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul></div>':'')+
    (w.state==='not_open'?'':!all.length?'<div class="note">No applicants selected this course yet. The course stays on your list with zero applicants.</div>':
    '<div class="filters"><label class="f">Level<select data-chg="facFilter" data-a="tier">'+opt('','All',fl.tier)+opt('PhD','PhD',fl.tier)+opt('Masters',"Master's",fl.tier)+opt('Undergraduate','Undergraduate',fl.tier)+'</select></label><label class="f">Returning<select data-chg="facFilter" data-a="ret">'+opt('','All',fl.ret)+opt('yes','Returning',fl.ret)+opt('no','New',fl.ret)+'</select></label><label class="f">Availability<select data-chg="facFilter" data-a="avail">'+opt('','All',fl.avail)+opt('available','Available',fl.avail)+opt('limited','Limited',fl.avail)+'</select></label><label class="f">Clearance<select data-chg="facFilter" data-a="elig">'+opt('','All',fl.elig)+opt('cleared','Cleared',fl.elig)+opt('pending','Pending',fl.elig)+opt('unavailable','Unavailable',fl.elig)+'</select></label></div>'+
-   '<div><h3 style="margin-bottom:8px">Your ranking ('+rankedCount(cid)+')</h3><div class="tbl"><table><thead><tr><th>Rank</th><th>Candidate</th><th>Preparation</th><th>Clearance</th><th>Recommendation</th><th>Comment</th><th></th></tr></thead><tbody>'+rRows+'</tbody></table></div></div>'+
+   '<div><h3 style="margin-bottom:4px">Your ranking ('+rankedCount(cid)+')</h3><div class="small muted" style="margin-bottom:8px">For each person, choose what you are asking for: full-time or half-time for graduate TAs, hours a week for undergraduates (UGCAs). "Backup" means only if someone above declines. You can ask for undergraduates here too, instead of emailing the office.</div><div class="tbl"><table><thead><tr><th>Rank</th><th>Candidate</th><th>Preparation</th><th>Clearance</th><th>Recommendation</th><th>Requesting</th><th>Comment</th><th></th></tr></thead><tbody>'+rRows+'</tbody></table></div></div>'+
+   '<label class="f" for="facNote">Note to the office (optional)<textarea id="facNote" rows="2" data-inp="facNote" data-a="'+cid+'" placeholder="e.g. I am giving both students a 50% GRA, so two half-time TAs please."'+(ro?' readonly':'')+'>'+esc(rk.note||'')+'</textarea></label>'+
    (unranked.length?'<div><h3 style="margin-bottom:8px">Applicants not ranked ('+unranked.length+')</h3><div class="tbl"><table><thead><tr><th>Candidate</th><th>Preparation</th><th>Clearance</th><th></th><th></th></tr></thead><tbody>'+uRows+'</tbody></table></div></div>':'')+
    '<div class="small muted">Applicants are listed by their own preference, then name. There is no match score. Open a name to see the full application.</div>'+
    (!ro&&facCanBrowse(c.faculty_id)?facBrowse(cid):'')+
@@ -1275,6 +1499,75 @@ function vFacPublished(){
   }).join('')+'</div>';
 }
 
+/* ---------- Nov 3 views: pay rates, history, UGCA roster, student offer page ---------- */
+function ratesCard(){
+  const r=S.rates,rows=RATE_TIERS.map(([k,l,per])=>{const v=r.vals[k],p=r.prev[k],ch=p?Math.round((v-p)/p*1000)/10:null;
+    return '<tr><td><b>'+esc(l)+'</b><div class="small muted">'+(k==='PhD'?'Every PhD TA':k==='Masters 1 (returning)'?'Second term on, stays here':k==='Masters 2'?'First term as a TA':k==='AI'?'A PhD teaching the class (set the appointment to AI)':'Undergraduate course assistant')+'</div></td><td class="num">'+(p!=null?money(p)+(per==='hour'?'/h':'/mo'):'—')+'</td><td><label class="f" style="flex-direction:row;align-items:center;gap:4px">$<input type="number" min="0" step="'+(per==='hour'?'0.25':'10')+'" value="'+v+'" data-chg="setRate" data-a="'+esc(k)+'" aria-label="'+esc(l)+' rate" style="width:90px">'+(per==='hour'?'an hour':'a month, full-time')+'</label></td><td class="num">'+(ch==null?'':(ch>0?'+':'')+ch+'%')+'</td></tr>'}).join('');
+  return '<div class="card" id="ratesCard"><div class="row" style="justify-content:space-between"><div><h3>Pay rates for '+esc(TERM.name)+'</h3><div class="small muted" style="max-width:760px">Each assignment gets its rate automatically from its tier. A master\'s student is "first time" in their first term and "returning" after that, read from the history list by EID, so someone placed in the fall moves up in the spring without anyone remembering to change it. Half-time is half the monthly rate. UGCAs are paid by the hour.</div></div><div class="row" style="gap:6px;align-items:flex-end"><label class="f">Raise all by<input type="number" id="raisePct" value="3" step="0.5" min="-20" max="20" style="width:64px"></label><button class="btn" data-act="raiseRates">Apply %</button></div></div>'+
+   (r.demo?'<div class="note warn" style="margin:10px 0">These amounts are placeholders for the demo, not UT\'s real rates. Type the real ones here each term.</div>':'')+
+   '<div class="tbl"><table><thead><tr><th>Tier</th><th class="num">'+esc(r.prevTerm)+'</th><th>'+esc(TERM.name)+'</th><th class="num">Change</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+   '<div class="small muted" style="margin-top:6px">Used in the HR draft (rate and pay columns) and in each student\'s offer email.'+(r.setAt?' Last changed '+when(r.setAt)+'.':'')+'</div></div>';
+}
+function histStats(){
+  const ppl=new Set(S.arch.rows.map(r=>r.eid)),sems=[...new Set(S.arch.rows.map(r=>r.sem).filter(Boolean))].sort((a,b)=>semKey(a)-semKey(b));
+  return{people:ppl.size,sems};
+}
+function vHistory(){
+  const st=histStats(),fl=S.histF||'',q=(S.histQ||'').trim().toLowerCase(),res=S.arch.last;
+  const rows=S.arch.rows.filter(r=>(!fl||r.sem===fl||(fl==='none'&&!r.sem))&&(!q||(r.first+' '+r.last+' '+r.eid).toLowerCase().includes(q))).slice().sort((a,b)=>semKey(b.sem)-semKey(a.sem)||a.last.localeCompare(b.last));
+  const apps=SEED.applications.filter(a=>a.application_status==='submitted').map(a=>a.application_id),ug=apps.filter(isUG),gr=apps.filter(a=>!isUG(a));
+  const g=S.grad,gn=Object.keys(g.rows).length,gres=g.last;
+  return '<div class="stack">'+
+   '<div class="card"><h3>This term\'s applicants against the history</h3><div class="stats" style="margin-top:8px">'+[['UGCA applicants',ug.length],['New UGCAs (need training)',ug.filter(needsTraining).length],['Returning UGCAs',ug.filter(isReturner).length],['Graduate applicants',gr.length],['Returning graduate TAs',gr.filter(isReturner).length]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div><div class="small muted" style="margin-top:8px">Matched by UT EID, so spelling differences in names do not matter. This replaces pasting two lists into ChatGPT to find who has never been a UGCA.</div></div>'+
+   '<div class="card" id="histCard"><div class="row" style="justify-content:space-between"><div><h3>Past UGCAs and TAs</h3><div class="small muted">'+S.arch.rows.length+' rows · '+st.people+' people · '+(st.sems.length?st.sems[0]+' to '+st.sems[st.sems.length-1]:'no semesters yet')+(S.arch.src==='demo'?' · synthetic demo list':'')+'</div></div>'+(latestPub()?'<button class="btn" data-act="archiveTerm">Add '+esc(TERM.name)+' to the history</button>':'')+'</div>'+
+   '<div class="grid2" style="margin-top:12px"><div><div class="eyebrow">Import your list</div><div class="small muted" style="margin:4px 0 8px">Choose the Excel file (every tab is read) or a CSV, or copy the cells in Excel and paste them. Columns are found by header (First, Last, EID, Semester) or, with no header row, by what is in them. EIDs are cleaned of spaces and line breaks. Semesters like "fall 23" or "spr 24" become Fall 2023 and Spring 2024. Rows already in the list are skipped.</div>'+
+    '<div class="row" style="align-items:flex-end;gap:10px"><label class="f">These rows are<select id="histRole">'+opt('UGCA','UGCAs',S.histRole||'UGCA')+opt('TA','Graduate TAs',S.histRole||'UGCA')+'</select></label><label class="f">File (.xlsx or .csv)<input type="file" id="histFile" accept=".xlsx,.xls,.csv,text/csv"></label></div>'+
+    '<label class="f" for="histPaste" style="margin-top:8px">Or paste</label><textarea id="histPaste" class="csv" rows="3" placeholder="First&#9;Last&#9;EID&#9;Semester"></textarea><div class="row" style="margin-top:6px"><button class="btn primary" data-act="histImport">Import pasted rows</button>'+(S.arch.msg?'<span class="small">'+esc(S.arch.msg)+'</span>':'')+'</div>'+
+    (res?'<div class="chips" style="margin-top:8px">'+chip(res.added+' added','ok')+chip(res.people+' people')+chip(res.dupes+' already there')+(res.noEid?chip(res.noEid+' without a usable EID','warn'):'')+(res.noSem?chip(res.noSem+' without a semester','warn'):'')+'</div><div class="small muted" style="margin-top:4px">'+esc(res.sheets.join(' · '))+'. Rows without a semester still count as one earlier term.</div>':'')+'</div>'+
+    '<div><div class="row" style="gap:10px;align-items:flex-end"><label class="f">Semester<select data-chg="histF">'+opt('','All',fl)+st.sems.slice().reverse().map(x=>opt(x,x,fl)).join('')+opt('none','No semester',fl)+'</select></label><label class="f">Search<input data-chg="histQ" data-fid="histQ" value="'+esc(S.histQ||'')+'" placeholder="Name or EID" style="width:150px"></label></div>'+
+    '<div class="tbl" style="margin-top:8px;max-height:340px;overflow:auto"><table style="min-width:420px"><thead><tr><th>Name</th><th>EID</th><th>Semester</th><th>Role</th></tr></thead><tbody>'+(rows.slice(0,150).map(r=>'<tr><td>'+esc((r.first+' '+r.last).trim())+'</td><td class="mono">'+esc(r.eid)+'</td><td>'+esc(r.sem||'—')+'</td><td>'+esc(r.role)+(r.src==='TA Studio'?' '+chip('Added from TA Studio','acc'):'')+'</td></tr>').join('')||'<tr><td colspan="4" class="muted">Nothing here.</td></tr>')+'</tbody></table></div>'+(rows.length>150?'<div class="small muted">Showing 150 of '+rows.length+'.</div>':'')+'</div></div>'+
+   '<div class="small muted" style="margin-top:10px">After students confirm, "Add '+esc(TERM.name)+' to the history" appends this term, so next term\'s new and returning list builds itself. In the real tool this list lives in the encrypted database; in this demo it resets when the page reloads.</div></div>'+
+   '<div class="card" id="gradCard"><h3>Graduate student records (for HR)</h3><div class="small muted" style="margin-bottom:8px">The enrolled graduate student list: international status and gender, which HR asks for. Matched by EID and shown only to the office, in the HR draft. '+gn+' students loaded'+(g.src==='demo'?' (synthetic)':'')+'.</div>'+
+    '<div class="row" style="align-items:flex-end;gap:10px"><label class="f">File (.xlsx or .csv)<input type="file" id="gradFile" accept=".xlsx,.xls,.csv,text/csv"></label><span class="small muted">Columns found by header: EID, name, gender, international or citizenship, program.</span></div>'+
+    (gres?'<div class="chips" style="margin-top:8px">'+chip(gres.added+' students loaded','ok')+(gres.noEid?chip(gres.noEid+' without a usable EID','warn'):'')+'</div>':'')+(g.msg?'<div class="small" style="margin-top:6px">'+esc(g.msg)+'</div>':'')+
+    '<div class="tbl" style="margin-top:8px"><table style="min-width:420px"><thead><tr><th>Applicant</th><th>EID</th><th>International</th><th>Gender</th><th>Program</th></tr></thead><tbody>'+gr.map(a=>{const x=gradOf(a);return '<tr><td>'+esc(nm(a))+'</td><td class="mono">'+esc(FL(a).eid||'')+'</td><td>'+esc(intlOf(a)||'—')+'</td><td>'+esc(genderOf(a)||'—')+'</td><td>'+esc(x?x.program:'')+(x?'':' '+chip('Not in the list','warn'))+'</td></tr>'}).join('')+'</tbody></table></div></div></div>';
+}
+/* Nov 3: Doug's UGCA spreadsheet (offer sent, confirmed Y, assigned to whom, new or returning, training) lives here now. */
+function ugcaRows(){
+  const p=latestPub();
+  return live().filter(r=>r.role==='UGCA').map(r=>{const pr=p&&p.rows.find(x=>key(x)===key(r));const st=pr?respOf(p,pr).status:'unpublished';return{r,st,pr,notifiedAt:pr&&st!=='not_notified'?p.notifiedAt:''}})
+    .sort((x,y)=>nm(x.r.app).localeCompare(nm(y.r.app))||cname(x.r.course).localeCompare(cname(y.r.course)));
+}
+function rosterTsv(){
+  const head=['First Name','Last Name','UT EID','Email','Course','Section','Instructor','Hours per week','Offer sent','Confirmed','New / Return','Times as UGCA before','Training complete','Pay rate'];
+  const t=v=>String(v==null?'':v).replace(/[\t\n]+/g,' ');
+  return [head.join('\t')].concat(ugcaRows().map(({r,st,notifiedAt})=>{const np=nameParts(r.app);return [np[0],np[1],FL(r.app).eid||'',LIVE?(LG[r.app]||{}).email||'':'',COURSE[r.course].catalog_number,COURSE[r.course].section_label,prof(r.course),fh(r.hrs),notifiedAt?day(notifiedAt):'',st==='confirmed'?'Y':st==='declined'?'Declined':'',isReturner(r.app)?'Return':'New',timesBefore(r.app,['UGCA']),needsTraining(r.app)?(trained(r.app)?'Y':''):'Not needed',rateOf('UGCA')?money(rateOf('UGCA'))+'/h':''].map(t).join('\t')})).join('\n');
+}
+function vUgca(){
+  const all=ugcaRows(),f=S.rosterF||'';
+  const xs=all.filter(x=>!f||(f==='train'&&needsTraining(x.r.app)&&!trained(x.r.app))||(f==='unconf'&&x.st!=='confirmed')||(f==='conf'&&x.st==='confirmed'));
+  const ppl=[...new Set(all.map(x=>x.r.app))],newP=ppl.filter(needsTraining);
+  const stc={confirmed:chip('Y · confirmed','ok'),declined:chip('Declined','bad'),awaiting:chip('Offer sent, waiting','warn'),not_notified:chip('Published, not notified'),unpublished:chip('Not published yet')};
+  const rows=xs.map(({r,st,notifiedAt})=>{const a=r.app,nt=needsTraining(a);
+    return '<tr class="'+rowCls(a)+'"><td>'+nameBtn(a,r.course)+'<div class="small muted mono">'+esc(FL(a).eid||'')+'</div></td><td>'+esc(cname(r.course))+'<div class="small muted">'+esc(prof(r.course))+'</div></td><td class="num">'+fh(r.hrs)+' h</td><td>'+chip(r.decision==='accepted'?'Accepted':'Requested',r.decision==='accepted'?'ok':'warn')+'</td><td>'+(notifiedAt?day(notifiedAt):'<span class="muted">—</span>')+'</td><td>'+stc[st]+'</td><td>'+nrChip(a)+'</td><td>'+(nt?'<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-chg="training" data-a="'+a+'"'+(trained(a)?' checked':'')+'> '+(trained(a)?'Complete '+day(S.training[a]):'Not yet')+'</label>':'<span class="small muted">Not needed</span>')+'</td><td class="small">'+esc(payTxt(r))+'</td></tr>'}).join('')||'<tr><td colspan="9" class="muted">No UGCAs '+(f?'match this filter':'are placed yet')+'. Place them in Assignments.</td></tr>';
+  return '<div class="stack"><div class="stats">'+[['UGCAs placed',ppl.length],['Confirmed (Y)',all.filter(x=>x.st==='confirmed').length],['Waiting on a reply',all.filter(x=>x.st==='awaiting').length],['New: need training',newP.length],['Training complete',newP.filter(trained).length]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
+   '<div class="card"><div class="row" style="justify-content:space-between"><div><h3>UGCA roster, '+esc(TERM.name)+'</h3><div class="small muted" style="max-width:760px">Every UGCA in the working draft, with who they are assigned to, whether the offer went out, whether they said yes, and whether they are new (needs training) or returning (from the history list). Confirmed comes straight from the student\'s reply, so there is no Y to type.</div></div><div class="row" style="gap:6px"><button class="btn" data-act="trainEmail"'+(newP.filter(a=>!trained(a)).length?'':' disabled')+'>Email new UGCAs about training</button><button class="btn primary" data-act="copyRoster">Copy for Excel</button></div></div>'+
+   '<div class="seg" role="group" aria-label="Filter roster" style="margin:10px 0">'+[['','All'],['train','Needs training'],['unconf','Not confirmed'],['conf','Confirmed']].map(x=>'<button class="btn sm" aria-pressed="'+(f===x[0])+'" data-act="rosterF" data-a="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'+
+   '<div class="tbl"><table><thead><tr><th>UGCA</th><th>Assigned to</th><th class="num">Hours</th><th>Office decision</th><th>Offer sent</th><th>Confirmed</th><th>New / returning</th><th>Training</th><th>Pay</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+   '<textarea id="rosterBox" class="sr" readonly aria-hidden="true">'+esc(rosterTsv())+'</textarea><div class="small muted" style="margin-top:6px">Copy for Excel gives the same columns as your spreadsheet (first, last, EID, course, instructor, hours, offer sent, confirmed, new or return, training), tab-separated so it pastes straight into a sheet.</div></div></div>';
+}
+/* What a student sees from the link in their offer email (Doug: "accept or decline by this date, with the contract"). */
+function vStudentOffer(){
+  const a=S.user.app,p=latestPub(),mine=p?p.rows.filter(r=>r.app===a):[];
+  return '<div class="stack"><div><h2>Your '+esc(TERM.name)+' assistantship</h2><div class="muted">'+esc(nm(a))+(FL(a).eid?' · '+esc(FL(a).eid):'')+'</div></div>'+
+   (mine.length?mine.map(r=>{const s=respOf(p,r),k=key(r),c=COURSE[r.course],open=p.respOpen&&(s.status==='awaiting'||s.status==='not_notified');
+    return '<div class="card"><h3>'+esc(r.role==='AI'?'Assistant instructor (AI)':r.role==='UGCA'?'Undergraduate course assistant (UGCA)':'Teaching assistant (TA)')+' · '+esc(c.catalog_number+' '+c.title)+'</h3><dl class="kv"><dt>Section</dt><dd>'+esc(c.section_label)+'</dd><dt>Instructor</dt><dd>'+esc(prof(r.course))+'</dd><dt>Appointment</dt><dd>'+esc(r.role==='UGCA'?sizeTxt(r)+' a week':sizeTxt(r))+'</dd><dt>Pay</dt><dd>'+esc(payTxt(r))+'</dd><dt>Reply by</dt><dd>'+day((S.ext[k]&&S.ext[k].until)||p.replyBy)+'</dd><dt>Offer letter</dt><dd><span class="mono">offer_'+esc(c.catalog_number)+'_'+esc(nameParts(a)[1].toLowerCase()||'student')+'.pdf</span> <span class="small muted">(attached to the email; mock)</span></dd></dl>'+
+     (s.status==='confirmed'?'<div class="note">'+chip('Accepted','ok')+' You accepted on '+day(s.at)+'. HR will contact you about paperwork'+(r.role==='UGCA'&&needsTraining(a)?', and the office will send UGCA training details':'')+'.</div>':
+      s.status==='declined'?'<div class="note bad">'+chip('Declined','bad')+' You declined on '+day(s.at)+'. Thank you for letting us know.</div>':
+      open?'<div class="row" style="margin-top:8px"><button class="btn primary" data-act="stuAccept" data-a="'+esc(k)+'">Accept this position</button><button class="btn danger" data-act="stuDecline" data-a="'+esc(k)+'">Decline</button></div>':'<div class="note warn">The reply window is not open yet. You will get an email when you can answer.</div>')+'</div>'}).join(''):'<div class="note">No published offer for you yet.</div>')+
+   '<div class="small muted">Demo: this is the page a student opens from the link in their offer email. In the real tool they sign in with their UT EID.</div></div>';
+}
+
 /* ---------- drawer ---------- */
 function legacyDd(a,dd){
   const l=LG[a],m=COLOR_MEANING[l.color];
@@ -1289,7 +1582,7 @@ function drawerHtml(){
   const cw=(CW[a]||[]).map(x=>esc(x.catalog_number)+' '+esc(x.course_title)+' · '+esc(x.grade_band)).join('<br>');
   const th=(TH[a]||[]).map(x=>esc(x.term)+' · '+esc(x.catalog_number)+' '+esc(x.role)+' · '+f(x.allocation_fte)+' FTE').join('<br>');
   let h='<div class="scrim" data-act="closeDrawer"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Applicant detail"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2>'+esc(nm(a))+'</h2><div class="row" style="gap:6px;flex-wrap:nowrap">'+(adm?'<button class="btn sm" data-act="composeOne" data-a="'+a+'">Email</button>':'')+'<button class="btn sm" id="drawerClose" data-act="closeDrawer">Close</button></div></div><div class="chips">'+tierChip(a)+chip(ap.assistant_type)+(adm?lgChips(a):'')+(adm?eligChipAdm(a):eligChipFac(a))+(ap.application_status==='draft'?chip('Draft application','warn'):'')+'</div><dl>'+
-   dd('Applied through','Legacy TA app form'+(ap.submitted_at?', '+day(ap.submitted_at):' (draft, not submitted)'))+dd('Program',esc(ap.program))+dd('Expected graduation',esc(ap.expected_graduation_term))+dd('Availability',esc(ap.availability_status))+dd('Returning TA',ap.returning_ta?'Yes':'No')+dd('Prior TA terms',ap.prior_ta_terms)+dd('Skills',sk)+dd('Relevant coursework',cw)+dd('Prior teaching',th);
+   dd('Applied through','Legacy TA app form'+(ap.submitted_at?', '+day(ap.submitted_at):' (draft, not submitted)'))+dd('Program',esc(ap.program))+dd('Expected graduation',esc(ap.expected_graduation_term))+dd('Availability',esc(ap.availability_status))+dd('New or returning',nrChip(a)+(pastSems(a).length?' <span class="small muted">'+esc(pastSems(a).join(', '))+' (from History)</span>':''))+dd('Returning TA (legacy form)',ap.returning_ta?'Yes':'No')+dd('Prior TA terms',ap.prior_ta_terms)+dd('Skills',sk)+dd('Relevant coursework',cw)+dd('Prior teaching',th);
   if(pr)h+=dd('Their choice for this course','#'+pr.preference_rank+(discOf(a,cid)===true?' · wants a discussion section':''))+dd('Preparedness',esc(pr.preparedness))+dd('Note for this course',esc(pr.applicant_note));
   else if(cid&&isOutside(cid,a))h+=dd('This course','Did not apply. '+(adm?esc(addedByTxt(cid,a).replace(/^./,c=>c.toUpperCase()))+'.':'Added to your list.'));
   const rz=resumeOf(a);
@@ -1303,7 +1596,7 @@ function drawerHtml(){
   h+='</dl><h3>'+(isGrad(a)?'Graduate application':'Undergraduate application')+'</h3><dl>'+(isGrad(a)?dd('Supervisor',esc(x.sup))+dd('Research area',esc(x.area))+dd('Resume: internships and industry work',esc(x.intern))+dd('English / ITA status',esc(x.ita))+dd('Teaching experience',esc(x.tex)):dd('Class year',esc(x.yr))+dd('Hours per week',x.hrs)+dd('Grade in this course',gb?esc(gb.grade_band):''))+'</dl><h3>Experience</h3><div class="pre">'+(esc(ap.experience_summary)||'<span class="muted">Not provided</span>')+'</div><h3>Teaching statement</h3><div class="stmt">'+(esc(ap.teaching_statement)||'<span class="muted">Not provided</span>')+'</div>';
   if(adm){
     const cm=isCommit(a)?'Yes'+(FL(a).commitExpires?', until '+esc(FL(a).commitExpires):'')+'. Must be placed.'+(ap.self_degree?' Applied as a master\'s student; the commitment list makes them a PhD, so they are treated as one.':''):'';
-    h+='<h3>Admin only</h3><dl>'+(cm?dd('Commitment student',cm):'')+(!LIVE&&FL(a).eid?dd('EID (made up for the demo)','<span class="mono">'+esc(FL(a).eid)+'</span>'):'')+dd('Employment eligibility',esc(elig(a).replace('_',' '))+(FL(a).color==='declined'?' (declined in the legacy app)':''))+dd('Spoken-English assessment',esc(ap.spoken_english_assessment))+dd('Max assignment',f(ap.max_assignment_fte)+' FTE')+dd('GRA list',S.gra.has(a)?'On the list':'Not on the list')+(LIVE&&LG[a]?legacyDd(a,dd):'')+dd('Citizenship (office only)',esc(ex(a).cit)+' <span class="small muted">Open question: who may see this.</span>')+dd('HR tier','<select data-chg="tierOv" data-a="'+a+'" aria-label="HR tier">'+opt('','Automatic: '+tierAuto(a),S.tierOv[a]||'')+TIER_CODES.map(c=>opt(c,c,S.tierOv[a]||'')).join('')+'</select>')+dd('Transcript',(S.tx[a]&&S.tx[a].checked?'Checked '+when(S.tx[a].at):'Not checked yet')+' <button class="btn sm" data-act="txToggle" data-a="'+a+'">'+(S.tx[a]&&S.tx[a].checked?'Clear':'Mark checked')+'</button>')+'</dl><h3>Faculty requests</h3>';
+    h+='<h3>Admin only</h3><dl>'+(cm?dd('Commitment student',cm):'')+(!LIVE&&FL(a).eid?dd('EID (made up for the demo)','<span class="mono">'+esc(FL(a).eid)+'</span>'):'')+dd('Employment eligibility',esc(elig(a).replace('_',' '))+(FL(a).color==='declined'?' (declined in the legacy app)':''))+dd('Spoken-English assessment',esc(ap.spoken_english_assessment))+dd('Max assignment',f(ap.max_assignment_fte)+' FTE')+dd('GRA list',S.gra.has(a)?'On the list':'Not on the list')+(LIVE&&LG[a]?legacyDd(a,dd):'')+dd('Citizenship (office only)',esc(ex(a).cit)+' <span class="small muted">Open question: who may see this.</span>')+(isGrad(a)?dd('International · gender (grad records)',esc((intlOf(a)||'—')+' · '+(genderOf(a)||'—'))+' <span class="small muted">For HR only</span>'):'')+(needsTraining(a)?dd('UGCA training',(trained(a)?'Complete '+day(S.training[a]):'Needed (first term as a UGCA)')):'')+(removedOf(a)?dd('Removed from pool',esc((REMOVE_WHY.find(x=>x[0]===removedOf(a).why)||['','Other'])[1])+' · '+when(removedOf(a).at)):'')+dd('HR tier','<select data-chg="tierOv" data-a="'+a+'" aria-label="HR tier">'+opt('','Automatic: '+tierAuto(a),S.tierOv[a]||'')+TIER_CODES.map(c=>opt(c,c,S.tierOv[a]||'')).join('')+'</select>')+dd('Transcript',(S.tx[a]&&S.tx[a].checked?'Checked '+when(S.tx[a].at):'Not checked yet')+' <button class="btn sm" data-act="txToggle" data-a="'+a+'">'+(S.tx[a]&&S.tx[a].checked?'Clear':'Mark checked')+'</button>')+'</dl><h3>Faculty requests</h3>';
     const rs=SEED.courses.map(c=>({c:c.course_id,e:S.rank[c.course_id].entries[a]})).filter(x=>x.e&&(x.e.rank!=null||x.e.rec));
     h+=rs.length?rs.map(x=>'<div class="issue"><div><b>'+esc(cname(x.c))+'</b> · '+esc(prof(x.c))+'<div class="small muted">'+(x.e.rank!=null?'Rank #'+x.e.rank+' · ':'')+esc((x.e.rec||'').replace('_',' '))+(x.e.comment?' · '+esc(x.e.comment):'')+'</div></div></div>').join(''):'<div class="muted">No professor has ranked this applicant.</div>';
   }
@@ -1336,6 +1629,14 @@ const ASK=[
  {id:'resume',w:'s',t:'Applicants',h:'Open the student and press Request résumé, or request from everyone without one.',k:'resume résumé cv internship industry experience upload attachment',go:{tab:'applicants'}},
  {id:'email',w:'s',t:'Applicants',h:'Press "Email applicants" and pick who gets it. It is drafted in Mail.',k:'email emails message mass blast everyone all students applicants ugcas tas contact announcement write tell',go:{tab:'applicants',act:'composeOpen',focus:'composeCard'}},
  {id:'transcript',w:'s',t:'Applicants',h:'Open the student and mark Transcript checked.',k:'transcript grade grades checked check took class',go:{tab:'applicants'}},
+ {id:'rates',w:'s',t:'Setup',h:'Pay rates for this term, by tier. Raise them all by a percent, or type each one.',k:'pay rate rates salary stipend money amount raise increase percent per month hourly wage tier',go:{tab:'setup',focus:'ratesCard'}},
+ {id:'history',w:'s',t:'History',h:'Import the past UGCA and TA list (Excel or paste). It marks who is new and who is returning.',k:'history past previous prior ugcas list returning returner new first time archive import spreadsheet semesters chatgpt',go:{tab:'history',focus:'histCard'}},
+ {id:'gradrec',w:'s',t:'History',h:'Load the graduate student list for international status and gender in the HR draft.',k:'international gender male female citizenship grad student list records enrolled graduate database',go:{tab:'history',focus:'gradCard'}},
+ {id:'roster',w:'s',t:'UGCAs',h:'The UGCA roster: assigned to whom, offer sent, confirmed (Y), new or returning, training. Copy it for Excel.',k:'ugca roster spreadsheet confirmed y offer letter sent assigned list undergrad course assistants tracking box',go:{tab:'ugca'}},
+ {id:'training',w:'s',t:'UGCAs',h:'Filter "Needs training", tick training complete, or email the new UGCAs about training.',k:'training train new ugca first time orientation needs training complete',go:{tab:'ugca'}},
+ {id:'remove',w:'s',t:'Applicants',h:'Press "Remove from pool…" on the row and pick the reason. GRA turns blue, the rest red.',k:'remove pool take out reason withdraw withdrew graduated drop exclude red blue',go:{tab:'applicants'}},
+ {id:'hrcols',w:'s',t:'HR drafts',h:'Open "Columns in the HR spreadsheet" and tick the ones HR wants.',k:'hr columns format fields layout which columns spreadsheet headings box',go:{tab:'hr',focus:'hrColsCard'}},
+ {id:'guide',w:'s',t:'Guided demo',h:'Press "Start the guided demo" in the orange bar for a start-to-finish run of a term.',k:'demo walkthrough tour guide tutorial how does it work show me start to finish',go:{tab:'dashboard'}},
  {id:'tier',w:'s',t:'Applicants',h:'Open the student and set HR tier (PhD, Masters 1, Masters 2, UGCA).',k:'hr tier pay level masters 1 2 phd rate',go:{tab:'applicants'}},
  {id:'refresh',w:'s',t:'Setup',h:'Load a newer sync file under Data source. Your work is kept.',k:'refresh update new applicants late pull sync legacy data reload latest',go:{tab:'setup',focus:'dataSource'}},
  {id:'slots',w:'s',t:'Setup',h:'Change TA, AI or UGCA hours needed, or who can apply, per course.',k:'how many tas needed slots need hours ugca hours course size who can apply graduate undergraduate audience',go:{tab:'setup'}},
@@ -1354,7 +1655,7 @@ const ASK=[
  {id:'l_users',w:'l',t:'Settings → Users',h:'Who can sign in to the legacy app is only managed there.',k:'users access admin login give access account permission add user staff',url:'/admin/classes'},
  {id:'l_commit',w:'l',t:'Settings → Commitment students',h:'Add admitted PhDs (name, EID, expiry) there; TA Studio reads it on the next refresh.',k:'commitment admitted phd add commitment student expiry expire yellow enter',url:'/admin/commitments'},
  {id:'l_content',w:'l',t:'Settings → Content / View student application',h:'The application questions and page text live in the legacy app.',k:'application form question questions content wording page wording ask applicants add question',url:'/admin/classes'},
- {id:'l_remove',w:'l',t:'Applicants → the student → Remove student from TA pool',h:'The official removal is in the legacy app. In TA Studio, flag them instead.',k:'remove delete student pool official withdraw drop take out',url:'/admin/applicants'},
+ {id:'l_remove',w:'l',t:'Applicants → the student → Remove student from TA pool',h:'The official removal is in the legacy app. In TA Studio, use "Remove from pool…" on Applicants.',k:'remove delete student pool official withdraw drop take out',url:'/admin/applicants'},
  {id:'l_editclass',w:'l',t:'Classes → Edit classes',h:'What applicants see on the form changes only there. TA Studio\'s Setup is for planning.',k:'edit class classes official legacy form course list professor teaching needed',url:'/admin/classes'},
  {id:'l_print',w:'l',t:'Classes → Print faculty requirements',h:'Printing is in the legacy app.',k:'print printout paper faculty requirements',url:'/admin/classes'},
  {id:'l_search',w:'l',t:'Applicants → Search',h:'Full-text search of applications is in the legacy app. In TA Studio, filter the Applicants list.',k:'search text keyword find word essay search applications',url:'/admin/applicants'},
@@ -1444,13 +1745,76 @@ async function loadReqs(){
 }
 function askFocus(id){setTimeout(()=>{const el=document.getElementById(id);if(!el)return;el.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1800)},30)}
 
+/* ---------- Guided demo (presentation for the CS department) ----------
+   A start-to-finish run of one term on the small synthetic set (Doug, Nov 3: "a smaller set, a couple of courses, and run
+   the entire thing from top to bottom, published, to HR, the mail"). Each step can be shown, or done for you so the live demo
+   never stalls. "Do it for me" also does any earlier step that was skipped. */
+const GUIDE_RANKS={
+ crs_f26_001:{list:[['app_f26_0001',15,'strong_yes','Great UGCA for this course last fall.'],['app_f26_0007',15,'yes',''],['app_f26_0009',0.5,'yes',''],['app_f26_0008',0,'acceptable','']],note:''},
+ crs_f26_002:{list:[['app_f26_0002',1,'strong_yes','Did well as my TA in the fall.'],['app_f26_0005',0,'yes',''],['app_f26_0010',0,'acceptable','']],note:''},
+ crs_f26_003:{list:[['app_f26_0008',0.5,'strong_yes',''],['app_f26_0006',0.5,'yes','']],note:'I am giving both of them a 50% GRA, so two half-time TAs please.'},
+ crs_f26_004:{list:[['app_f26_0011',1,'strong_yes',''],['app_f26_0010',0,'yes','']],note:''},
+ crs_f26_005:{list:[['app_f26_0005',1,'strong_yes',''],['app_f26_0004',0,'yes','Could help as a UGCA if Ember says no.']],note:''}};
+const gDue=()=>isoOf(new Date(Date.now()+7*864e5)).slice(0,10);
+const gAdmin=()=>{if(S.user.type!=='admin'){S.user={type:'admin'};S.facCourse=null}S.drawer=null};
+const GUIDE=[
+ {t:'What TA Studio is',from:'',say:'Each semester the office staffs every CS class with graduate TAs and undergraduate UGCAs (the past UGCA list shows 130 to 210 UGCAs a long semester). Today that takes the legacy TA app, a UGCA spreadsheet in Box, ChatGPT to find who is new, and a lot of email. TA Studio reads the applications from the legacy app and does the rest in one place. This walkthrough runs Spring 2027 from start to finish on a small made-up set: 12 applicants and 6 classes.',
+  show(){gAdmin();S.tab='dashboard'},done:()=>SCN==='fresh'},
+ {t:'Set up the term',from:'"Every year that amount goes up 2 or 3 percent… I just have to remember to update that."',say:'Setup holds this term\'s pay rates by tier (PhD, master\'s first time, master\'s returning, AI, UGCA hourly) and how many TAs, AIs and UGCA hours each class needs. The rates flow into the HR draft and every offer email. (Amounts are placeholders.)',
+  show(){gAdmin();S.tab='setup';askFocus('ratesCard')}},
+ {t:'Who is new, who is returning',from:'"It just told me who had never been a UGCA before, and that told me who needed training."',say:'History holds every past UGCA and TA by semester, in the same shape as the office\'s spreadsheet, and Excel files import directly. Matching by EID marks each applicant new or returning: a new UGCA needs training, and a master\'s student who TA\'d in the fall moves to the returning rate automatically.',
+  show(){gAdmin();S.tab='history'}},
+ {t:'Open the ranking windows',from:'',say:'One click opens every professor\'s window and drafts their email. Until a window is open, that professor cannot rank. The status column says exactly where each professor is.',
+  show(){gAdmin();S.tab='windows'},do(){const t=trackRows().filter(r=>r.st==='Not opened');t.forEach(r=>openWindow(r.fid,gDue(),''));return t.length+' windows opened'},done:()=>!trackRows().some(r=>r.st==='Not opened')},
+ {t:'A professor ranks',from:'"I\'ll give a student a 50% GRA and they can be a half-time TA, and another one the same."',say:'This is what J Biswas sees: only the students who chose the course, ranked in order. For each one the professor says what they want (full-time, half-time, or hours for an undergraduate), adds a note for the office, and submits. Undergraduates can be requested here too, instead of by email.',
+  show(){S.user={type:'faculty',fid:'fac_j_biswas'};S.tab='courses';S.facCourse='crs_f26_003';S.drawer=null},
+  do(){let n=0;Object.entries(GUIDE_RANKS).forEach(([cid,g])=>{const rk=S.rank[cid];if(rk.status==='submitted')return;rk.entries={};g.list.forEach(([a,ask,rec,cm],i)=>{rk.entries[a]={rank:i+1,rec,comment:cm,ask}});rk.note=g.note;rk.status='submitted';rk.submittedAt=nowIso();rk.savedAt=rk.submittedAt;const q=submitRequests(cid);n++;
+    const who=prof(cid);S.audit.unshift({ts:rk.submittedAt,actor:who,action:'staffing request submitted',entity:'ranking',id:cid,summary:cname(cid)+' ranking submitted, '+q+' requested'+(g.note?' · note: '+g.note:'')});notify('admin',who+' submitted the '+cname(cid)+' ranking and requested '+q+(q>1?' people':' person')+(g.note?'. Note: "'+g.note+'"':'')+'.',{tab:'assign',course:cid})});return n+' rankings submitted'},
+  done:()=>Object.keys(GUIDE_RANKS).every(c=>S.rank[c].status==='submitted')},
+ {t:'The office decides',from:'"Can you make it grad and undergrad… so if I want to add undergrads I can just go to the undergrad list."',say:'Back as the office: each class shows the professor\'s rank, what they asked for and their note. Accept, change the hours, or add someone who did not apply, picking from the graduate or the undergraduate list. Conflicts (over 20 UGCA hours, GRA, declined) block publishing.',
+  show(){gAdmin();S.tab='assign';S.selCourse='crs_f26_003'},do(){let n=0;S.draft.rows.filter(r=>r.decision==='requested').forEach(r=>{r.decision='accepted';n++});log('requests accepted','assignment','all',n+' requested assignments accepted (guided demo)');return n+' requests accepted'},done:()=>S.draft.rows.length>0&&!S.draft.rows.some(r=>r.decision==='requested')},
+ {t:'Publish to professors',from:'',say:'Publishing locks a numbered version and tells each professor who they got. Warnings need a written note first. Because "create the HR draft automatically" is on, HR draft 1 and its email are prepared at the same moment.',
+  show(){gAdmin();S.tab='publish'},do(){ACT.fillNotes();const g=gate();if(!g.ok)return 'Not ready: '+(g.blocks[0]?g.blocks[0].msg:'nothing to publish');publishNow();return 'Version '+latestPub().version+' published'},done:()=>S.pubs.length>0},
+ {t:'Offers go to students',from:'"You\'ve been selected for a UGCA position. Please accept or decline by this date, with the contract."',say:'Open the reply window and send the offers. Each email has the class, the appointment, the pay and a link to accept or decline. They all sit in the Mail tab, since the demo sends nothing.',
+  show(){gAdmin();S.tab='students'},do(){const p=latestPub();p.respOpen=true;p.replyBy=S.replyBy;ACT.notify();return 'Offers queued'},done:()=>{const p=latestPub();return !!p&&p.rows.every(r=>respOf(p,r).status!=='not_notified')}},
+ {t:'A student answers',from:'"And when they accept or decline, does it show me?"',say:'This is the page Grove, a new UGCA, opens from the email. Accepting lands straight in the Students tab and the UGCA roster. In this step everyone else answers too, and Ember declines 311H.',
+  show(){const p=latestPub();if(p&&p.rows.some(r=>r.app==='app_f26_0007')){S.user={type:'student',app:'app_f26_0007'};S.tab='offer'}else{gAdmin();S.tab='students'}},
+  do(){const p=latestPub();let n=0;p.rows.forEach(r=>{const k=key(r),st=respOf(p,r).status;if(st==='confirmed'||st==='declined')return;p.responses[k]={status:r.app==='app_f26_0005'&&r.course==='crs_f26_005'?'declined':'confirmed',at:nowIso()};n++});log('student replies received','publication',p.id,n+' replies (guided demo)');notify('admin','Candidate Ember declined '+cname('crs_f26_005')+'.',{tab:'students'});gAdmin();S.tab='students';return n+' replies in'},
+  done:()=>{const p=latestPub();return !!p&&p.rows.some(r=>respOf(p,r).status==='declined')}},
+ {t:'Replace and publish again',from:'',say:'Under a decline, the professor\'s next backup is listed with anything that rules them out. Using Delta creates version 2, and HR draft 2 shows exactly what changed: Ember removed, Delta added.',
+  show(){gAdmin();S.tab='students'},do(){const p=latestPub();if(p.version<2){const d=S.draft.rows.find(r=>r.course==='crs_f26_005'&&r.app==='app_f26_0005'&&r.decision!=='declined');if(d)ACT.useBackup('crs_f26_005','app_f26_0005','app_f26_0004');S.draft.rows.filter(r=>r.decision==='requested').forEach(r=>{r.decision='accepted'});ACT.fillNotes();if(!gate().ok)return 'Not ready to publish';publishNow();const q=latestPub();q.respOpen=true;q.replyBy=S.replyBy;ACT.notify()}gAdmin();S.tab='hr';return 'Version '+latestPub().version+' published'},
+  done:()=>S.pubs.length>1},
+ {t:'The HR draft',from:'"If they\'re an international student, or male or female, I have to tell them that."',say:'Each draft lists who, where, the appointment, tier, rate and pay, new or returning, plus international status and gender from the graduate records. The office picks the columns HR wants. Copy for Excel pastes straight into the sheet in Box, and the email to HR is drafted.',
+  show(){gAdmin();S.tab='hr';S.hrSel=S.hr.drafts.length?S.hr.drafts[S.hr.drafts.length-1].n:null}},
+ {t:'The UGCA roster',from:'"This marks whether the student is confirmed… who they\'re assigned to… new and returning."',say:'This replaces the UGCA spreadsheet. Confirmed comes from the student\'s own reply, new or returning from the history, and training is a checkbox. One button emails the new UGCAs about training. When the term is set, "Add Spring 2027 to the history" feeds next term.',
+  show(){gAdmin();S.tab='ugca'},do(){const n=archiveTerm();gAdmin();S.tab='history';return n+' people added to the history'},done:()=>S.arch.rows.some(r=>r.sem===TERM.name)},
+ {t:'What it needs to go live',from:'',say:'The demo runs on made-up data and sends nothing. To run it for real: (1) read access to the TA app\'s data (a database view or a small API) instead of reading its pages; (2) a place to host it, such as a department server; (3) UT EID sign-in for the office, professors and students; (4) an email account it may send from; (5) an encrypted database for the history and the term\'s work; (6) a decision on who may see citizenship, international status and gender.',
+  show(){gAdmin();S.tab='dashboard'}}
+];
+function guideHtml(){
+  if(!S.guide||LIVE)return '';const i=S.guide.step,g=GUIDE[i],done=g.done?g.done():false;
+  if(S.guide.min)return '<div class="gpanel min" role="region" aria-label="Guided demo"><button class="btn sm primary" data-act="guideMin">Guided demo · step '+(i+1)+' of '+GUIDE.length+': '+esc(g.t)+'</button></div>';
+  return '<div class="gpanel" role="region" aria-label="Guided demo"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="eyebrow">Guided demo · step '+(i+1)+' of '+GUIDE.length+'</span><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="guideMin" aria-label="Minimize">–</button><button class="btn sm" data-act="guideClose" aria-label="Close guided demo">×</button></span></div>'+
+   '<div class="gdots" aria-hidden="true">'+GUIDE.map((x,j)=>'<button class="gdot'+(j===i?' on':'')+((x.done?x.done():j<i)?' ok':'')+'" data-act="guideGo" data-a="'+j+'" tabindex="-1" title="'+esc(x.t)+'"></button>').join('')+'</div>'+
+   '<h3 style="margin:6px 0 6px">'+esc(g.t)+(done&&g.do?' '+chip('Done','ok'):'')+'</h3>'+(g.from?'<div class="gquote">'+esc(g.from)+'</div>':'')+'<p class="gsay">'+esc(g.say)+'</p>'+
+   (S.guide.msg?'<div class="small" style="margin-top:6px"><b>'+esc(S.guide.msg)+'</b></div>':'')+
+   '<div class="row" style="margin-top:10px;gap:6px"><button class="btn sm" data-act="guideShow">Show me</button>'+(g.do?'<button class="btn sm primary" data-act="guideDo"'+(done?' disabled':'')+'>'+(done?'Done':'Do it for me')+'</button>':'')+'<span style="flex:1"></span><button class="btn sm" data-act="guidePrev"'+(i?'':' disabled')+'>Back</button><button class="btn sm primary" data-act="guideNext"'+(i<GUIDE.length-1?'':' disabled')+'>Next</button></div></div>';
+}
+function guideCard(){
+  if(S.guide)return '';
+  return '<div class="card hero"><div class="row" style="justify-content:space-between;align-items:center"><div style="max-width:760px"><h3>See a whole term, start to finish</h3><p class="muted" style="margin-top:4px">A guided run of Spring 2027 on a small made-up set: set rates, open ranking windows, professors rank, the office decides, publish, offers and replies, the HR draft and the UGCA roster. Every step can be shown or done for you.</p></div><button class="btn primary" data-act="guideOpen">Start the guided demo</button></div></div>';
+}
+function guideRun(n){const g=GUIDE[n];for(let j=0;j<n;j++){const p=GUIDE[j];if(p.do&&p.done&&!p.done())p.do()}return g.do?g.do():''}
+
 /* ---------- render ---------- */
 function render(){
   const y=S.toTop?0:window.scrollY;S.toTop=false;
   let main;
-  if(S.user.type==='admin')main={dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,hr:vHR,students:vStudents,concerns:vConcerns,mail:vMail,setup:vSetup,audit:vAudit}[S.tab]();
+  if(S.user.type==='admin')main=({dashboard:vDashboard,windows:vWindows,assign:vAssign,applicants:vApplicants,publish:vPublish,hr:vHR,students:vStudents,concerns:vConcerns,mail:vMail,setup:vSetup,audit:vAudit,history:vHistory,ugca:vUgca}[S.tab]||vDashboard)();
+  else if(S.user.type==='student')main=vStudentOffer();
   else main=S.tab==='published'?vFacPublished():vFacCourses();
-  $('#app').innerHTML=band()+'<div class="wrap gut">'+header()+nav()+'<main>'+main+'</main><footer class="foot">'+(LIVE?'Data read from the legacy TA app at '+when(FEEDMETA.syncedAt)+'. Nothing is written back to it and no email has been sent. The page resets when you refresh, and picking a profile is not sign-in.':'Every applicant here is fictional and labeled as synthetic. The page resets when you refresh, and picking a profile is not sign-in. Course titles and faculty names come from public Fall 2026 UT Austin Computer Science listings.')+'</footer></div>';
+  $('#app').innerHTML=band()+'<div class="wrap gut'+(S.guide?' guided':'')+'">'+header()+nav()+tip()+'<main>'+main+'</main><footer class="foot">'+(S.tips||S.user.type!=='admin'?'':'<button class="link small" data-act="tipsOn">Show page tips</button> · ')+(LIVE?'Data read from the legacy TA app at '+when(FEEDMETA.syncedAt)+'. Nothing is written back to it and no email has been sent. The page resets when you refresh, and picking a profile is not sign-in.':'Every applicant here is fictional and labeled as synthetic, and the pay rates are placeholders. The page resets when you refresh, and picking a profile is not sign-in. Course titles and faculty names come from public Fall 2026 UT Austin Computer Science listings'+(SCN==='fresh'?', reused for the Spring 2027 walkthrough.':'.'))+'</footer></div>';
+  $('#guide').innerHTML=guideHtml();
   const d=$('#drawer');d.innerHTML=drawerHtml();
   if(S.drawer&&S.drawerNew){const b=$('#drawerClose');if(b)b.focus();S.drawerNew=false}
   window.scrollTo(0,y);
@@ -1468,13 +1832,81 @@ async function copyText(text,el){
 }
 
 /* ---------- actions ---------- */
+function publishNow(){
+    const g=gate();if(!g.ok)return null;
+    const prev=latestPub(),v=prev?prev.version+1:1;
+    let n=S.pubs.reduce((m,p)=>m+p.rows.length,0);
+    const rows=g.accepted.map(r=>{
+      const notes=[S.overrides['pending:'+r.id],S.overrides['unranked:'+r.id],S.overrides['noranking:'+r.course]].filter(x=>x&&x.trim());
+      return normRow({id:'pub_asn_'+String(++n).padStart(3,'0'),course:r.course,app:r.app,fte:r.fte,hrs:r.hrs,role:r.role,note:notes.join(' ')});
+    });
+    const gaps={};SEED.courses.forEach(c=>{if(sum(rows.filter(r=>r.course===c.course_id).map(r=>r.fte))<c.ta_slots_required-1e-9)gaps[c.course_id]=S.overrides['unfilled:'+c.course_id]||''});
+    const pub={id:'pub_f26_v'+v,version:v,at:nowIso(),by:ADMIN,rows,gaps,notifiedAt:prev?prev.notifiedAt:null,replyBy:null,responses:{},respOpen:false};
+    if(prev)rows.forEach(r=>{const o=prev.responses[key(r)];if(o)pub.responses[key(r)]={...o}});
+    S.pubs.push(pub);
+    g.accepted.forEach(r=>{r.published=true});
+    S.concerns.forEach(c=>{if(c.status==='under_review'&&c.adjust){c.status='resolved_adjustment';c.resolved_at=pub.at;c.resolved_by_user_id='usr_admin_01';c.resolution_note=(c.resolution_note||'')+' Published in version '+v+'.';log('resolution recorded','concern',c.concern_id,'Resolved by adjustment in version '+v)}});
+    log('publication created','publication',pub.id,'Version '+v+' published with '+rows.length+' assignments');
+    [...new Set(rows.map(r=>COURSE[r.course].faculty_id))].forEach(fid=>notify('fac:'+fid,'Version '+v+' is published. See who is assigned to your course.',{facTab:'published'}));
+    S.selPub=v;
+    const hd=S.autoHr?makeHrDraft(true):null;
+    toast('Version '+v+' published to faculty'+(hd?'. HR draft '+hd.n+' created, email queued (not sent).':''));
+    return pub;
+}
+function makeHrDraft(auto){
+  const cur=hrRows(),last=hrLatest();
+  if(!cur.length||(last.n&&!hrDiff(cur,last.rows).some(r=>r.ch)))return null;
+  const n=last.n+1;S.hr.drafts.push({n,at:nowIso(),by:ADMIN+(auto?' (on publish)':''),rows:cur});S.hrSel=n;const body=hrEmail(n);
+  queueOut({kind:'HR draft',audience:'HR',to:'HR office',address:'HR contact to be confirmed',subject:body.split('\n')[0].replace(/^Subject: /,''),body});
+  log('HR draft created','hr',String(n),'Draft '+n+' with '+cur.length+' assignments'+(auto?', made automatically on publish':''));return S.hr.drafts[S.hr.drafts.length-1];
+}
 const ACT={
-  reset(){initState();render();toast('Demo reset')},
+  reset(){const g=S.guide;initState();if(g)S.guide={step:0};render();toast('Demo reset')},
+  scenario(a,b,v){initState(v==='fresh'?'fresh':'mid');render();toast(SCN==='fresh'?'Spring 2027 from the start: nothing opened yet':'Fall 2026 in progress')},
   role(a,b,v){
     S.toTop=true;S.drawer=null;S.facCourse=null;S.bell=false;
-    if(v==='admin'){S.user={type:'admin'};S.tab='dashboard'}else{S.user={type:'faculty',fid:v.slice(4)};S.tab='courses'}
+    if(v==='admin'){S.user={type:'admin'};S.tab='dashboard'}else if(/^stu:/.test(v)){S.user={type:'student',app:v.slice(4)};S.tab='offer'}else{S.user={type:'faculty',fid:v.slice(4)};S.tab='courses'}
     render();
   },
+  /* guided demo */
+  guideOpen(){if(S.guide){S.guide.min=false;render();return}initState('fresh');S.guide={step:0};S.toTop=true;GUIDE[0].show();render();toast('Spring 2027, from the very start')},
+  guideClose(){S.guide=null;render()},
+  guideMin(){if(S.guide){S.guide.min=!S.guide.min;render()}},
+  guideGo(a){S.guide={step:Math.max(0,Math.min(GUIDE.length-1,+a)),msg:''};S.toTop=true;GUIDE[S.guide.step].show();render()},
+  guideNext(){ACT.guideGo(S.guide.step+1)},
+  guidePrev(){ACT.guideGo(S.guide.step-1)},
+  guideShow(){S.toTop=true;GUIDE[S.guide.step].show();render()},
+  guideDo(){const i=S.guide.step;let m='';try{m=guideRun(i)||''}catch(e){m='Could not finish: '+e.message}S.guide={step:i,msg:m};S.toTop=true;if(!/^Not ready|^Could not/.test(m)&&GUIDE[i].show&&i!==11)GUIDE[i].show();render()},
+  tipsOff(){S.tips=false;render()},
+  tipsOn(){S.tips=true;render()},
+  /* Nov 3 */
+  setAsk(a,b,v){const rk=S.rank[a];if(!canEdit(a))return;const e=rk.entries[b];if(!e)return;let x=parseFloat(v);if(!isFinite(x)||x<0)x=0;if(isUG(b))x=Math.min(UG_MAX,Math.round(x));else x=x>=1?1:x>=0.5?0.5:0;e.ask=Math.min(x,isUG(b)?UG_MAX:APP[b].max_assignment_fte);touch(a);render()},
+  facNote(a,b,v){if(!canEdit(a))return false;S.rank[a].note=v;touch(a);return false},
+  addLevel(a){S.addLevel=a;S.addQ='';render()},
+  addQ(a,b,v){S.addQ=v;FID='addQ';render()},
+  removeAsk(a){S.rmPick=a;render()},
+  removeCancel(){S.rmPick=null;render()},
+  removeDo(a){const why=($('#rmWhy')||{}).value||'other';S.rmPick=null;
+    if(why==='gra'){S.gra.add(a);S.graBack.delete(a);log('removed from pool','applicant',a,nm(a)+': has a GRA or other support (blue)')}
+    else{S.removed[a]={why,at:nowIso()};log('removed from pool','applicant',a,nm(a)+': '+(REMOVE_WHY.find(x=>x[0]===why)||['',''])[1])}
+    toast(short(a)+' removed from the pool');render()},
+  unremove(a){delete S.removed[a];log('added back to pool','applicant',a,nm(a));toast(short(a)+' is back in the pool');render()},
+  setRate(a,b,v){const x=parseFloat(v);if(!isFinite(x)||x<0){toast('Enter an amount of 0 or more');render();return}const was=S.rates.vals[a];S.rates.vals[a]=Math.round(x*100)/100;S.rates.setAt=nowIso();log('pay rate changed','rates',a,a+': '+money(was)+' to '+money(S.rates.vals[a]));render()},
+  raiseRates(){const p=parseFloat(($('#raisePct')||{}).value);if(!isFinite(p)){toast('Enter a percent');return}Object.keys(S.rates.vals).forEach(k=>{const v=S.rates.prev[k]!=null?S.rates.prev[k]:S.rates.vals[k];S.rates.vals[k]=k==='UGCA'?Math.round(v*(1+p/100)*4)/4:Math.round(v*(1+p/100)/10)*10});S.rates.setAt=nowIso();log('pay rates raised','rates','all',p+'% over '+S.rates.prevTerm);toast('Rates set to '+S.rates.prevTerm+' plus '+p+'%');render()},
+  histF(a,b,v){S.histF=v;render()},
+  histQ(a,b,v){S.histQ=v;FID='histQ';render()},
+  histImport(){const t=($('#histPaste')||{}).value||'';if(!t.trim()){toast('Paste rows first, or choose a file');return}S.histRole=($('#histRole')||{}).value||'UGCA';const r=importArchive([{name:'Pasted rows',rows:parseGrid(t)}],S.histRole,'paste');S.arch.msg='';toast(r.added+' rows added to the history');render()},
+  archiveTerm(){const n=archiveTerm();toast(n?n+' people from '+TERM.name+' added to the history':'Everyone is already in the history');render()},
+  training(a,b,v,el){if(el&&el.checked)S.training[a]=nowIso();else delete S.training[a];log(el&&el.checked?'UGCA training complete':'UGCA training cleared','applicant',a,nm(a));render()},
+  rosterF(a){S.rosterF=a;render()},
+  copyRoster(){copyText(rosterTsv(),$('#rosterBox'));return false},
+  trainEmail(){S.compose={one:null,who:'training',subject:TERM.name+' UGCA training',body:'Hello {name},\n\nWelcome to your first term as a UGCA. Before classes start, please complete the UGCA training: [training date and link].\n\nThank you,\nCS Graduate Office'};S.tab='applicants';S.toTop=true;render()},
+  hrCol(a,b,v,el){const on=new Set(S.hrCols);if(el&&el.checked)on.add(a);else on.delete(a);S.hrCols=HR_COLS.map(c=>c[0]).filter(k=>on.has(k));S.hrColsOpen=true;render()},
+  hrColsDefault(){S.hrCols=HR_DEFAULT.slice();S.hrColsOpen=true;render()},
+  autoHr(a,b,v,el){S.autoHr=!!(el&&el.checked);render()},
+  copyHrTsv(){const d=S.hr.drafts.find(x=>x.n===S.hrSel)||hrLatest();copyText(hrCsv(d.n,'\t'),$('#hrCsv'));return false},
+  stuAccept(a){const p=latestPub();if(!p||!p.respOpen)return;p.responses[a]={status:'confirmed',at:nowIso()};const app=a.split('|')[1];log('student accepted','publication',p.id,nm(app)+' accepted '+cname(a.split('|')[0])+' from the offer page');notify('admin',nm(app)+' accepted '+cname(a.split('|')[0])+'.',{tab:'students'});toast('Accepted. The office sees it now.');render()},
+  stuDecline(a){const p=latestPub();if(!p||!p.respOpen)return;p.responses[a]={status:'declined',at:nowIso()};const app=a.split('|')[1];log('student declined','publication',p.id,nm(app)+' declined '+cname(a.split('|')[0])+' from the offer page');notify('admin',nm(app)+' declined '+cname(a.split('|')[0])+'. Pick a backup.',{tab:'students'});toast('Declined. The office has been told.');render()},
   tab(a){S.toTop=true;S.tab=a;S.facCourse=null;render()},
   go(a,b){S.toTop=true;ACT.role(null,null,a);S.tab=b;render()},
   goCourse(a){S.toTop=true;if(S.user.type!=='admin'){ACT.role(null,null,'admin')}S.tab='assign';S.selCourse=a;S.drawer=null;render()},
@@ -1525,8 +1957,9 @@ const ACT={
     const m=validateRanking(a);S.facErrors[a]=m;
     if(m.length){render();return}
     const rk=S.rank[a];rk.status='submitted';rk.submittedAt=nowIso();rk.savedAt=rk.submittedAt;
-    log('staffing request submitted','ranking',a,cname(a)+' ranking submitted with '+rankedCount(a)+' candidates');
-    notify('admin',prof(a)+' submitted the '+cname(a)+' ranking.',{tab:'windows'});
+    const nreq=submitRequests(a);
+    log('staffing request submitted','ranking',a,cname(a)+' ranking submitted with '+rankedCount(a)+' candidates, '+nreq+' requested'+(rk.note?' · note: '+rk.note.slice(0,80):''));
+    notify('admin',prof(a)+' submitted the '+cname(a)+' ranking'+(nreq?' and requested '+nreq+(nreq>1?' people':' person'):'')+(rk.note?'. Note: "'+rk.note.slice(0,90)+'"':'')+'.',{tab:'assign',course:a});
     toast('Staffing request submitted');render();
   },
   reopen(a){
@@ -1539,7 +1972,7 @@ const ACT={
   notifAll(){S.notifs.filter(n=>n.to===me()).forEach(n=>{n.read=true});render()},
   notifGo(a){
     const n=S.notifs.find(x=>x.id===a);if(!n)return;n.read=true;S.bell=false;S.toTop=true;
-    if(n.go&&n.go.tab){S.tab=n.go.tab;S.facCourse=null}
+    if(n.go&&n.go.tab){S.tab=n.go.tab;S.facCourse=null;if(n.go.course)S.selCourse=n.go.course}
     if(n.go&&n.go.facTab){S.tab=n.go.facTab;S.facCourse=null}
     render();
   },
@@ -1621,10 +2054,8 @@ const ACT={
   txToggle(a){const x=S.tx[a]=S.tx[a]||{};x.checked=!x.checked;x.at=x.checked?nowIso():'';log('transcript check','applicant',a,nm(a)+(x.checked?' transcript checked':' transcript check cleared'));render()},
   tierOv(a,b,v){if(v)S.tierOv[a]=v;else delete S.tierOv[a];log('HR tier set','applicant',a,nm(a)+': '+tierOf(a).code);render()},
   createHr(){
-    const cur=hrRows(),last=hrLatest();
-    if(!hrDiff(cur,last.rows).some(r=>r.ch)){toast('Nothing changed since draft '+last.n);return}
-    const n=last.n+1;S.hr.drafts.push({n,at:nowIso(),by:ADMIN,rows:cur});S.hrSel=n;{const body=hrEmail(n);queueOut({kind:'HR draft',audience:'HR',to:'HR office',address:'HR contact to be confirmed',subject:body.split('\n')[0].replace(/^Subject: /,''),body})}
-    log('HR draft created','hr',String(n),'Draft '+n+' with '+cur.length+' assignments');toast('Draft '+n+' created. The email is in the Mail tab, not sent.');render();
+    const d=makeHrDraft(false);if(!d){toast(hrLatest().n?'Nothing changed since draft '+hrLatest().n:'Accept assignments first');return}
+    toast('Draft '+d.n+' created. The email is in the Mail tab, not sent.');render();
   },
   selHr(a){S.hrSel=parseInt(a,10);render()},
   copyHrCsv(){copyText(($('#hrCsv')||{}).value||'',$('#hrCsv'));return false},
@@ -1733,24 +2164,7 @@ const ACT={
   setOverride(a,b,v){S.overrides[a]=v;updateGate();return false},
   fillNotes(){gate().warns.filter(w=>w.gate&&!(S.overrides[w.key]||'').trim()).forEach(w=>{S.overrides[w.key]='Acknowledged. Will be filled after faculty review.'});render()},
   selPub(a){S.selPub=parseInt(a,10);S.confirmClone=null;render()},
-  publish(){
-    const g=gate();if(!g.ok)return;
-    const prev=latestPub(),v=prev?prev.version+1:1;
-    let n=S.pubs.reduce((m,p)=>m+p.rows.length,0);
-    const rows=g.accepted.map(r=>{
-      const notes=[S.overrides['pending:'+r.id],S.overrides['unranked:'+r.id],S.overrides['noranking:'+r.course]].filter(x=>x&&x.trim());
-      return normRow({id:'pub_asn_'+String(++n).padStart(3,'0'),course:r.course,app:r.app,fte:r.fte,hrs:r.hrs,role:r.role,note:notes.join(' ')});
-    });
-    const gaps={};SEED.courses.forEach(c=>{if(sum(rows.filter(r=>r.course===c.course_id).map(r=>r.fte))<c.ta_slots_required-1e-9)gaps[c.course_id]=S.overrides['unfilled:'+c.course_id]||''});
-    const pub={id:'pub_f26_v'+v,version:v,at:nowIso(),by:ADMIN,rows,gaps,notifiedAt:prev?prev.notifiedAt:null,replyBy:null,responses:{},respOpen:false};
-    if(prev)rows.forEach(r=>{const o=prev.responses[key(r)];if(o)pub.responses[key(r)]={...o}});
-    S.pubs.push(pub);
-    g.accepted.forEach(r=>{r.published=true});
-    S.concerns.forEach(c=>{if(c.status==='under_review'&&c.adjust){c.status='resolved_adjustment';c.resolved_at=pub.at;c.resolved_by_user_id='usr_admin_01';c.resolution_note=(c.resolution_note||'')+' Published in version '+v+'.';log('resolution recorded','concern',c.concern_id,'Resolved by adjustment in version '+v)}});
-    log('publication created','publication',pub.id,'Version '+v+' published with '+rows.length+' assignments');
-    [...new Set(rows.map(r=>COURSE[r.course].faculty_id))].forEach(fid=>notify('fac:'+fid,'Version '+v+' is published. See who is assigned to your course.',{facTab:'published'}));
-    S.selPub=v;toast('Version '+v+' published to faculty');render();
-  },
+  publish(){if(!gate().ok)return;publishNow();render()},
   cloneAsk(a){S.confirmClone=parseInt(a,10);render()},
   cloneCancel(){S.confirmClone=null;render()},
   cloneDo(a){
@@ -1839,11 +2253,20 @@ document.addEventListener('change',e=>{
   rd.onload=()=>{S.importDraft=String(rd.result||'');try{const r=importCourses(S.importDraft);S.importMsg='Imported '+r.rows+' rows from '+el.files[0].name+'.'}catch(err){S.importMsg='Could not import that file: '+err.message}render()};
   rd.readAsText(el.files[0]);
 });
+document.addEventListener('change',async e=>{
+  const el=e.target;if(!el||!/^(histFile|gradFile)$/.test(el.id)||!el.files||!el.files[0])return;
+  const file=el.files[0];
+  try{const sh=await readSheets(file);
+    if(el.id==='histFile'){S.histRole=($('#histRole')||{}).value||'UGCA';const r=importArchive(sh,S.histRole,file.name);S.arch.msg='Read '+file.name+'.';toast(r.added+' rows added to the history')}
+    else{const r=importGrad(sh);S.grad.msg='Read '+file.name+'.';toast(r.added+' graduate records loaded')}
+  }catch(err){if(el.id==='histFile')S.arch.msg='Could not read that file: '+err.message;else S.grad.msg='Could not read that file: '+err.message}
+  render();
+});
 document.addEventListener('submit',e=>{const f=e.target.closest('[data-ask]');if(!f)return;e.preventDefault();const i=f.querySelector('#askQ');runAsk(i?i.value:'')});
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!/input|textarea|select/i.test((document.activeElement||{}).tagName||'')){const i=$('#askQ');if(i){e.preventDefault();i.focus()}}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S&&(S.drawer||S.bell)){S.drawer=null;S.bell=false;render()}});
 
-window.__ta={askLocal,ASK,runAsk,loadFeed,refreshFeed,importCourses,sampleCourseCsv,resumeOf,composeTargets,sizeTxt,FL,isCommit,live:()=>LIVE,lg:()=>LG,state:()=>S,trackRows,trackCsv,hrRows,hrDiff,hrCsv,hrEmail,tierOf,audOk,ACT,computeIssues,gate,backupsFor,validateRanking,needsHome,render};
+window.__ta={importArchive,importGrad,normSem,isReturner,needsTraining,intlOf,genderOf,rosterTsv,payTxt,GUIDE,askLocal,ASK,runAsk,loadFeed,refreshFeed,importCourses,sampleCourseCsv,resumeOf,composeTargets,sizeTxt,FL,isCommit,live:()=>LIVE,lg:()=>LG,state:()=>S,trackRows,trackCsv,hrRows,hrDiff,hrCsv,hrEmail,tierOf,audOk,ACT,computeIssues,gate,backupsFor,validateRanking,needsHome,render};
 initState();render();
 })();
 </script>

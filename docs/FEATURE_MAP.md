@@ -59,6 +59,25 @@ Process order, with the transition points between processes marked. "Lives in" s
 | 38 | Role switcher and privacy boundary | Tool | None | UT sign-in | Fake |
 | 39 | Walkthrough and reset | Demo | Demo only | None | Demo only |
 
+## Added Nov 7 (v6, from the Nov 3 meeting and Doug's Nov 6 email)
+
+| Feature | Lives in | Outside integration | Demo status |
+|---|---|---|---|
+| Graduate / Undergraduate lists when adding a person | Tool | None | Works |
+| Professor request size (FT / HT / hours) and note to the office | Tool | None | Works; submit creates requested rows |
+| History of past UGCAs and TAs (import Excel, CSV or paste; add the term) | Tool (encrypted DB later) | Doug's spreadsheet; later the database | Works, in memory |
+| New / returning by EID; training needed and complete | Tool | History | Works |
+| Pay rates per term by tier, incl. AI; auto returning tier | Tool | Real rates from Doug each year | Works, placeholder amounts |
+| Graduate records (gender, international) for HR | Tool (office only) | Grad office list | Works on import |
+| HR draft columns chooser, Copy for Excel, auto draft on publish | Tool | HR's column list (to confirm) | Works, email mock |
+| UGCA roster (replaces the UGCA spreadsheet) | Tool | None | Works |
+| Student offer page (accept / decline) | Tool | UT EID sign-in | Works as "View as student" |
+| Remove from pool with a reason | Tool (office note) | Legacy removal stays official | Works |
+| Guided demo, two scenarios, numbered tabs, page tips | Demo | None | Works |
+| Applicant↔course linking report in the legacy pull | Pull | Real pages | Works on the mock site |
+
+Still needed from Doug: the column headers of tab 1 (Fall 26 UGCAs), tab 3 (grad TAs with HR info) and tab 4 (enrolled grad students). The Nov 6 file had only the past-UGCA tabs, so the roster and HR columns follow the meeting and can be changed in one place (`HR_COLS`, `rosterTsv`).
+
 ## Added Oct 21 (v5, from the Oct 14 walkthrough)
 
 - **Appointment size:** UGCA hours per week (1 to 20, any number; 15 = one full UGCA). TA and AI full-time or half-time. Course need = TA FTE + AI FTE + UGCA hours. HR spreadsheet gains `size` and `hours_per_week`.

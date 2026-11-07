@@ -99,7 +99,7 @@ function taDetail(html) {
   const kk = (...ks) => { for (const k of ks) { const x = find(k); if (x) return txt(x); } return ''; };
   return {
     commitSupport: grab(/Commitment of support:\s*(.*?)\s*Requested by:/), requestedBy: grab(/Requested by:\s*(.*?)\s*Currently Assigned/),
-    eid: hm ? hm[1] : '', email, phone: txt('phone number'), ssn: txt('ssn'), nativeEnglish: txt('native english speaker'), english: txt('english assessment results'),
+    eid: hm ? hm[1] : '', email, phone: txt('phone number'), nativeEnglish: txt('native english speaker'), english: txt('english assessment results'),
     supervisor: txt('supervising prof').replace(/^Prof\.?\s*/i, ''), major: txt('major field'), admitted: txt('grad school admission'), degrees: txt('degrees held'),
     citizenship: txt('citizenship status'), gra: txt('gra'), hist, gainTeaching: kk('are you looking to gain'), teaching: txt('teaching experience'),
     supportive: kk('briefly explain'), challenges: kk('describe any past'), langs, research: lis(f['reseach'] || f['research']),
@@ -125,7 +125,7 @@ function ugcaModal(html) {
   return {
     eid: hm ? hm[1] : '', phone: t('phone'), email: f.email ? clean(f.email.find('a').text() || f.email.text()) : '', major: t('major'), grad: t('expected graduation'),
     experience: t('experience'), supportive: t('what a supportive learning environment means to you'), challenges: t('challenges faced by cs students'),
-    courses: lines('highest cs courses'), requests: reqs,
+    courses: lines('highest cs courses'), requests: reqs, requestsRaw: lines('requested courses to proctor'),
     resume: resume ? resume.replace(/^https?:\/\/[^/]+/, '').replace(/^.*?index\.php/, '') : '' // path only; the file itself is not downloaded
   };
 }

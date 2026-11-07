@@ -92,7 +92,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ['dashboard', 'windows', 'assign', 'applicants', 'publish', 'hr', 'students', 'concerns', 'mail', 'setup', 'audit'].forEach(t => { A.tab(t); ok(main().length > 20, 'live tab renders: ' + t); });
   const st = S();
   ok(st.hr.drafts.length === 1 && st.hr.drafts[0].n === 15 && st.hr.drafts[0].rows.length === 78, 'HR draft 15 is the legacy baseline');
-  A.tab('hr'); ok(/new_return/.test(w.document.getElementById('hrCsv').value), 'HR spreadsheet has the New/Return, Degree, AI, GPA columns');
+  A.tab('hr'); ok(/New \/ return/.test(w.document.getElementById('hrCsv').value)&&/Degree \(legacy\)/.test(w.document.getElementById('hrCsv').value)&&/GPA/.test(w.document.getElementById('hrCsv').value), 'HR spreadsheet has the New/Return, Degree, AI, GPA columns');
   ok(st.pubs.length === 0 && st.draft.rows.length === 78, 'no publications; 78 legacy assignments are the working draft');
   { const sm = p.applications.find(x => x.self_degree === 'Masters'); A.drawer(sm.application_id, null);
     ok(/Applied as Master's/.test(w.document.querySelector('#drawer').textContent) && /Commitment student/.test(w.document.querySelector('#drawer').textContent), 'live card shows the commitment override'); A.closeDrawer();
