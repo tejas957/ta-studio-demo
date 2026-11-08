@@ -5,7 +5,7 @@ A clickable, single-file demo of the TA scheduling workflow for the CS office. O
 **Synthetic data only.** Applicants are fictional aliases from the small dataset in `data/seed.json` (from `ta-scheduler-mvp-dataset`). No PID, SSN or real student information. The demo EIDs (like `ce4103`) are made up so the EID-based GRA check can be tried.
 
 ## Presenting (Nov 10, CS department and IT)
-Press **Start the guided demo** in the orange bar. It runs Spring 2027 from the very start on the synthetic set, 13 steps, each with **Show me** and **Do it for me**. See `docs/TUESDAY_RUN_SHEET.md` for the talk track and `docs/PRODUCTION_PLAN.md` for what IT is being asked for.
+Press **Start the guided demo** in the orange bar. It opens a **quick demo** (6 steps, about a minute) of Spring 2027 on the synthetic set; the **full tour** (13 steps, from setup to what IT needs) is one click away in the panel. Every step has **Show me** and **Do it for me**. See `docs/TUESDAY_RUN_SHEET.md` for the talk track and `docs/PRODUCTION_PLAN.md` for what IT is being asked for.
 
 ## New in v6 (from the Nov 3 meeting and Doug's Nov 6 email)
 - **Two scenarios** (orange bar): *Spring 2027 from the start* (nothing opened yet, for the start-to-finish run) and *Fall 2026 in progress* (the earlier demo state; the tests use it).

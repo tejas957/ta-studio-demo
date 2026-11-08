@@ -900,7 +900,7 @@ function header(){
 /* The burnt-orange band from the legacy app. It carries the data source, the "View as" switch and Reset (where the legacy app has Logout). */
 function band(){
   const sel=me(),lp=latestPub(),stus=lp?[...new Set(lp.rows.map(r=>r.app))]:[];
-  return '<div class="uband"><div class="in gut">'+(LIVE?'':'<button class="bandbtn strong" data-act="guideOpen">'+(S.guide?'Guided demo: step '+(S.guide.step+1)+' of '+GUIDE.length:'Start the guided demo')+'</button><label for="scnSel">Scenario <select data-chg="scenario" id="scnSel">'+opt('fresh','Spring 2027 from the start',SCN)+opt('mid','Fall 2026 in progress',SCN)+'</select></label>')+'<span class="src">'+(LIVE?'From the legacy app · read only':'Synthetic demo data')+'</span>'+
+  return '<div class="uband"><div class="in gut">'+(LIVE?'':'<button class="bandbtn strong" data-act="guideOpen">'+(S.guide?(S.guide.track==='full'?'Full tour':'Quick demo')+': step '+(S.guide.step+1)+' of '+gList().length:'Start the guided demo')+'</button><label for="scnSel">Scenario <select data-chg="scenario" id="scnSel">'+opt('fresh','Spring 2027 from the start',SCN)+opt('mid','Fall 2026 in progress',SCN)+'</select></label>')+'<span class="src">'+(LIVE?'From the legacy app · read only':'Synthetic demo data')+'</span>'+
     '<label for="roleSel">View as <select data-chg="role" id="roleSel"><optgroup label="Office">'+opt('admin',ADMIN+' (admin)',sel)+'</optgroup><optgroup label="Professors">'+SEED.faculty.map(x=>opt('fac:'+x.faculty_id,x.display_name,sel)).join('')+'</optgroup>'+(stus.length?'<optgroup label="Students with a published offer">'+stus.map(a=>opt('stu:'+a,nm(a),sel)).join('')+'</optgroup>':'')+'</select></label>'+
     '<button class="bandbtn" data-act="reset">'+(LIVE?'Reset my changes':'Reset demo')+'</button></div></div>';
 }
@@ -1767,7 +1767,7 @@ const GUIDE=[
  {t:'Open the ranking windows',from:'',say:'One click opens every professor\'s window and drafts their email. Until a window is open, that professor cannot rank. The status column says exactly where each professor is.',
   show(){gAdmin();S.tab='windows'},do(){const t=trackRows().filter(r=>r.st==='Not opened');t.forEach(r=>openWindow(r.fid,gDue(),''));return t.length+' windows opened'},done:()=>!trackRows().some(r=>r.st==='Not opened')},
  {t:'A professor ranks',from:'"I\'ll give a student a 50% GRA and they can be a half-time TA, and another one the same."',say:'This is what J Biswas sees: only the students who chose the course, ranked in order. For each one the professor says what they want (full-time, half-time, or hours for an undergraduate), adds a note for the office, and submits. Undergraduates can be requested here too, instead of by email.',
-  show(){S.user={type:'faculty',fid:'fac_j_biswas'};S.tab='courses';S.facCourse='crs_f26_003';S.drawer=null},
+  show(){if(GUIDE[3].do&&!GUIDE[3].done())GUIDE[3].do();S.user={type:'faculty',fid:'fac_j_biswas'};S.tab='courses';S.facCourse='crs_f26_003';S.drawer=null},
   do(){let n=0;Object.entries(GUIDE_RANKS).forEach(([cid,g])=>{const rk=S.rank[cid];if(rk.status==='submitted')return;rk.entries={};g.list.forEach(([a,ask,rec,cm],i)=>{rk.entries[a]={rank:i+1,rec,comment:cm,ask}});rk.note=g.note;rk.status='submitted';rk.submittedAt=nowIso();rk.savedAt=rk.submittedAt;const q=submitRequests(cid);n++;
     const who=prof(cid);S.audit.unshift({ts:rk.submittedAt,actor:who,action:'staffing request submitted',entity:'ranking',id:cid,summary:cname(cid)+' ranking submitted, '+q+' requested'+(g.note?' · note: '+g.note:'')});notify('admin',who+' submitted the '+cname(cid)+' ranking and requested '+q+(q>1?' people':' person')+(g.note?'. Note: "'+g.note+'"':'')+'.',{tab:'assign',course:cid})});return n+' rankings submitted'},
   done:()=>Object.keys(GUIDE_RANKS).every(c=>S.rank[c].status==='submitted')},
@@ -1778,7 +1778,7 @@ const GUIDE=[
  {t:'Offers go to students',from:'"You\'ve been selected for a UGCA position. Please accept or decline by this date, with the contract."',say:'Open the reply window and send the offers. Each email has the class, the appointment, the pay and a link to accept or decline. They all sit in the Mail tab, since the demo sends nothing.',
   show(){gAdmin();S.tab='students'},do(){const p=latestPub();p.respOpen=true;p.replyBy=S.replyBy;ACT.notify();return 'Offers queued'},done:()=>{const p=latestPub();return !!p&&p.rows.every(r=>respOf(p,r).status!=='not_notified')}},
  {t:'A student answers',from:'"And when they accept or decline, does it show me?"',say:'This is the page Grove, a new UGCA, opens from the email. Accepting lands straight in the Students tab and the UGCA roster. In this step everyone else answers too, and Ember declines 311H.',
-  show(){const p=latestPub();if(p&&p.rows.some(r=>r.app==='app_f26_0007')){S.user={type:'student',app:'app_f26_0007'};S.tab='offer'}else{gAdmin();S.tab='students'}},
+  show(){let p=latestPub();if(p&&!GUIDE[7].done()){GUIDE[7].do();p=latestPub()}if(p&&p.rows.some(r=>r.app==='app_f26_0007')){S.user={type:'student',app:'app_f26_0007'};S.tab='offer'}else{gAdmin();S.tab='students'}},
   do(){const p=latestPub();let n=0;p.rows.forEach(r=>{const k=key(r),st=respOf(p,r).status;if(st==='confirmed'||st==='declined')return;p.responses[k]={status:r.app==='app_f26_0005'&&r.course==='crs_f26_005'?'declined':'confirmed',at:nowIso()};n++});log('student replies received','publication',p.id,n+' replies (guided demo)');notify('admin','Candidate Ember declined '+cname('crs_f26_005')+'.',{tab:'students'});gAdmin();S.tab='students';return n+' replies in'},
   done:()=>{const p=latestPub();return !!p&&p.rows.some(r=>respOf(p,r).status==='declined')}},
  {t:'Replace and publish again',from:'',say:'Under a decline, the professor\'s next backup is listed with anything that rules them out. Using Delta creates version 2, and HR draft 2 shows exactly what changed: Ember removed, Delta added.',
@@ -1791,14 +1791,19 @@ const GUIDE=[
  {t:'What it needs to go live',from:'',say:'The demo runs on made-up data and sends nothing. To run it for real: (1) read access to the TA app\'s data (a database view or a small API) instead of reading its pages; (2) a place to host it, such as a department server; (3) UT EID sign-in for the office, professors and students; (4) an email account it may send from; (5) an encrypted database for the history and the term\'s work; (6) a decision on who may see citizenship, international status and gender.',
   show(){gAdmin();S.tab='dashboard'}}
 ];
+/* Nov 8: the presentation is about 3 minutes, so the default is a quick track of the six moments that matter
+   (about a minute live). The full 13-step tour is one click away. */
+const GUIDE_QUICK=[4,5,6,10,8,11];
+const gList=()=>S.guide&&S.guide.track==='full'?GUIDE.map((_,i)=>i):GUIDE_QUICK;
+const gIdx=()=>gList()[S.guide.step];
 function guideHtml(){
-  if(!S.guide||LIVE)return '';const i=S.guide.step,g=GUIDE[i],done=g.done?g.done():false;
-  if(S.guide.min)return '<div class="gpanel min" role="region" aria-label="Guided demo"><button class="btn sm primary" data-act="guideMin">Guided demo · step '+(i+1)+' of '+GUIDE.length+': '+esc(g.t)+'</button></div>';
-  return '<div class="gpanel" role="region" aria-label="Guided demo"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="eyebrow">Guided demo · step '+(i+1)+' of '+GUIDE.length+'</span><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="guideMin" aria-label="Minimize">–</button><button class="btn sm" data-act="guideClose" aria-label="Close guided demo">×</button></span></div>'+
-   '<div class="gdots" aria-hidden="true">'+GUIDE.map((x,j)=>'<button class="gdot'+(j===i?' on':'')+((x.done?x.done():j<i)?' ok':'')+'" data-act="guideGo" data-a="'+j+'" tabindex="-1" title="'+esc(x.t)+'"></button>').join('')+'</div>'+
+  if(!S.guide||LIVE)return '';const L=gList(),i=S.guide.step,g=GUIDE[L[i]],done=g.done?g.done():false,full=S.guide.track==='full';
+  if(S.guide.min)return '<div class="gpanel min" role="region" aria-label="Guided demo"><button class="btn sm primary" data-act="guideMin">'+(full?'Full tour':'Quick demo')+' · step '+(i+1)+' of '+L.length+': '+esc(g.t)+'</button></div>';
+  return '<div class="gpanel" role="region" aria-label="Guided demo"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="eyebrow">'+(full?'Full tour':'Quick demo')+' · step '+(i+1)+' of '+L.length+'</span><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm" data-act="guideMin" aria-label="Minimize">–</button><button class="btn sm" data-act="guideClose" aria-label="Close guided demo">×</button></span></div>'+
+   '<div class="gdots" aria-hidden="true">'+L.map((n,j)=>{const x=GUIDE[n];return '<button class="gdot'+(j===i?' on':'')+((x.done?x.done():j<i)?' ok':'')+'" data-act="guideGo" data-a="'+j+'" tabindex="-1" title="'+esc(x.t)+'"></button>'}).join('')+'</div>'+
    '<h3 style="margin:6px 0 6px">'+esc(g.t)+(done&&g.do?' '+chip('Done','ok'):'')+'</h3>'+(g.from?'<div class="gquote">'+esc(g.from)+'</div>':'')+'<p class="gsay">'+esc(g.say)+'</p>'+
    (S.guide.msg?'<div class="small" style="margin-top:6px"><b>'+esc(S.guide.msg)+'</b></div>':'')+
-   '<div class="row" style="margin-top:10px;gap:6px"><button class="btn sm" data-act="guideShow">Show me</button>'+(g.do?'<button class="btn sm primary" data-act="guideDo"'+(done?' disabled':'')+'>'+(done?'Done':'Do it for me')+'</button>':'')+'<span style="flex:1"></span><button class="btn sm" data-act="guidePrev"'+(i?'':' disabled')+'>Back</button><button class="btn sm primary" data-act="guideNext"'+(i<GUIDE.length-1?'':' disabled')+'>Next</button></div></div>';
+   '<div class="row" style="margin-top:10px;gap:6px"><button class="btn sm" data-act="guideShow">Show me</button>'+(g.do?'<button class="btn sm primary" data-act="guideDo"'+(done?' disabled':'')+'>'+(done?'Done':'Do it for me')+'</button>':'')+'<span style="flex:1"></span><button class="btn sm" data-act="guidePrev"'+(i?'':' disabled')+'>Back</button><button class="btn sm primary" data-act="guideNext"'+(i<L.length-1?'':' disabled')+'>Next</button></div><div class="small" style="margin-top:8px"><button class="link small" data-act="guideTrack" data-a="'+(full?'quick':'full')+'">'+(full?'Switch to the quick demo (6 steps, about a minute)':'Switch to the full tour (13 steps)')+'</button></div></div>';
 }
 function guideCard(){
   if(S.guide)return '';
@@ -1861,7 +1866,7 @@ function makeHrDraft(auto){
   log('HR draft created','hr',String(n),'Draft '+n+' with '+cur.length+' assignments'+(auto?', made automatically on publish':''));return S.hr.drafts[S.hr.drafts.length-1];
 }
 const ACT={
-  reset(){const g=S.guide;initState();if(g)S.guide={step:0};render();toast('Demo reset')},
+  reset(){const g=S.guide;initState();if(g)S.guide={step:0,track:g.track};render();toast('Demo reset')},
   scenario(a,b,v){initState(v==='fresh'?'fresh':'mid');render();toast(SCN==='fresh'?'Spring 2027 from the start: nothing opened yet':'Fall 2026 in progress')},
   role(a,b,v){
     S.toTop=true;S.drawer=null;S.facCourse=null;S.bell=false;
@@ -1869,14 +1874,15 @@ const ACT={
     render();
   },
   /* guided demo */
-  guideOpen(){if(S.guide){S.guide.min=false;render();return}initState('fresh');S.guide={step:0};S.toTop=true;GUIDE[0].show();render();toast('Spring 2027, from the very start')},
+  guideOpen(){if(S.guide){S.guide.min=false;render();return}initState('fresh');S.guide={step:0,track:'quick'};S.toTop=true;GUIDE[gIdx()].show();render();toast('Spring 2027, from the very start')},
+  guideTrack(a){const t=a==='full'?'full':'quick',cur=S.guide?gIdx():0,L=t==='full'?GUIDE.map((_,i)=>i):GUIDE_QUICK;let j=L.indexOf(cur);if(j<0)j=Math.max(0,L.findIndex(n=>n>cur));S.guide={step:j,track:t,msg:''};S.toTop=true;GUIDE[L[j]].show();render()},
   guideClose(){S.guide=null;render()},
   guideMin(){if(S.guide){S.guide.min=!S.guide.min;render()}},
-  guideGo(a){S.guide={step:Math.max(0,Math.min(GUIDE.length-1,+a)),msg:''};S.toTop=true;GUIDE[S.guide.step].show();render()},
+  guideGo(a){const t=S.guide?S.guide.track:'quick';S.guide={step:0,track:t,msg:''};S.guide.step=Math.max(0,Math.min(gList().length-1,+a));S.toTop=true;GUIDE[gIdx()].show();render()},
   guideNext(){ACT.guideGo(S.guide.step+1)},
   guidePrev(){ACT.guideGo(S.guide.step-1)},
-  guideShow(){S.toTop=true;GUIDE[S.guide.step].show();render()},
-  guideDo(){const i=S.guide.step;let m='';try{m=guideRun(i)||''}catch(e){m='Could not finish: '+e.message}S.guide={step:i,msg:m};S.toTop=true;if(!/^Not ready|^Could not/.test(m)&&GUIDE[i].show&&i!==11)GUIDE[i].show();render()},
+  guideShow(){S.toTop=true;GUIDE[gIdx()].show();render()},
+  guideDo(){const st=S.guide.step,t=S.guide.track,i=gIdx();let m='';try{m=guideRun(i)||''}catch(e){m='Could not finish: '+e.message}S.guide={step:st,track:t,msg:m};S.toTop=true;if(!/^Not ready|^Could not/.test(m)&&GUIDE[i].show&&i!==11)GUIDE[i].show();render()},
   tipsOff(){S.tips=false;render()},
   tipsOn(){S.tips=true;render()},
   /* Nov 3 */

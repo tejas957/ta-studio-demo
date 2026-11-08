@@ -54,7 +54,17 @@ A.tipsOff();ok(!w.document.querySelector('.tip'),'tips can be hidden');A.tipsOn(
 // ---- fresh scenario, start to finish through the guided demo ----
 A.guideOpen();
 ok(S().scn==='fresh'&&/Spring 2027/.test(txt())&&S().pubs.length===0&&S().draft.rows.length===0&&S().hr.drafts.length===0,'guided demo starts Spring 2027 from nothing');
-ok(/step 1 of 13/i.test(G()),'guide panel shows step 1');
+ok(/Quick demo · step 1 of 6/i.test(G())&&S().user.fid==='fac_j_biswas'&&S().win.fac_j_biswas.state==='open','quick demo opens on the professor ranking (windows opened for it)');
+// quick track, the 3-minute presentation path
+A.guideDo();ok(S().rank.crs_f26_003.status==='submitted','quick 1: rankings submitted');
+A.guideNext();A.guideDo();ok(!S().draft.rows.some(r=>r.decision==='requested'),'quick 2: office accepted');
+A.guideNext();A.guideDo();ok(S().pubs.length===1&&S().hr.drafts.length===1,'quick 3: published, HR draft made');
+A.guideNext();ok(S().tab==='hr'&&/Draft 1/.test(M()),'quick 4: HR draft shown');
+A.guideNext();ok(S().user.type==='student'&&/Accept this position/.test(M()),'quick 5: student page, offers already sent');
+A.stuAccept('crs_f26_001|app_f26_0007');A.guideNext();ok(S().tab==='ugca'&&/Y · confirmed/.test(M())&&/needs training/i.test(M()),'quick 6: roster shows the confirmation and training');
+ok(/step 6 of 6/.test(G()),'quick track has 6 steps');
+A.guideTrack('full');ok(/Full tour · step 12 of 13/.test(G()),'switch to full tour keeps the place');
+A.reset();A.guideTrack('full');A.guideGo(0);ok(/step 1 of 13/i.test(G())&&S().pubs.length===0,'full tour from a reset');
 ['dashboard','setup','applicants','windows','assign','publish','students','hr','ugca','history','mail','concerns','audit'].forEach(t=>{A.tab(t);ok(M().length>100,'fresh renders: '+t)});
 ok(T.tierOf('app_f26_0002').code==='Masters 1 (returning)','Birch TA\'d in Fall 2026, so is a returning master\'s in Spring 2027');
 ok(T.tierOf('app_f26_0008').code==='Masters 2','Harbor is a first-time master\'s');
