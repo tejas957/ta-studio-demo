@@ -72,12 +72,23 @@ function applicants(html) {
   return out;
 }
 
-/* ----- TA applicant page ----- */
+/* ----- TA applicant page -----
+   Nov 9, from the real dump: /admin/applicant/{id} holds only <div id="record" data-id="{id}">Loading...</div>. The
+   application itself (contact, history, research, REQUESTED CLASSES) is loaded by admin.js from /ajax/ta_record/{id}.
+   Reading only the page is why no applicant was linked to a course. recordId() finds the id; mergeRecord() puts the
+   record back where admin.js would, so taDetail() reads the page as a browser shows it. */
+function recordId(html) { const m = String(html || '').match(/id="record"[^>]*data-id="(\d+)"|data-id="(\d+)"[^>]*id="record"/); return m ? +(m[1] || m[2]) : null; }
+function recordLoaded(html) { return /id="record"[^>]*>\s*<div class="record"/.test(String(html || '')) || (/class="record"/.test(String(html || '')) && !/id="record"[^>]*>\s*Loading/i.test(String(html || ''))); }
+function mergeRecord(page, record) {
+  const $r = cheerio.load(String(record || '')), rec = $r('.record').first();
+  const inner = rec.length ? $r.html(rec) : String(record || '');
+  return String(page).replace(/(<div[^>]*id="record"[^>]*>)[\s\S]*?(<\/div>)/, (m, open) => open + inner + '</div>');
+}
 function taDetail(html) {
   const $ = cheerio.load(html);
   const top = clean($('.row').first().text());
   const grab = (re) => { const m = top.match(re); return m ? clean(m[1]) : ''; };
-  const rec = $('#record');
+  const rec = $('#record').length ? $('#record') : $('.record').first().parent();
   const f = {};
   rec.find('> .record > table > tbody > tr, #record table:first-of-type > tbody > tr').each((_, tr) => {
     const th = $(tr).children('th').first(), td = $(tr).children('td').first();
@@ -111,7 +122,7 @@ function taDetail(html) {
 function ugcaModal(html) {
   const $ = cheerio.load(html);
   const f = {};
-  $('.modal-body p').each((_, p) => {
+  ($('.modal-body p').length ? $('.modal-body p') : $('p')).each((_, p) => {
     const st = $(p).find('strong').first(); if (!st.length) return;
     const k = clean(st.text()).replace(/:$/, '').toLowerCase();
     const clone = $(p).clone(); clone.find('strong').remove();
@@ -119,7 +130,7 @@ function ugcaModal(html) {
   });
   const t = k => f[k] ? clean(f[k].text()) : '';
   const lines = k => f[k] ? (f[k].html() || '').split(/<br\s*\/?>/i).map(x => clean(cheerio.load('<p>' + x + '</p>').text())).filter(Boolean) : [];
-  const head = clean($('.modal-title').first().text()), hm = head.match(/\(([^)]+)\)\s*$/);
+  const head = clean($('.modal-title').first().text() || $('.page-header').first().text()), hm = head.match(/\(([^)]+)\)\s*$/);
   const reqs = lines('requested courses to proctor').map(l => { const m = l.match(/^(\d+)\s*-/); return m ? +m[1] : null; }).filter(Boolean);
   const resume = f.resume ? (f.resume.find('a').attr('href') || '') : '';
   return {
@@ -211,4 +222,4 @@ function profile(html) {
   return { email };
 }
 
-module.exports = { classes, applicants, taDetail, ugcaModal, commitments, course, drafts, notify, people, profile, clean };
+module.exports = { recordId, recordLoaded, mergeRecord, classes, applicants, taDetail, ugcaModal, commitments, course, drafts, notify, people, profile, clean };

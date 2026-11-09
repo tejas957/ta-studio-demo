@@ -26,19 +26,22 @@ function start(opts = {}) {
     const pm = p.match(/^\/people\/faculty-researchers\/([a-z-]+)$/);
     if (pm) { const f = db.faculty.find(x => x.slug === pm[1]); return f ? send(200, 'text/html', pages.profilePage(f)) : send(404, 'text/html', 'not found'); }
     if (p === B + '/login') return send(200, 'text/html', pages.loginPage());
-    if (!p.startsWith(B + '/admin')) return send(404, 'text/html', 'not found');
+    if (!p.startsWith(B + '/admin') && !p.startsWith(B + '/ajax')) return send(404, 'text/html', 'not found');
     if (!opts.noAuth && !(req.headers.cookie || '').includes(COOKIE)) { stats.loginRedirects++; res.writeHead(302, { Location: origin + B + '/login' }); return res.end(); }
+    // The real app loads the TA record and the UGCA pop-up from /ajax/... (seen in its admin.js and app.js, Nov 9).
+    let am;
+    if ((am = p.match(/\/ajax\/ta_record\/(\d+)$/))) { const t = pages.taAll().find(x => x.id === +am[1]); return t ? send(200, 'text/html', pages.taDetail(t).record) : send(404, 'text/html', 'no'); }
+    if ((am = p.match(/\/ajax\/proctor_record\/(\d+)$/))) { const x = db.ugca.find(y => y.id === +am[1]); return x ? send(200, 'text/html', pages.ugcaModal(x)) : send(404, 'text/html', 'no'); }
     const a = p.slice((B + '/admin').length);
     let m;
     if (a === '/classes') return send(200, 'text/html', pages.classesPage());
     if (a === '/applicants') return send(200, 'text/html', pages.applicantsPage());
-    if ((m = a.match(/^\/applicant\/(\d+)$/))) { const t = pages.taAll().find(x => x.id === +m[1]); return t ? send(200, 'text/html', pages.taDetail(t)) : send(404, 'text/html', 'no'); }
-    if ((m = a.match(/^\/proctor_applicant\/(\d+)$/))) { const x = db.ugca.find(y => y.id === +m[1]); return x ? send(200, 'text/html', pages.ugcaModal(x)) : send(404, 'text/html', 'no'); }
+    if ((m = a.match(/^\/applicant\/(\d+)$/))) { const t = pages.taAll().find(x => x.id === +m[1]); return t ? send(200, 'text/html', pages.taDetail(t).page) : send(404, 'text/html', 'no'); }
     if ((m = a.match(/^\/course\/(\d+)$/))) { const c = db.classes.find(y => y.id === +m[1]); return c ? send(200, 'text/html', pages.coursePage(c)) : send(404, 'text/html', 'no'); }
     if (a === '/assignments') return send(200, 'text/html', pages.assignmentsPage(+u.searchParams.get('draft') || undefined));
     if (a === '/assignments/download') return send(200, 'text/csv', pages.draftCsv(+u.searchParams.get('draft') || db.draftNo));
     if (a === '/assignment_notify') return send(200, 'text/html', pages.notifyPage());
-    if (a === '/commitment_students') return send(200, 'text/html', pages.commitmentPage());
+    if (a === '/commitment_students' || a === '/commitments') return send(200, 'text/html', pages.commitmentPage());
     return send(404, 'text/html', 'not found');
   });
   return new Promise(resolve => server.listen(opts.port || 0, '127.0.0.1', () => {

@@ -26,7 +26,7 @@ async function sync(opt = {}) {
   const base = opt.base || routes.base, peopleBase = opt.peopleBase || routes.peopleBase;
   const D = opt.dump ? opt.dump.pages || {} : null;
   const R = D ? { ...routes, classes: D['@classes'] ? [D['@classes']] : routes.classes, applicants: D['@applicants'] ? [D['@applicants']] : routes.applicants,
-    ugcaModal: id => (D['@ugcaModal'] || '/admin/proctor_applicant/') + id, commitments: D['@commitments'] || routes.commitments } : routes;
+    ugcaModal: id => (D['@ugcaModal'] || '/ajax/proctor_record/') + id, commitments: D['@commitments'] || routes.commitments } : routes;
   if (D) opt.only = opt.only || 'courses,applicants';
   const c = D ? dumpClient(opt.dump) : client({ base, peopleBase, cookie: opt.cookie || process.env.LEGACY_COOKIE || '', delayMs: opt.delayMs == null ? 250 : opt.delayMs, log: opt.log || (() => {}) });
   const L = p => c.legacy(p);
@@ -45,16 +45,25 @@ async function sync(opt = {}) {
   warnings.push(...applicants.warnings);
 
   const taDetails = {}, ugcaDetails = {};
-  let i = 0;
+  let i = 0, noRecord = 0;
   for (const a of applicants.ta) {
     prog('TA applicant ' + (++i) + '/' + applicants.ta.length);
-    try { taDetails[a.id] = parse.taDetail(await c.get(L(R.applicant(a.id)))); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('TA applicant ' + a.id + ': ' + e.message); }
+    try {
+      let page = await c.get(L(R.applicant(a.id)));
+      if (!parse.recordLoaded(page)) {
+        const rid = parse.recordId(page) || a.id;
+        try { page = parse.mergeRecord(page, await c.get(L(R.taRecord(rid)))); }
+        catch (e) { if (e instanceof AuthError) throw e; noRecord++; warnings.push('TA applicant ' + a.id + ': application not read from ' + R.taRecord(rid) + ' (' + e.message + '), so their requested classes are missing'); }
+      }
+      taDetails[a.id] = parse.taDetail(page);
+    } catch (e) { if (e instanceof AuthError) throw e; warnings.push('TA applicant ' + a.id + ': ' + e.message); }
   }
   i = 0;
   for (const u of applicants.ugca) {
     prog('UGCA applicant ' + (++i) + '/' + applicants.ugca.length);
     try { ugcaDetails[u.id] = parse.ugcaModal(await c.get(L(R.ugcaModal(u.id)))); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('UGCA applicant ' + u.id + ': ' + e.message); }
   }
+  if (noRecord && D) warnings.unshift(noRecord + ' TA applications are not in this dump (it was made before Nov 9, when the pull learned to read /ajax/ta_record). Run the browser pull again.');
   let notify = null, drafts = null, commitments = null;
   prog('commitment students');
   try { commitments = parse.commitments(await c.get(L(R.commitments))); if (!commitments) warnings.push('Commitment students page has no table with EID and expiry; the yellow row color is used instead.'); } catch (e) { if (e instanceof AuthError) throw e; warnings.push('Commitment students page not read (' + e.message + '); the yellow row color is used instead.'); }

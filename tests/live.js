@@ -57,6 +57,20 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   let refused = false; try { await cl.get('https://example.com/'); } catch (e) { refused = true; }
   ok(refused, 'any other host is refused');
 
+  // ---- Nov 9: the real applicant page is an empty shell; requested classes come from /ajax/ta_record/{id} ----
+  { const P = require('../scraper/parse');
+    const shell = '<div class="row"><p>Commitment of support: No</p></div><div id="record" data-id="768">Loading...</div><div class="panel">x</div>';
+    const rec = '<div class="record"><h2>A B (ab123)</h2><table class="table"><tbody><tr><th>Non-Discussion session classes requested:</th><td><ol><li>312  INTRODUCTION TO PROGRAMMING</li><li>314  DATA STRUCTURES</li></ol></td></tr></tbody></table></div>';
+    ok(P.recordId(shell) === 768 && !P.recordLoaded(shell), 'shell page: record id found, record not loaded');
+    ok(P.taDetail(shell).requests.length === 0, 'shell page alone has no requested classes (the Oct 28 bug)');
+    const merged = P.mergeRecord(shell, rec);
+    ok(P.recordLoaded(merged) && P.taDetail(merged).requests.length === 2 && P.taDetail(merged).eid === 'ab123', 'merged record gives the requested classes');
+    const ug = P.ugcaModal('<div class="page-header">C D (cd456)</div><p><strong>Major:</strong> CS</p><p><strong>Requested courses to Proctor:</strong><br>209117 - 312 INTRO - SMITH</p>');
+    ok(ug.eid === 'cd456' && ug.requests.length === 1 && ug.requests[0] === 209117, 'UGCA pop-up without the modal wrapper (real /ajax/proctor_record)');
+    const lk = p.meta.linkage;
+    ok(lk && lk.ta.linked >= lk.ta.total - 5 && lk.ugca.linked === lk.ugca.total, /* 5 mock TA applicants asked for no class, by design */ 'mock pull links applicants to courses through /ajax (' + JSON.stringify(lk && { ta: lk.ta, ugca: lk.ugca }) + ')');
+  }
+
   // ---- browser dump (scraper/browser-dump.js run in a signed-in tab), parsed offline ----
   { const g0 = srv.stats.gets.length, n0 = srv.stats.nonGet.length;
     const page = await (await fetch(base + '/admin/applicants', { headers: { Cookie: srv.cookie } })).text();
@@ -68,7 +82,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
     bw.HTMLAnchorElement.prototype.click = function () {};
     bw.eval(fs.readFileSync(require('path').join(__dirname, '../scraper/browser-dump.js'), 'utf8'));
     await fin; const dump = JSON.parse(blob);
-    ok(dump.meta.source === 'legacy-browser-dump' && dump.pages['@classes'] === '/admin/classes' && dump.pages['@applicants'] === '/admin/applicants' && dump.pages['@ugcaModal'] === '/admin/proctor_applicant/', 'browser dump finds the class, applicant and UGCA pages');
+    ok(dump.meta.source === 'legacy-browser-dump' && dump.pages['@classes'] === '/admin/classes' && dump.pages['@applicants'] === '/admin/applicants' && dump.pages['@ugcaModal'] === '/ajax/proctor_record/' && +dump.pages['@taRecords'] > 0 && Object.keys(dump.pages).some(k => /^\/ajax\/ta_record\/\d+$/.test(k)), 'browser dump finds the class, applicant and UGCA pages');
     ok(srv.stats.nonGet.length === n0 && srv.stats.gets.length - g0 > 400, 'browser dump sends only GET requests (' + (srv.stats.gets.length - g0) + ')');
     const pd = await sync({ dump });
     ok(pd.meta.counts.taApplicants === 166 && pd.meta.counts.ugcaApplicants === 264 && pd.meta.counts.sections === 121 && pd.meta.commitmentList === 65, 'the dump parses offline into all courses and applicants');

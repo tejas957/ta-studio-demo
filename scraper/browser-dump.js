@@ -48,16 +48,24 @@
       const ug = [...new Set([...d.querySelectorAll('a.proctor-view[data-record], [data-record].proctor-view')].map(a => a.getAttribute('data-record')))];
       log(ta.length + ' TA and ' + ug.length + ' UGCA applicants. Reading each one (about ' + Math.ceil((ta.length + ug.length) * 0.2 / 60) + ' min)...');
       let k = 0;
-      for (const id of ta) { try { await get('/admin/applicant/' + id); } catch (e) { if (/Not signed in/.test(e.message)) throw e; } if (++k % 25 === 0) log('TA ' + k + '/' + ta.length); }
+      // The applicant page is an empty shell; admin.js loads the application (with the requested classes) from /ajax/ta_record/{id}.
+      let recs = 0;
+      for (const id of ta) {
+        try { const shell = await get('/admin/applicant/' + id); const m = shell.match(/id="record"[^>]*data-id="(\d+)"/); await get('/ajax/ta_record/' + (m ? m[1] : id)); recs++; }
+        catch (e) { if (/Not signed in/.test(e.message)) throw e; }
+        if (++k % 25 === 0) log('TA ' + k + '/' + ta.length);
+      }
+      pages['@taRecords'] = String(recs);
+      log(recs + ' of ' + ta.length + ' TA applications read (with their requested classes).');
       // UGCA pop-up: the address is a guess, so test it on the first one before trying them all
-      const modalPaths = ['/admin/proctor_applicant/', '/admin/proctor/', '/admin/proctor_view/', '/admin/ugca_applicant/'];
+      const modalPaths = ['/ajax/proctor_record/', '/admin/proctor_applicant/'];   // the first is what app.js loads (Nov 9)
       let mp = null;
-      if (ug.length) for (const p of modalPaths) { try { const t = await get(p + ug[0]); if (/modal|Requested courses/i.test(t)) { mp = p; break; } } catch (e) { if (/Not signed in/.test(e.message)) throw e; } }
+      if (ug.length) for (const p of modalPaths) { try { const t = await get(p + ug[0]); if (/Requested courses|modal|page-header/i.test(t)) { mp = p; break; } } catch (e) { if (/Not signed in/.test(e.message)) throw e; } }
       pages['@ugcaModal'] = mp || '';
       if (mp) { k = 0; for (const id of ug) { try { await get(mp + id); } catch (e) { if (/Not signed in/.test(e.message)) throw e; } if (++k % 50 === 0) log('UGCA ' + k + '/' + ug.length); } }
       else if (ug.length) log('UGCA pop-up address not found; UGCA course requests will be missing. The admin script is saved so it can be fixed.');
     }
-    for (const p of ['/admin/commitment_students', '/admin/commitments', '/admin/commitment']) { try { await get(p); pages['@commitments'] = p; break; } catch (e) { if (/Not signed in/.test(e.message)) throw e; } }
+    for (const p of ['/admin/commitments', '/admin/commitment_students']) { try { await get(p); pages['@commitments'] = p; break; } catch (e) { if (/Not signed in/.test(e.message)) throw e; } }
   } catch (e) { log('Stopped: ' + e.message + '. Sign in again in this tab and re-run.'); }
   const out = { meta: { source: 'legacy-browser-dump', at: new Date().toISOString(), base: BASE, requests: n, method: 'GET only', fails }, pages };
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out)], { type: 'application/json' })); a.download = 'legacy-dump.json'; document.body.appendChild(a); a.click(); a.remove();
