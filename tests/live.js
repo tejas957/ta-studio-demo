@@ -68,7 +68,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
     const ug = P.ugcaModal('<div class="page-header">C D (cd456)</div><p><strong>Major:</strong> CS</p><p><strong>Requested courses to Proctor:</strong><br>209117 - 312 INTRO - SMITH</p>');
     ok(ug.eid === 'cd456' && ug.requests.length === 1 && ug.requests[0] === 209117, 'UGCA pop-up without the modal wrapper (real /ajax/proctor_record)');
     const lk = p.meta.linkage;
-    ok(lk && lk.ta.linked >= lk.ta.total - 5 && lk.ugca.linked === lk.ugca.total, /* 5 mock TA applicants asked for no class, by design */ 'mock pull links applicants to courses through /ajax (' + JSON.stringify(lk && { ta: lk.ta, ugca: lk.ugca }) + ')');
+    ok(lk && lk.ta.linked === lk.ta.total && lk.ugca.linked === lk.ugca.total && lk.noRequest.total === 5 && lk.noRequest.suggested === 5, /* the 5 who asked for no class reach their supervisor's course */ 'mock pull links applicants to courses through /ajax (' + JSON.stringify(lk && { ta: lk.ta, ugca: lk.ugca }) + ')');
   }
 
   // ---- browser dump (scraper/browser-dump.js run in a signed-in tab), parsed offline ----
@@ -102,6 +102,15 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   const load = obj => T.loadFeed(w.JSON.parse(JSON.stringify(obj)));
   load(p);
   ok(T.live(), 'app is in live mode');
+  { // Nov 10: an applicant who requested no class shows up for their supervisor as a suggestion, not as their own choice
+    const sp = p.course_preferences.find(x => x.suggested === 'supervisor'), c = p.courses.find(x => x.course_id === sp.course_id);
+    ok(!p.course_preferences.some(x => x.application_id === sp.application_id && !x.suggested && !/Assigned in the legacy/.test(x.applicant_note)), 'suggested applicant had no requests of their own');
+    T.openWindow(c.faculty_id, '2026-12-01', ''); A.role(null, null, 'fac:' + c.faculty_id);
+    A.facOpen(sp.course_id); const m = main();
+    ok(/Suggested/.test(m) && /You are listed as their supervisor/.test(m), 'the supervising professor sees the student as Suggested when ranking');
+    A.role(null, null, 'admin'); A.tab('applicants'); ok(/Requested none/.test(main()), 'applicants list shows "Requested none" for them');
+    A.drawer(sp.application_id, sp.course_id); ok(/Suggested, not their choice/.test(w.document.querySelector('#drawer').textContent), 'their card says the course is a suggestion'); A.closeDrawer();
+    A.tab('setup'); ok(/who requested no class suggested to their supervisor/.test(main()), 'data source report counts supervisor suggestions'); A.tab('dashboard'); }
   ok(!/Candidate Cedar|Atlas/.test(main()), 'no demo people on the dashboard');
   ['dashboard', 'windows', 'assign', 'applicants', 'publish', 'hr', 'students', 'concerns', 'mail', 'setup', 'audit'].forEach(t => { A.tab(t); ok(main().length > 20, 'live tab renders: ' + t); });
   const st = S();

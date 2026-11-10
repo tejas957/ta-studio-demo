@@ -47,7 +47,24 @@ function buildPayload(P) {
   const prLoose = indexBy(P.classes.proctor, c => loose(c.label)), prNum = indexBy(P.classes.proctor, c => nrm(c.number).replace(/^C\.?\s?S\.?\s*/, ''));
   const unmatched = {};
   const findSecs = (label, exact, lo, num) => { const a = exact ? exact[nrm(label)] : null; if (a && a.length) return { secs: a, how: 'label' }; const b = lo[loose(label)]; if (b && b.length) return { secs: b, how: 'loose' }; const n = catNo(label), c = n ? num[n] : null; if (c && c.length) return { secs: c, how: 'number' }; unmatched[label] = (unmatched[label] || 0) + 1; return { secs: [], how: '' }; };
-  const linkHow = { label: 0, loose: 0, number: 0 };
+  const linkHow = { label: 0, loose: 0, number: 0, supervisor: 0 };
+  /* Nov 10 (Tejas): an applicant who requested no class is suggested to the courses their supervising professor teaches
+     this term, so that professor sees them when ranking. The supervisor is free text ("Prof. Peter Stone and Prof. Mitchell
+     Pryor", "Stone, Peter", "Dr. Stone"); the class list says "STONE, P", sometimes several joined by ";". Match on last
+     name, and on first initial when both sides give one. These links are marked as suggestions, never as the student's choice. */
+  const deacc = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const supNames = t => {
+    const s = deacc(t).replace(/\([^)]*\)/g, ' ').replace(/\b(prof(essor)?|dr|doctor|mr|mrs|ms)\.?(?=\s|$)/gi, ' ').replace(/\s+/g, ' ').trim();
+    if (!s || /^(none|n\/?a|-+|no|tbd|unknown|not yet|not applicable|undecided)$/i.test(s)) return [];
+    const parts = /^[A-Za-z'\-]+,\s*[A-Za-z'\-]+$/.test(s) ? [s.split(/,\s*/).reverse().join(' ')] : s.split(/\s+(?:and|&)\s+|\s*[;|\/&,]\s*/i);
+    return parts.map(p => p.trim().split(/\s+/).filter(w => /[A-Za-z]/.test(w))).filter(w => w.length)
+      .map(w => ({ last: w[w.length - 1].toUpperCase().replace(/[^A-Z'\-]/g, ''), first: w.length > 1 ? w[0][0].toUpperCase() : '' })).filter(x => x.last.length > 1);
+  };
+  const profNames = p => String(p || '').split(/\s*[;|\/]\s*|\s+and\s+/i).map(x => x.trim()).filter(Boolean).map(x => {
+    const m = x.match(/^([^,]+),\s*(\S)/); return m ? { last: deacc(m[1]).toUpperCase().replace(/[^A-Z'\- ]/g, '').trim(), first: m[2].toUpperCase() } : { last: deacc(x).toUpperCase().trim().split(/\s+/).pop(), first: '' }; });
+  const nameMatch = (s, p) => !!s.last && !!p.last && (s.last === p.last || p.last.split(/[\s\-]+/).includes(s.last)) && (!s.first || !p.first || s.first === p.first);
+  const supervisorSecs = t => { const ns = supNames(t); return ns.length ? P.classes.ta.filter(c => profNames(c.prof).some(p => ns.some(s => nameMatch(s, p)))).map(c => c.id) : []; };
+  const noReq = { total: 0, suggested: 0, noSupervisor: 0, notTeaching: [] };
   for (const id of secIds) {
     const t = taCls.get(id), p = prCls.get(id), base = t || p;
     const taN = t ? t.needed : 0, ugN = p ? p.needed : 0;
@@ -92,13 +109,20 @@ function buildPayload(P) {
     // The legacy page has two lists, discussion-session and non-discussion-session classes. Both count; the flag is kept.
     // ASSUMED: rank runs through the non-discussion list first, then the discussion list, each in page order. Confirm with Doug.
     let rank = 0; const seenC = new Set();
-    const addPref = (secId, r, note, disc) => { if (seenC.has(secId)) return; seenC.add(secId); prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(secId), preference_rank: r, preparedness: 'moderate', applicant_note: note || '', discussion: disc }); };
+    const addPref = (secId, r, note, disc, suggested) => { if (seenC.has(secId)) return; seenC.add(secId); prefs.push({ preference_id: 'pref_' + (prefN++), application_id: aid, course_id: cid(secId), preference_rank: r, preparedness: 'moderate', applicant_note: note || '', discussion: disc, ...(suggested ? { suggested } : {}) }); };
     const reqList = d ? d.requests.map(l => [l, false]).concat((d.requestsDiscussion || []).map(l => [l, true])) : [];
     for (const [label, disc] of reqList) {
       const hit = findSecs(label, bySecLabel, taLoose, taNum), secs = hit.secs;
       if (!secs.length) { warnings.push('Requested class not found in class list: "' + label + '" (applicant ' + a.id + ')'); continue; }
       linkHow[hit.how]++;
       rank++; secs.forEach(s => addPref(s, rank, 'Requested the course by name' + (disc ? ', with a discussion session' : '') + '; all sections of it count.', disc));
+    }
+    if (rank === 0 && d) {
+      noReq.total++;
+      const sup = String(d.supervisor || '').replace(/\s+/g, ' ').trim(), secs = supervisorSecs(sup);
+      if (secs.length) { noReq.suggested++; linkHow.supervisor++; rank = 1; secs.forEach(s => addPref(s, 1, 'Suggested: requested no class, and their supervising professor (' + sup + ') teaches this course.', undefined, 'supervisor')); }
+      else if (!supNames(sup).length) noReq.noSupervisor++;
+      else noReq.notTeaching.push(sup);
     }
     a.assignments.forEach(s => { if (taCls.has(s)) addPref(s, rank + 1, 'Assigned in the legacy app.'); });
     if (d) {
@@ -175,7 +199,7 @@ function buildPayload(P) {
   const linkage = {
     ta: { total: P.applicants.ta.length, linked: P.applicants.ta.filter(a => linkedIds.has(appIdTA(a.id))).length },
     ugca: { total: P.applicants.ugca.length, linked: P.applicants.ugca.filter(u => linkedIds.has(appIdUG(u.id))).length },
-    how: linkHow, unmatched: Object.entries(unmatched).sort((x, y) => y[1] - x[1]).slice(0, 40).map(([label, n]) => ({ label, n }))
+    how: linkHow, noRequest: { total: noReq.total, suggested: noReq.suggested, noSupervisor: noReq.noSupervisor, supervisorNotTeaching: noReq.notTeaching.length, supervisors: [...new Set(noReq.notTeaching)].slice(0, 30) }, unmatched: Object.entries(unmatched).sort((x, y) => y[1] - x[1]).slice(0, 40).map(([label, n]) => ({ label, n }))
   };
   return {
     meta: { source: 'legacy', syncedAt: now, term, commitmentList: P.commitments ? P.commitments.length : null, counts: { taApplicants: P.applicants.ta.length, ugcaApplicants: P.applicants.ugca.length, taClasses: taCls.size, proctorClasses: prCls.size, sections: secIds.length, assignments: draftRows.length, faculty: faculty.length, facultyToReview: review.length, facultyUnmatched: unmatchedCount }, linkage, warnings, facultyReview: review },
