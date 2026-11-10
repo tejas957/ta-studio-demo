@@ -77,11 +77,13 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
     const bd = new JSDOM(page, { url: base + '/admin/applicants', runScripts: 'outside-only', pretendToBeVisual: true });
     const bw = bd.window; let blob = null, done = null; const fin = new Promise(r => { done = r; });
     bw.__TA_DUMP_TEST = true; bw.console.log = (...a) => { if (/Done:|Stopped:/.test(a.join(' '))) done(); };
-    bw.fetch = (u, o) => fetch(new URL(u, bw.location.href).href, { method: (o && o.method) || 'GET', headers: { Cookie: srv.cookie } });
+    let dropped = null; // Nov 10: the first UGCA pop-up request fails like ERR_NETWORK_IO_SUSPENDED; the retry must recover it
+    bw.fetch = (u, o) => { const href = new URL(u, bw.location.href).href; if (!dropped && /\/ajax\/proctor_record\//.test(href)) { dropped = href; return Promise.reject(new TypeError('Failed to fetch')); } return fetch(href, { method: (o && o.method) || 'GET', headers: { Cookie: srv.cookie } }); };
     bw.Blob = class { constructor(parts) { blob = parts.join(''); } }; bw.URL.createObjectURL = () => 'blob:x';
     bw.HTMLAnchorElement.prototype.click = function () {};
     bw.eval(fs.readFileSync(require('path').join(__dirname, '../scraper/browser-dump.js'), 'utf8'));
     await fin; const dump = JSON.parse(blob);
+    ok(dropped && Object.keys(dump.pages).some(k => dropped.endsWith(k)) && !Object.keys(dump.meta.fails || {}).some(k => /proctor_record/.test(k)), 'a dropped request is retried and still lands in the dump');
     ok(dump.meta.source === 'legacy-browser-dump' && dump.pages['@classes'] === '/admin/classes' && dump.pages['@applicants'] === '/admin/applicants' && dump.pages['@ugcaModal'] === '/ajax/proctor_record/' && +dump.pages['@taRecords'] > 0 && Object.keys(dump.pages).some(k => /^\/ajax\/ta_record\/\d+$/.test(k)), 'browser dump finds the class, applicant and UGCA pages');
     ok(srv.stats.nonGet.length === n0 && srv.stats.gets.length - g0 > 400, 'browser dump sends only GET requests (' + (srv.stats.gets.length - g0) + ')');
     const pd = await sync({ dump });

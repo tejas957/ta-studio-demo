@@ -15,9 +15,18 @@
     if (path in pages) return pages[path];
     const url = BASE + path;
     if (new URL(url).origin !== location.origin) throw new Error('refused other host');
-    await sleep(120); n++;
-    const r = await fetch(url, { method: 'GET', credentials: 'same-origin', redirect: 'follow', cache: 'no-store' });
-    const t = await r.text();
+    await sleep(120);
+    // Nov 10: a sleeping Mac or a Wi-Fi drop (ERR_NETWORK_IO_SUSPENDED, ERR_TIMED_OUT, ERR_ADDRESS_INVALID) used to skip
+    // that applicant. Now each request waits up to 30 s and is retried 4 times, 2, 5, 10 and 20 s apart. Still GET only.
+    let r, t, lastErr;
+    for (let k = 0; k < 5; k++) {
+      if (k) { log('Network hiccup on ' + path + ', retrying in ' + [2, 5, 10, 20][k - 1] + ' s (' + k + '/4)'); await sleep([2000, 5000, 10000, 20000][k - 1]); }
+      const ac = typeof AbortController === 'function' ? new AbortController() : null, to = ac ? setTimeout(() => ac.abort(), 30000) : null;
+      try { n++; r = await fetch(url, { method: 'GET', credentials: 'same-origin', redirect: 'follow', cache: 'no-store', signal: ac ? ac.signal : undefined }); t = await r.text(); lastErr = null; }
+      catch (e) { lastErr = e; r = null; } finally { if (to) clearTimeout(to); }
+      if (r && (r.ok || (r.status < 500 && r.status !== 429))) break;
+    }
+    if (!r) { fails[path] = 'network'; throw new Error('network ' + path + ': ' + (lastErr && lastErr.message)); }
     if (!r.ok) { fails[path] = r.status; throw new Error(r.status + ' ' + path); }
     if (/You must be logged in|type="password"/i.test(t)) { fails[path] = 'login'; throw new Error('Not signed in: ' + path); }
     pages[path] = t; return t;
@@ -46,7 +55,7 @@
       const d = doc(apps);
       const ta = [...new Set([...d.querySelectorAll('a[href]')].map(a => (a.getAttribute('href').match(/applicant\/(\d+)/) || [])[1]).filter(Boolean))];
       const ug = [...new Set([...d.querySelectorAll('a.proctor-view[data-record], [data-record].proctor-view')].map(a => a.getAttribute('data-record')))];
-      log(ta.length + ' TA and ' + ug.length + ' UGCA applicants. Reading each one (about ' + Math.ceil((ta.length + ug.length) * 0.2 / 60) + ' min)...');
+      log(ta.length + ' TA and ' + ug.length + ' UGCA applicants. Reading each one (about ' + Math.ceil((ta.length + ug.length) * 0.2 / 60) + ' min). Keep this tab in front and the Mac awake.');
       let k = 0;
       // The applicant page is an empty shell; admin.js loads the application (with the requested classes) from /ajax/ta_record/{id}.
       let recs = 0;
